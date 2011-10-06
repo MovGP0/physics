@@ -39,13 +39,13 @@ public class Definitions {
             SubstitutionsFactory.createSubstitution("RR = "
             + "(1/10)*L*L*HATK^{d}*DELTA^{mnab}*HATK^{g}*n_s*n_r*R^s_abg*R^r_mnd + "
             + "L*L*(L-1)*(L-1)*(L-2)*HATK^{bgd}*DELTA^a*HATK^{mn}*n_s*n_r*((2/45)*R^r_adn*R^s_bmg-(1/120)*R^r_dan*R^s_bmg) + "
-            + "L*L*(L-1)*HATK^d*DELTA^{abg}*HATK^{mn}*n_s*n_r*(-(1/10)*R^r_mgn*R^s_adb+(1/15)*R^r_dan*R^s_bmg+(1/60)*R^r_bdn*R^s_gma)+"
+            + "L*L*(L-1)*HATK^{d}*DELTA^{abg}*HATK^{mn}*n_s*n_r*(-(1/10)*R^r_mgn*R^s_adb+(1/15)*R^r_dan*R^s_bmg+(1/60)*R^r_bdn*R^s_gma)+"
             + "L*L*(L-1)*(L-1)*HATK^{gd}*DELTA^{ab}*HATK^{mn}*n_s*n_r*(-(1/20)*R^r_mbn*R^s_dag+(1/180)*R^r_anb*R^s_gdm-(7/360)*R^r_mgn*R^s_adb-(1/240)*R^r_dbn*R^s_gam-(1/120)*R^r_bgn*R^s_adm-(1/30)*R^r_dbn*R^s_agm)+"
             + "L*L*(L-1)*HATK^{mn}*DELTA^{abg}*HATK^d*n_s*n_r*((7/120)*R^r_bgn*R^s_mad-(3/40)*R^r_bgd*R^s_man+(1/120)*R^r_dgn*R^s_abm)+"
             + "L*L*HATK^m*DELTA^{abg}*HATK^n*n_r*(-(1/8)*R_bg*R^r_nam+(3/20)*R_bg*R^r_man+(3/40)*R_am*R^r_bgn+(1/40)*R^s_bgm*R^r_nas-(3/20)*R^s_abm*R^r_gns+(1/10)*R^s_abn*R^r_gms)+"
-            + "L*L*(L-1)*HATK^g*DELTA^{ab}*HATK^{mn}*n_r*((1/20)*R_an*R^r_gbm+(1/20)*R_ag*R^r_mbn+(1/10)*R_ab*R^r_mgn+(1/20)*R^s_ang*R^r_sbm-(1/60)*R^s_man*R^r_bsg+(1/10)*R^s_abg*R^r_msn-(1/12)*R^s_abn*R^r_msg)+"
+            + "L*L*(L-1)*HATK^{g}*DELTA^{ab}*HATK^{mn}*n_r*((1/20)*R_an*R^r_gbm+(1/20)*R_ag*R^r_mbn+(1/10)*R_ab*R^r_mgn+(1/20)*R^s_ang*R^r_sbm-(1/60)*R^s_man*R^r_bsg+(1/10)*R^s_abg*R^r_msn-(1/12)*R^s_abn*R^r_msg)+"
             + "L*L*(L-1)*(L-1)*HATK^{ab}*DELTA^{g}*HATK^{mn}*n_r*((1/60)*R_am*R^r_bng-(1/20)*R_am*R^r_gnb+(1/120)*R_ab*R^r_mng+(3/40)*R_ag*R^r_nbm+(1/20)*R^s_gma*R^r_nsb+(1/120)*R^s_amg*R^r_bns-(1/40)*R^s_amg*R^r_snb+(1/40)*R^s_amb*R^r_sng-(1/20)*R^s_amb*R^r_gns-(1/40)*R^s_mbn*R^r_gsa)+"
-            + "L*L*(L-1)*HATK^{ab}*DELTA^{mn}*HATK^{g}*n_r*((1/20)*R^s_mnb*R^r_gsa-(7/60)*R^s_bma*R^r_gns+(1/20)*R^s_bma*R^r_sng+(1/10)*R^s_mbg*R^r_nas+(1/60)*R^s_mbg*R^r_ans+(7/120)*R_ab*R^r_ngm+(11/60)*R_bm*R^r_nag)+");
+            + "L*L*(L-1)*HATK^{ab}*DELTA^{mn}*HATK^{g}*n_r*((1/20)*R^s_mnb*R^r_gsa-(7/60)*R^s_bma*R^r_gns+(1/20)*R^s_bma*R^r_sng+(1/10)*R^s_mbg*R^r_nas+(1/60)*R^s_mbg*R^r_ans+(7/120)*R_ab*R^r_ngm+(11/60)*R_bm*R^r_nag)");
 
     public static void main(String[] args) {
     }
