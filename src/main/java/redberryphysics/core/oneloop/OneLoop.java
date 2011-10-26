@@ -20,9 +20,14 @@
 package redberryphysics.core.oneloop;
 
 import redberry.core.context.CC;
+import redberry.core.parser.ParserIndexes;
 import redberry.core.tensor.Tensor;
 import redberry.core.tensor.test.TTest;
+import redberry.core.transformation.IndexesInsertion;
 import redberry.core.transformation.Transformation;
+import redberry.core.transformation.Transformations;
+import redberry.core.transformation.collect.AbstractCollectTerms;
+import redberry.core.transformation.collect.EqualsSplitCriteria;
 import redberry.core.transformation.substitutions.SubstitutionsFactory;
 import redberry.core.utils.Indicator;
 
@@ -37,6 +42,7 @@ public class OneLoop {
             SubstitutionsFactory.createSubstitution("G1 = "
             + "Flat + WR + SR + SSR + FF + FR + RR ");
     public static Tensor RR = CC.parse("RR");
+    public static Tensor N = CC.parse("n_{\\mu}");
     //temporary L=2
     public static Tensor RR_SUB = CC.parse("(1/10)*L*L*HATK^{\\delta}*DELTA^{\\mu\\nu\\alpha\\beta}*HATK^{\\gamma}*n_{\\sigma}*n_{\\lambda}*R^{\\sigma}_{\\alpha\\beta\\gamma}*R^{\\lambda}_{\\mu\\nu\\delta} + "
             + "L*L*(L-1)*(L-1)*(L-2)*HATK^{\\beta\\gamma\\delta}*DELTA^{\\alpha}*HATK^{\\mu\\nu}*n_{\\sigma}*n_{\\lambda}*((2/45)*R^{\\lambda}_{\\alpha\\delta\\nu}*R^{\\sigma}_{\\beta\\mu\\gamma}-(1/120)*R^{\\lambda}_{\\delta\\alpha\\nu}*R^{\\sigma}_{\\beta\\mu\\gamma}) + "
@@ -62,6 +68,11 @@ public class OneLoop {
     public static Tensor HATK_2 = CC.parse("HATK^{\\mu\\nu}");
     public static Tensor HATK_3 = CC.parse("HATK^{\\mu\\nu\\alpha}");
     public static Tensor HATK_4 = CC.parse("HATK^{\\mu\\nu\\alpha\\beta}");
+    //
+    public static Tensor MATRIX_HATK_1 = CC.parse("HATK^{ij}_{pq}^{\\mu}");
+    public static Tensor MATRIX_HATK_2 = CC.parse("HATK^{ij}_{pq}^{\\mu\\nu}");
+    public static Tensor MATRIX_HATK_3 = CC.parse("HATK^{ij}_{pq}^{\\mu\\nu\\alpha}");
+    public static Tensor MATRIX_HATK_4 = CC.parse("HATK^{ij}_{pq}^{\\mu\\nu\\alpha\\beta}");
     public static Tensor K_2 = CC.parse("K^{\\mu\\nu}");
     public static Tensor K_2_INV = CC.parse("KINV");
     public static Tensor HATK_1_SUB = CC.parse("KINV*K^{\\mu\\nu}*n_{\\nu}");
@@ -73,10 +84,10 @@ public class OneLoop {
      */
     public static Tensor MATRIX_K_2 = CC.parse("K^{ij}_{pq}^{\\mu\\nu}");
     //K^{\\mu\\nu}^{ij}_{pq}
-    public static Tensor MATRIX_K_2_SUB = CC.parse("g^{\\mu\\nu}*((1/2)*(d^i_p*d^j_q+d^i_q*d^j_p)-(1/4)*g_{pq}*g^{ij})");
+    public static Tensor MATRIX_K_2_SUB = CC.parse("g^{\\mu\\nu}*((1/2)*(d^i_p*d^j_q+d^i_q*d^j_p)-(1/4)*g_{pq}*g^{ij}))");
     //KINV^{ij}_{pq}
     public static Tensor MATRIX_K_2_INV = CC.parse("KINV^{ij}_{pq}");
-    public static Tensor MATRIX_K_2_INV_SUB = CC.parse("(1/2)*(d^i_p*d^j_q+d^i_q*d^j_p)-(1/4)*g_{pq}*g^{ij}");
+    public static Tensor MATRIX_K_2_INV_SUB = CC.parse("(1/2)*(d^i_p*d^j_q+d^i_q*d^j_p)-(1/4)*g_{pq}*g^{ij}+a*g_{pq}*g^{ij}");
     /*
      * Defining substitutions
      */
@@ -84,10 +95,16 @@ public class OneLoop {
     public final Transformation DELTA_2_SUBSTITUTION;
     public final Transformation DELTA_3_SUBSTITUTION;
     public final Transformation DELTA_4_SUBSTITUTION;
+    //
     public final Transformation HATK_1_SUBSTITUTION;
     public final Transformation HATK_2_SUBSTITUTION;
     public final Transformation HATK_3_SUBSTITUTION;
     public final Transformation HATK_4_SUBSTITUTION;
+    //
+    public final Transformation MATRIX_HATK_1_SUBSTITUTION;
+    public final Transformation MATRIX_HATK_2_SUBSTITUTION;
+//    public final Transformation MATRIX_HATK_3_SUBSTITUTION;
+//    public final Transformation MATRIX_HATK_4_SUBSTITUTION;
     public final Transformation MATRIX_K_2_SUBSTITUTION;
     public final Transformation MATRIX_K_2_INV_SUBSTITUTION;
     public final static Indicator<Tensor> matrices = new Indicator<Tensor>() {
@@ -117,5 +134,29 @@ public class OneLoop {
         this.HATK_4_SUBSTITUTION = SubstitutionsFactory.createSubstitution(HATK_4, HATK_4_SUB);
         this.MATRIX_K_2_SUBSTITUTION = SubstitutionsFactory.createSubstitution(MATRIX_K_2, MATRIX_K_2_SUB);
         this.MATRIX_K_2_INV_SUBSTITUTION = SubstitutionsFactory.createSubstitution(MATRIX_K_2_INV, MATRIX_K_2_INV_SUB);
+
+        IndexesInsertion ii = new IndexesInsertion(matrices, ParserIndexes.parse("^{ij}_{pq}"));
+        HATK_1_SUB = ii.transform(HATK_1_SUB);
+        HATK_2_SUB = ii.transform(HATK_2_SUB);
+        HATK_3_SUB = ii.transform(HATK_3_SUB);
+        HATK_4_SUB = ii.transform(HATK_4_SUB);
+
+        HATK_1_SUB = MATRIX_K_2_SUBSTITUTION.transform(HATK_1_SUB);
+        HATK_1_SUB = MATRIX_K_2_INV_SUBSTITUTION.transform(HATK_1_SUB);
+
+        HATK_2_SUB = MATRIX_K_2_SUBSTITUTION.transform(HATK_2_SUB);
+        HATK_2_SUB = MATRIX_K_2_INV_SUBSTITUTION.transform(HATK_2_SUB);
+
+        HATK_1_SUB = Transformations.expandBrackets(HATK_1_SUB);
+        HATK_2_SUB = Transformations.expandBrackets(HATK_2_SUB);
+        HATK_1_SUB = Transformations.contractMetrics(HATK_1_SUB);
+        HATK_2_SUB = Transformations.contractMetrics(HATK_2_SUB);
+
+        Transformation collect = new AbstractCollectTerms(new EqualsSplitCriteria());
+        HATK_1_SUB = collect.transform(HATK_1_SUB);
+        HATK_2_SUB = collect.transform(HATK_2_SUB);
+
+        MATRIX_HATK_1_SUBSTITUTION = SubstitutionsFactory.createSubstitution(MATRIX_HATK_1, HATK_1_SUB);
+        MATRIX_HATK_2_SUBSTITUTION = SubstitutionsFactory.createSubstitution(MATRIX_HATK_2, HATK_2_SUB);
     }
 }
