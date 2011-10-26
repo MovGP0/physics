@@ -27,8 +27,11 @@ import redberry.core.tensor.Tensor;
 import java.util.Deque;
 import redberry.core.transformation.collect.CollectPatternParser;
 import org.junit.Test;
+import redberry.core.context.ToStringMode;
+import redberry.core.parser.ParserIndexes;
 import redberry.core.tensor.MultiTensor;
 import redberry.core.tensor.test.TTest;
+import redberry.core.transformation.IndexesInsertion;
 import redberry.core.transformation.Transformations;
 import redberry.core.transformation.collect.CollectManager;
 import redberry.core.transformation.collect.SplitPattern;
@@ -89,6 +92,7 @@ public class OneLoopTest {
         RR = Transformations.calculateNumbers(RR);
         assertTrue(TTest.testIsScalar(RR));
         assertIndexes(RR);
+        System.out.println(RR);
     }
 
     @Test
@@ -101,7 +105,24 @@ public class OneLoopTest {
         RR = loop.DELTA_4_SUBSTITUTION.transform(RR);
         RR = SubstitutionsFactory.createSubstitution("L=2").transform(RR);
         RR = Transformations.calculateNumbers(RR);
-        assertTrue(TTest.testIsScalar(RR));
+        RR = loop.HATK_1_SUBSTITUTION.transform(RR);
+        RR = loop.HATK_2_SUBSTITUTION.transform(RR);
+        RR = loop.HATK_3_SUBSTITUTION.transform(RR);
+        RR = loop.HATK_4_SUBSTITUTION.transform(RR);
         assertIndexes(RR);
+        IndexesInsertion indexesInsertion = new IndexesInsertion(matrices, ParserIndexes.parse("^ab_ab"));
+        System.out.println(RR.toString(ToStringMode.REDBERRY));
+        Tensor RR = indexesInsertion.transform(loop.RR);
+        assertIndexes(RR);
+        System.out.println(RR.toString(ToStringMode.UTF8));
+        RR = loop.MATRIX_K_2_SUBSTITUTION.transform(RR);
+        RR = loop.MATRIX_K_2_INV_SUBSTITUTION.transform(RR);
+        assertIndexes(RR);
+
+        RR = Transformations.contractMetrics(RR);
+        RR = Transformations.expandBrackets(RR);
+        RR = Transformations.contractMetrics(RR);
+        assertIndexes(RR);
+        System.out.println(RR.toString(ToStringMode.UTF8));
     }
 }

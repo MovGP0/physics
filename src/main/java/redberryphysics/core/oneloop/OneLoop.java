@@ -84,6 +84,12 @@ public class OneLoop {
     public final Transformation DELTA_2_SUBSTITUTION;
     public final Transformation DELTA_3_SUBSTITUTION;
     public final Transformation DELTA_4_SUBSTITUTION;
+    public final Transformation HATK_1_SUBSTITUTION;
+    public final Transformation HATK_2_SUBSTITUTION;
+    public final Transformation HATK_3_SUBSTITUTION;
+    public final Transformation HATK_4_SUBSTITUTION;
+    public final Transformation MATRIX_K_2_SUBSTITUTION;
+    public final Transformation MATRIX_K_2_INV_SUBSTITUTION;
     public final static Indicator<Tensor> matrices = new Indicator<Tensor>() {
         public boolean is(Tensor tensor) {
             return TTest.testEqualstensorStructure(tensor, K_2)
@@ -105,5 +111,11 @@ public class OneLoop {
         this.DELTA_2_SUBSTITUTION = SubstitutionsFactory.createSubstitution(DELTA_2, DELTA_2_SUB);
         this.DELTA_3_SUBSTITUTION = SubstitutionsFactory.createSubstitution(DELTA_3, DELTA_3_SUB);
         this.DELTA_4_SUBSTITUTION = SubstitutionsFactory.createSubstitution(DELTA_4, DELTA_4_SUB);
+        this.HATK_1_SUBSTITUTION = SubstitutionsFactory.createSubstitution(HATK_1, HATK_1_SUB);
+        this.HATK_2_SUBSTITUTION = SubstitutionsFactory.createSubstitution(HATK_2, HATK_2_SUB);
+        this.HATK_3_SUBSTITUTION = SubstitutionsFactory.createSubstitution(HATK_3, HATK_3_SUB);
+        this.HATK_4_SUBSTITUTION = SubstitutionsFactory.createSubstitution(HATK_4, HATK_4_SUB);
+        this.MATRIX_K_2_SUBSTITUTION = SubstitutionsFactory.createSubstitution(MATRIX_K_2, MATRIX_K_2_SUB);
+        this.MATRIX_K_2_INV_SUBSTITUTION = SubstitutionsFactory.createSubstitution(MATRIX_K_2_INV, MATRIX_K_2_INV_SUB);
     }
 }
