@@ -17,9 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package redberryphysics.oneloop;
+package redberryphysics.core.oneloop;
 
 import redberry.core.context.CC;
+import redberry.core.context.ToStringMode;
 import redberry.core.tensor.Tensor;
 import redberry.core.transformation.Transformation;
 import redberry.core.transformation.substitutions.SubstitutionsFactory;
@@ -30,7 +31,8 @@ import redberry.core.transformation.substitutions.SubstitutionsFactory;
  * @author Stanislav Poslavsky
  */
 public class Definitions {
-    public final static Tensor COUNTERTERMS = CC.parse("G1");
+    public static Tensor COUNTERTERMS = CC.parse("G1");
+    public static Tensor RR = CC.parse("RR");
     public final static Transformation COUNTERTERMS_SUBSTITUTION =
             SubstitutionsFactory.createSubstitution("G1 = "
             + "Flat + WR + SR + SSR + FF + FR + RR ");
@@ -64,13 +66,10 @@ public class Definitions {
             + "-(1/2)*L*(L-1)*HATK^{\\mu\\nu}+L*L*HATK^{\\mu}*HATK^{\\nu}");
     public final static Transformation DELTA_3_SUBSTITUTION =
             SubstitutionsFactory.createSubstitution("DELTA^{\\mu\\nu\\alpha} = "
-             + "-(1/6)*L*(L-1)*(L-2)*HATK^{\\mu\\nu\\alpha}+(1/12)*L*L*(L-1)*(HATK^{\\mu\\nu}*HATK^{\\alpha}+HATK^{\\mu\\alpha}*HATK^{\\nu}+HATK^{\\alpha\\nu}*HATK^{\\mu}+HATK^{\\nu\\mu}*HATK^{\\alpha}+HATK^{\\nu\\alpha}*HATK^{\\mu}+HATK^{\\alpha\\mu}*HATK^{\\nu})+(1/2)*L*L*(L-1)*HATK^{\\mu}*HATK^{\\nu}*HATK^{\\alpha}"); 
+            + "-(1/6)*L*(L-1)*(L-2)*HATK^{\\mu\\nu\\alpha}+(1/12)*L*L*(L-1)*(HATK^{\\mu\\nu}*HATK^{\\alpha}+HATK^{\\mu\\alpha}*HATK^{\\nu}+HATK^{\\alpha\\nu}*HATK^{\\mu}+HATK^{\\nu\\mu}*HATK^{\\alpha}+HATK^{\\nu\\alpha}*HATK^{\\mu}+HATK^{\\alpha\\mu}*HATK^{\\nu})+(1/2)*L*L*(L-1)*HATK^{\\mu}*HATK^{\\nu}*HATK^{\\alpha}");
 //            + "-(1/6)*L*(L-1)*(L-2)*HATK^{mna}+(1/12)*L*L*(L-1)*(HATK^{mn}*HATK^{a}+HATK^{ma}*HATK^{n}+HATK^{an}*HATK^{m}+HATK^{nm}*HATK^{a}+HATK^{na}*HATK^{m}+HATK^{am}*HATK^{n})+(1/2)*L*L*(L-1)*HATK^m*HATK^n*HATK^a");
     //temprory wrong
     public final static Transformation DELTA_4_SUBSTITUTION =
             SubstitutionsFactory.createSubstitution("DELTA^{\\mu\\nu\\alpha\\beta} = "
             + "-(1/6)*L*(L-1)*(L-2)*(L-3)*HATK^{\\mu\\nu\\alpha\\beta}");
-
-    public static void main(String[] args) {
-    }
 }

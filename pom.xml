@@ -40,11 +40,10 @@
             <artifactId>slf4j-api</artifactId>
             <version>1.6.1</version>
         </dependency>
-        
         <dependency>
             <groupId>redberry</groupId>
             <artifactId>redberry</artifactId>
-            <version>0.9.0</version>
+            <version>0.9.3-SNAPSHOT</version>
         </dependency>
     </dependencies>
 </project>
