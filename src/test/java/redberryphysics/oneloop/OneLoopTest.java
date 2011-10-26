@@ -32,7 +32,9 @@ import redberry.core.tensor.test.TTest;
 import redberry.core.transformation.Transformations;
 import redberry.core.transformation.collect.CollectManager;
 import redberry.core.transformation.collect.SplitPattern;
-import static redberryphysics.core.oneloop.Definitions.*;
+import redberry.core.transformation.substitutions.SubstitutionsFactory;
+import redberryphysics.core.oneloop.OneLoop;
+import static redberryphysics.core.oneloop.OneLoop.*;
 import static core.TAssert.*;
 import static org.junit.Assert.*;
 
@@ -40,14 +42,15 @@ import static org.junit.Assert.*;
  *
  * @author stas
  */
-public class DefinitionsTest {
+public class OneLoopTest {
     @Test
     public void substitutions1() {
-        RR = RR_SUBSTITUTION.transform(RR);
-        RR = DELTA_1_SUBSTITUTION.transform(RR);
-        RR = DELTA_2_SUBSTITUTION.transform(RR);
-        RR = DELTA_3_SUBSTITUTION.transform(RR);
-        RR = DELTA_4_SUBSTITUTION.transform(RR);
+        OneLoop loop = new OneLoop();
+        RR = loop.RR_SUBSTITUTION.transform(RR);
+        RR = loop.DELTA_1_SUBSTITUTION.transform(RR);
+        RR = loop.DELTA_2_SUBSTITUTION.transform(RR);
+        RR = loop.DELTA_3_SUBSTITUTION.transform(RR);
+        RR = loop.DELTA_4_SUBSTITUTION.transform(RR);
         RR = Transformations.multiplyNumbers(RR);
         RR = Transformations.sumNumbers(RR);
         Tensor copy = RR.clone();
@@ -72,5 +75,33 @@ public class DefinitionsTest {
         System.out.println(((MultiTensor) RR).size());
         RR = Transformations.multiplyNumbers(RR);
         RR = Transformations.sumNumbers(RR);
+    }
+
+    @Test
+    public void substitutions2_L_TO_2() {
+        OneLoop loop = new OneLoop();
+        RR = loop.RR_SUBSTITUTION.transform(RR);
+        RR = loop.DELTA_1_SUBSTITUTION.transform(RR);
+        RR = loop.DELTA_2_SUBSTITUTION.transform(RR);
+        RR = loop.DELTA_3_SUBSTITUTION.transform(RR);
+        RR = loop.DELTA_4_SUBSTITUTION.transform(RR);
+        RR = SubstitutionsFactory.createSubstitution("L=2").transform(RR);
+        RR = Transformations.calculateNumbers(RR);
+        assertTrue(TTest.testIsScalar(RR));
+        assertIndexes(RR);
+    }
+
+    @Test
+    public void substitutions3_MATRICES() {
+        OneLoop loop = new OneLoop();
+        RR = loop.RR_SUBSTITUTION.transform(RR);
+        RR = loop.DELTA_1_SUBSTITUTION.transform(RR);
+        RR = loop.DELTA_2_SUBSTITUTION.transform(RR);
+        RR = loop.DELTA_3_SUBSTITUTION.transform(RR);
+        RR = loop.DELTA_4_SUBSTITUTION.transform(RR);
+        RR = SubstitutionsFactory.createSubstitution("L=2").transform(RR);
+        RR = Transformations.calculateNumbers(RR);
+        assertTrue(TTest.testIsScalar(RR));
+        assertIndexes(RR);
     }
 }
