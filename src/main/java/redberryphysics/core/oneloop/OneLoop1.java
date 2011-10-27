@@ -20,6 +20,10 @@
 package redberryphysics.core.oneloop;
 
 import redberry.core.context.CC;
+import redberry.core.indexes.IndexType;
+import redberry.core.indexes.Indexes;
+import redberry.core.indexes.IndexesFactory;
+import redberry.core.indexes.SimpleIndexesImpl;
 import redberry.core.indexgenerator.IndexGenerator;
 import redberry.core.parser.ParserIndexes;
 import redberry.core.tensor.Expression;
@@ -38,6 +42,7 @@ import redberry.core.utils.Indicator;
  *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
+ * @author Konstantin Kiselev
  */
 public class OneLoop1 {
     /*
@@ -91,11 +96,27 @@ public class OneLoop1 {
     /*
      *Section for defining matrices 
      */
+//    public final Expression MATRIX_K =
+//            new Expression("K^{\\mu\\nu}^{ij}_{pq} = g^{\\mu\\nu}*((1/2)*(d^i_p*d^j_q+d^i_q*d^j_p)-(1/4)*g_{pq}*g^{ij})");
+    /*
+     * The indexes ^{\\alpha\\beta}_{\\gamma\\delta} are the matrix indexes
+     */
     public final Expression MATRIX_K =
-            new Expression("K^{ij}_{pq}^{\\mu\\nu} = g^{\\mu\\nu}*((1/2)*(d^i_p*d^j_q+d^i_q*d^j_p)-(1/4)*g_{pq}*g^{ij})");
+            new Expression("K^{\\mu\\nu}^{\\alpha\\beta}_{\\gamma\\delta} = g^{\\mu\\nu}*P^{\\alpha\\beta}_{\\gamma\\delta}+"
+            + "(1+2*beta)*((1/4)*(d^{\\mu}_{\\gamma}*g^{\\alpha \\nu}*d^{\\beta}_{\\delta} + d^{\\mu}_{\\delta}*g^{\\alpha \\nu}*d^{\\beta}_{\\gamma}+d^{\\mu}_{\\gamma}*g^{\\beta \\nu}*d^{\\alpha}_{\\delta}+ d^{\\mu}_{\\delta}*g^{\\beta \\nu}*d^{\\alpha}_{\\gamma})+"
+            + "(1/4)*(d^{\\nu}_{\\gamma}*g^{\\alpha \\mu}*d^{\\beta}_{\\delta} + d^{\\nu}_{\\delta}*g^{\\alpha \\mu}*d^{\\beta}_{\\gamma}+d^{\\nu}_{\\gamma}*g^{\\beta \\mu}*d^{\\alpha}_{\\delta}+ d^{\\nu}_{\\delta}*g^{\\beta \\mu}*d^{\\alpha}_{\\gamma}) -"
+            + "(1/4)*(g_{\\gamma\\delta}*g^{\\mu \\alpha}*g^{\\nu \\beta}+g_{\\gamma\\delta}*g^{\\mu \\beta}*g^{\\nu \\alpha})-"
+            + "(1/4)*(g^{\\alpha\\beta}*d^{\\mu}_{\\gamma}*d^{\\nu}_{\\delta}+g^{\\alpha\\beta}*d^{\\mu}_{\\delta}*d^{\\nu}_{\\gamma})+(1/8)*g^{\\mu\\nu}*g_{\\gamma\\delta}*g^{\\alpha\\beta})");
     //KINV^{ij}_{pq}
+//    public final Expression MATRIX_K_INV =
+//            new Expression("KINV^{ij}_{pq} = (1/2)*(d^i_p*d^j_q+d^i_q*d^j_p)-(1/4)*g_{pq}*g^{ij}+a*g_{pq}*g^{ij}");
+    /*
+     * The indexes ^{\\alpha\\beta}_{\\mu\\nu} are the matrix indexes
+     */
     public final Expression MATRIX_K_INV =
-            new Expression("KINV^{ij}_{pq} = (1/2)*(d^i_p*d^j_q+d^i_q*d^j_p)-(1/4)*g_{pq}*g^{ij}+a*g_{pq}*g^{ij}");
+            new Expression("KINV^{\\alpha\\beta}_{\\mu\\nu} = P^{\\alpha\\beta}_{\\mu\\nu}+a*g_{\\mu\\nu}*g^{\\alpha\\beta}+"
+            + "(1/4)*b*(n_{\\mu}*n^{\\alpha}*d^{\\beta}_{\\nu}+n_{\\mu}*n^{\\beta}*d^{\\alpha}_{\\nu}+n_{\\nu}*n^{\\alpha}*d^{\\beta}_{\\mu})+n_{\\nu}*n^{\\beta}*d^{\\alpha}_{\\mu}+"
+            + "c*(n_{\\mu}*n_{\\nu}*g^{\\alpha\\beta}+n^{\\alpha}*n^{\\beta}*g_{\\mu\\nu})+d*n_{\\mu}*n_{\\nu}*n^{\\alpha}*n^{\\beta}");
     private final Expression[] HATKs = new Expression[]{HATK_1, HATK_2, HATK_3, HATK_4};
     public final Indicator<Tensor> matrices = new Indicator<Tensor>() {
         public boolean is(Tensor tensor) {
@@ -104,18 +125,37 @@ public class OneLoop1 {
         }
     };
 
-    public OneLoop1() {
-        //generating free indexes
+    private Indexes createInsertingIndexes(Expression[] expressions) {
+        IndexGenerator generator = new IndexGenerator();
+        Indexes expIndexes;
+        int i;
+        for (Expression exp : expressions) {
+            expIndexes = exp.getIndexes();
+            for (i = 0; i < expIndexes.size(); ++i)
+                generator.add(expIndexes.get(i));
+        }
+        int[] i_array = new int[4];
+        i_array[2] = generator.generate(IndexType.GreekLower.getId());
+        i_array[3] = generator.generate(IndexType.GreekLower.getId());
+        i_array[0] = 0x80000000 ^ i_array[2];
+        i_array[1] = 0x80000000 ^ i_array[3];
+        return IndexesFactory.create(i_array);
+    }
 
-        Transformation indexesInsertion = new IndexesInsertion(matrices, ParserIndexes.parse("^{ij}_{ij}"));
+    public OneLoop1() {
+        Transformation indexesInsertion = new IndexesInsertion(matrices, createInsertingIndexes(HATKs));
         for (Expression hatK : HATKs)
             hatK.eval(
                     indexesInsertion,
                     MATRIX_K.asSubstitution(),
                     MATRIX_K_INV.asSubstitution(),
+                    P.asSubstitution(),
                     new Transformer(ExpandBrackets.INSTANCE),
                     IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                    KRONECKER_DIMENSION.asSubstitution(),
                     CollectFactory.createCollectEqualTerms(),
+                    CalculateNumbers.INSTANCE,
+                    CollectFactory.ccreateCollectAllScalars(),
                     CalculateNumbers.INSTANCE);
         for (Expression delta : DELTAs)
             delta.eval(L.asSubstitution(), CalculateNumbers.INSTANCE);

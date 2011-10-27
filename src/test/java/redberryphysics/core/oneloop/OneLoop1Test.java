@@ -19,10 +19,11 @@
  */
 package redberryphysics.core.oneloop;
 
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import redberry.core.context.CC;
 import redberry.core.context.ToStringMode;
+import redberry.core.tensor.Tensor;
 
 /**
  *
@@ -38,8 +39,11 @@ public class OneLoop1Test {
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
-    public static void tearDownClass() throws Exception {
+    @Test
+    public void test() {
+        OneLoop1 loop1 = new OneLoop1();
+        System.out.println(loop1.MATRIX_K.toString(ToStringMode.UTF8));
+        System.out.println(loop1.MATRIX_K_INV.toString(ToStringMode.UTF8));
     }
 
     @Test
