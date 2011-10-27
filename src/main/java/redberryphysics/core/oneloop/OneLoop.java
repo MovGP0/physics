@@ -58,7 +58,7 @@ public class OneLoop {
     //temporary without symmetrization
     public static Tensor DELTA_1_SUB = CC.parse("-L*HATK^{\\mu}");
     public static Tensor DELTA_2 = CC.parse("DELTA^{\\mu\\nu}");
-    public static Tensor DELTA_2_SUB = CC.parse("-(1/2)*L*(L-1)*HATK^{\\mu\\nu}+L*L*HATK^{\\mu}*HATK^{\\nu}");
+    public static Tensor DELTA_2_SUB = CC.parse("-(1/2)*L*(L-1)*HATK^{\\mu\\nu}+L*L*HATK^{\\mu}*HATK^{\\nu}+L*L*HATK^{\\nu}*HATK^{\\mu}");
     public static Tensor DELTA_3 = CC.parse("DELTA^{\\mu\\nu\\alpha}");
     public static Tensor DELTA_3_SUB = CC.parse("-(1/6)*L*(L-1)*(L-2)*HATK^{\\mu\\nu\\alpha}+(1/12)*L*L*(L-1)*(HATK^{\\mu\\nu}*HATK^{\\alpha}+HATK^{\\mu\\alpha}*HATK^{\\nu}+HATK^{\\alpha\\nu}*HATK^{\\mu}+HATK^{\\nu\\mu}*HATK^{\\alpha}+HATK^{\\nu\\alpha}*HATK^{\\mu}+HATK^{\\alpha\\mu}*HATK^{\\nu})+(1/2)*L*L*(L-1)*HATK^{\\mu}*HATK^{\\nu}*HATK^{\\alpha}");
     public static Tensor DELTA_4 = CC.parse("DELTA^{\\mu\\nu\\alpha\\beta}");
@@ -84,7 +84,7 @@ public class OneLoop {
      */
     public static Tensor MATRIX_K_2 = CC.parse("K^{ij}_{pq}^{\\mu\\nu}");
     //K^{\\mu\\nu}^{ij}_{pq}
-    public static Tensor MATRIX_K_2_SUB = CC.parse("g^{\\mu\\nu}*((1/2)*(d^i_p*d^j_q+d^i_q*d^j_p)-(1/4)*g_{pq}*g^{ij}))");
+    public static Tensor MATRIX_K_2_SUB = CC.parse("g^{\\mu\\nu}*((1/2)*(d^i_p*d^j_q+d^i_q*d^j_p)-(1/4)*g_{pq}*g^{ij})");
     //KINV^{ij}_{pq}
     public static Tensor MATRIX_K_2_INV = CC.parse("KINV^{ij}_{pq}");
     public static Tensor MATRIX_K_2_INV_SUB = CC.parse("(1/2)*(d^i_p*d^j_q+d^i_q*d^j_p)-(1/4)*g_{pq}*g^{ij}+a*g_{pq}*g^{ij}");
@@ -152,7 +152,7 @@ public class OneLoop {
         HATK_1_SUB = Transformations.contractMetrics(HATK_1_SUB);
         HATK_2_SUB = Transformations.contractMetrics(HATK_2_SUB);
 
-        Transformation collect = new AbstractCollectTerms(new EqualsSplitCriteria());
+        Transformation collect = new AbstractCollectTerms(EqualsSplitCriteria.INSTANCE);
         HATK_1_SUB = collect.transform(HATK_1_SUB);
         HATK_2_SUB = collect.transform(HATK_2_SUB);
 
