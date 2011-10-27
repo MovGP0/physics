@@ -22,14 +22,13 @@ package redberryphysics.core.oneloop;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import redberry.core.tensor.Tensor;
-import redberry.core.transformation.Transformations;
-import redberry.core.transformation.collect.CollectFactory;
+import redberry.core.context.ToStringMode;
 
 /**
  *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
+ * @author Konstantin Kiselev
  */
 public class OneLoop1Test {
     public OneLoop1Test() {
@@ -46,7 +45,7 @@ public class OneLoop1Test {
     @Test
     public void testSomeMethod() {
         OneLoop1 loop1 = new OneLoop1();
-        System.out.println(loop1.HATK_1);
-        System.out.println(loop1.HATK_2);
+        System.out.println(loop1.HATK_1.toString(ToStringMode.UTF8));
+        System.out.println(loop1.HATK_2.toString(ToStringMode.UTF8));
     }
 }

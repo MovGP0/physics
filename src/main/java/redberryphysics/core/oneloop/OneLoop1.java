@@ -20,21 +20,18 @@
 package redberryphysics.core.oneloop;
 
 import redberry.core.context.CC;
+import redberry.core.indexgenerator.IndexGenerator;
 import redberry.core.parser.ParserIndexes;
 import redberry.core.tensor.Expression;
 import redberry.core.tensor.Tensor;
 import redberry.core.tensor.test.TTest;
+import redberry.core.transformation.CalculateNumbers;
 import redberry.core.transformation.ExpandBrackets;
 import redberry.core.transformation.IndexesInsertion;
 import redberry.core.transformation.Transformation;
 import redberry.core.transformation.Transformer;
 import redberry.core.transformation.collect.CollectFactory;
 import redberry.core.transformation.contractions.IndexesContractionsTransformation;
-import redberry.core.transformation.numbers.FractionToNumber;
-import redberry.core.transformation.numbers.MultiplyNumbers;
-import redberry.core.transformation.numbers.RemoveOneFromProduct;
-import redberry.core.transformation.numbers.RemoveZeroFromSum;
-import redberry.core.transformation.numbers.SumNumbers;
 import redberry.core.utils.Indicator;
 
 /**
@@ -43,8 +40,20 @@ import redberry.core.utils.Indicator;
  * @author Stanislav Poslavsky
  */
 public class OneLoop1 {
-    public final Expression COUNTERTERMS =
-            new Expression("G1 = Flat + WR + SR + SSR + FF + FR + RR ");
+    /*
+     * General definitions of auxilary tensors
+     */
+    public final Expression L = new Expression("L = 2");
+    public final Expression P =
+            new Expression("P^{\\alpha\\beta}_{\\mu\\nu} = (1/2)*(d^{\\alpha}_{\\mu}*d^{\\beta}_{\\nu}+d^{\\alpha}_{\\nu}*d^{\\beta}_{\\mu})-"
+            + "(1/4)*g_{\\mu\\nu}*g^{\\alpha\\beta}");
+    public final Expression KRONECKER_DIMENSION =
+            new Expression("d^{\\alpha}_{\\alpha} = 4");
+    /*
+     * Effective action section
+     */
+    public final Expression ACTION =
+            new Expression("ACTION = Flat + WR + SR + SSR + FF + FR + RR ");
     public final Expression RR =
             new Expression("RR = (1/10)*L*L*HATK^{\\delta}*DELTA^{\\mu\\nu\\alpha\\beta}*HATK^{\\gamma}*n_{\\sigma}*n_{\\lambda}*R^{\\sigma}_{\\alpha\\beta\\gamma}*R^{\\lambda}_{\\mu\\nu\\delta} + "
             + "L*L*(L-1)*(L-1)*(L-2)*HATK^{\\beta\\gamma\\delta}*DELTA^{\\alpha}*HATK^{\\mu\\nu}*n_{\\sigma}*n_{\\lambda}*((2/45)*R^{\\lambda}_{\\alpha\\delta\\nu}*R^{\\sigma}_{\\beta\\mu\\gamma}-(1/120)*R^{\\lambda}_{\\delta\\alpha\\nu}*R^{\\sigma}_{\\beta\\mu\\gamma}) + "
@@ -55,6 +64,10 @@ public class OneLoop1 {
             + "L*L*(L-1)*HATK^{\\gamma}*DELTA^{\\alpha\\beta}*HATK^{\\mu\\nu}*n_{\\lambda}*((1/20)*R_{\\alpha\\nu}*R^{\\lambda}_{\\gamma\\beta\\mu}+(1/20)*R_{\\alpha\\gamma}*R^{\\lambda}_{\\mu\\beta\\nu}+(1/10)*R_{\\alpha\\beta}*R^{\\lambda}_{\\mu\\gamma\\nu}+(1/20)*R^{\\sigma}_{\\alpha\\nu\\gamma}*R^{\\lambda}_{\\sigma\\beta\\mu}-(1/60)*R^{\\sigma}_{\\mu\\alpha\\nu}*R^{\\lambda}_{\\beta\\sigma\\gamma}+(1/10)*R^{\\sigma}_{\\alpha\\beta\\gamma}*R^{\\lambda}_{\\mu\\sigma\\nu}-(1/12)*R^{\\sigma}_{\\alpha\\beta\\nu}*R^{\\lambda}_{\\mu\\sigma\\gamma})+"
             + "L*L*(L-1)*(L-1)*HATK^{\\alpha\\beta}*DELTA^{\\gamma}*HATK^{\\mu\\nu}*n_{\\lambda}*((1/60)*R_{\\alpha\\mu}*R^{\\lambda}_{\\beta\\nu\\gamma}-(1/20)*R_{\\alpha\\mu}*R^{\\lambda}_{\\gamma\\nu\\beta}+(1/120)*R_{\\alpha\\beta}*R^{\\lambda}_{\\mu\\nu\\gamma}+(3/40)*R_{\\alpha\\gamma}*R^{\\lambda}_{\\nu\\beta\\mu}+(1/20)*R^{\\sigma}_{\\gamma\\mu\\alpha}*R^{\\lambda}_{\\nu\\sigma\\beta}+(1/120)*R^{\\sigma}_{\\alpha\\mu\\gamma}*R^{\\lambda}_{\\beta\\nu\\sigma}-(1/40)*R^{\\sigma}_{\\alpha\\mu\\gamma}*R^{\\lambda}_{\\sigma\\nu\\beta}+(1/40)*R^{\\sigma}_{\\alpha\\mu\\beta}*R^{\\lambda}_{\\sigma\\nu\\gamma}-(1/20)*R^{\\sigma}_{\\alpha\\mu\\beta}*R^{\\lambda}_{\\gamma\\nu\\sigma}-(1/40)*R^{\\sigma}_{\\mu\\beta\\nu}*R^{\\lambda}_{\\gamma\\sigma\\alpha})+"
             + "L*L*(L-1)*HATK^{\\alpha\\beta}*DELTA^{\\mu\\nu}*HATK^{\\gamma}*n_{\\lambda}*((1/20)*R^{\\sigma}_{\\mu\\nu\\beta}*R^{\\lambda}_{\\gamma\\sigma\\alpha}-(7/60)*R^{\\sigma}_{\\beta\\mu\\alpha}*R^{\\lambda}_{\\gamma\\nu\\sigma}+(1/20)*R^{\\sigma}_{\\beta\\mu\\alpha}*R^{\\lambda}_{\\sigma\\nu\\gamma}+(1/10)*R^{\\sigma}_{\\mu\\beta\\gamma}*R^{\\lambda}_{\\nu\\alpha\\sigma}+(1/60)*R^{\\sigma}_{\\mu\\beta\\gamma}*R^{\\lambda}_{\\alpha\\nu\\sigma}+(7/120)*R_{\\alpha\\beta}*R^{\\lambda}_{\\nu\\gamma\\mu}+(11/60)*R_{\\beta\\mu}*R^{\\lambda}_{\\nu\\alpha\\gamma})");
+    public final Expression[] TERMs = new Expression[]{RR};
+    /*
+     *Section for defining \Delta's 
+     */
     public final Expression DELTA_1 =
             new Expression("DELTA^{\\mu} = -L*HATK^{\\mu}");
     public final Expression DELTA_2 =
@@ -63,6 +76,10 @@ public class OneLoop1 {
             new Expression("DELTA^{\\mu\\nu\\alpha}=-(1/6)*L*(L-1)*(L-2)*HATK^{\\mu\\nu\\alpha}+(1/12)*L*L*(L-1)*(HATK^{\\mu\\nu}*HATK^{\\alpha}+HATK^{\\mu\\alpha}*HATK^{\\nu}+HATK^{\\alpha\\nu}*HATK^{\\mu}+HATK^{\\nu\\mu}*HATK^{\\alpha}+HATK^{\\nu\\alpha}*HATK^{\\mu}+HATK^{\\alpha\\mu}*HATK^{\\nu})+(1/2)*L*L*(L-1)*HATK^{\\mu}*HATK^{\\nu}*HATK^{\\alpha}");
     public final Expression DELTA_4 =
             new Expression("DELTA^{\\mu\\nu\\alpha\\beta} = DELTA^{\\mu\\nu\\alpha\\beta}");
+    private final Expression[] DELTAs = new Expression[]{DELTA_1, DELTA_2, DELTA_3, DELTA_4};
+    /*
+     *Section for defining \hat K's 
+     */
     public final Expression HATK_1 =
             new Expression("HATK^{\\mu} = KINV*K^{\\mu\\nu}*n_{\\nu}");
     public final Expression HATK_2 =
@@ -71,12 +88,15 @@ public class OneLoop1 {
             new Expression("HATK^{\\mu\\nu\\alpha} = HATK^{\\mu\\nu\\alpha}");
     public final Expression HATK_4 =
             new Expression("HATK^{\\mu\\nu\\alpha\\beta} = HATK^{\\mu\\nu\\alpha\\beta}");
+    /*
+     *Section for defining matrices 
+     */
     public final Expression MATRIX_K =
             new Expression("K^{ij}_{pq}^{\\mu\\nu} = g^{\\mu\\nu}*((1/2)*(d^i_p*d^j_q+d^i_q*d^j_p)-(1/4)*g_{pq}*g^{ij})");
     //KINV^{ij}_{pq}
     public final Expression MATRIX_K_INV =
             new Expression("KINV^{ij}_{pq} = (1/2)*(d^i_p*d^j_q+d^i_q*d^j_p)-(1/4)*g_{pq}*g^{ij}+a*g_{pq}*g^{ij}");
-    private final Expression[] HATK = new Expression[]{HATK_1, HATK_2, HATK_3, HATK_4};
+    private final Expression[] HATKs = new Expression[]{HATK_1, HATK_2, HATK_3, HATK_4};
     public final Indicator<Tensor> matrices = new Indicator<Tensor>() {
         public boolean is(Tensor tensor) {
             return TTest.testEqualstensorStructure(tensor, CC.parse("K^{\\mu\\nu}"))
@@ -85,8 +105,10 @@ public class OneLoop1 {
     };
 
     public OneLoop1() {
-        Transformation indexesInsertion = new IndexesInsertion(matrices, ParserIndexes.parse("^{ij}_{pq}"));
-        for (Expression hatK : HATK)
+        //generating free indexes
+
+        Transformation indexesInsertion = new IndexesInsertion(matrices, ParserIndexes.parse("^{ij}_{ij}"));
+        for (Expression hatK : HATKs)
             hatK.eval(
                     indexesInsertion,
                     MATRIX_K.asSubstitution(),
@@ -94,11 +116,10 @@ public class OneLoop1 {
                     new Transformer(ExpandBrackets.INSTANCE),
                     IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                     CollectFactory.createCollectEqualTerms(),
-                    new Transformer(
-                    MultiplyNumbers.INSTANCE,
-                    RemoveOneFromProduct.INSTANCE,
-                    SumNumbers.INSTANCE,
-                    RemoveZeroFromSum.INSTANCE,
-                    FractionToNumber.INSTANCE));
+                    CalculateNumbers.INSTANCE);
+        for (Expression delta : DELTAs)
+            delta.eval(L.asSubstitution(), CalculateNumbers.INSTANCE);
+        for (Expression termo : TERMs)
+            termo.eval(L.asSubstitution(), CalculateNumbers.INSTANCE);
     }
 }
