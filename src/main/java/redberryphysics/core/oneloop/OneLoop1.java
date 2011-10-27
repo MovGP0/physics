@@ -93,11 +93,12 @@ public class OneLoop1 {
             new Expression("HATK^{\\mu\\nu\\alpha} = HATK^{\\mu\\nu\\alpha}");
     public final Expression HATK_4 =
             new Expression("HATK^{\\mu\\nu\\alpha\\beta} = HATK^{\\mu\\nu\\alpha\\beta}");
+    private final Expression[] HATKs = new Expression[]{HATK_1, HATK_2, HATK_3, HATK_4};
     /*
-     *Section for defining matrices 
+     *Section for defining matricesIndicator 
      */
-//    public final Expression MATRIX_K =
-//            new Expression("K^{\\mu\\nu}^{ij}_{pq} = g^{\\mu\\nu}*((1/2)*(d^i_p*d^j_q+d^i_q*d^j_p)-(1/4)*g_{pq}*g^{ij})");
+    //public final Expression MATRIX_K =
+    //        new Expression("K^{\\mu\\nu}^{ij}_{pq} = g^{\\mu\\nu}*((1/2)*(d^i_p*d^j_q+d^i_q*d^j_p)-(1/4)*g_{pq}*g^{ij})");
     /*
      * The indexes ^{\\alpha\\beta}_{\\gamma\\delta} are the matrix indexes
      */
@@ -108,8 +109,8 @@ public class OneLoop1 {
             + "(1/4)*(g_{\\gamma\\delta}*g^{\\mu \\alpha}*g^{\\nu \\beta}+g_{\\gamma\\delta}*g^{\\mu \\beta}*g^{\\nu \\alpha})-"
             + "(1/4)*(g^{\\alpha\\beta}*d^{\\mu}_{\\gamma}*d^{\\nu}_{\\delta}+g^{\\alpha\\beta}*d^{\\mu}_{\\delta}*d^{\\nu}_{\\gamma})+(1/8)*g^{\\mu\\nu}*g_{\\gamma\\delta}*g^{\\alpha\\beta})");
     //KINV^{ij}_{pq}
-//    public final Expression MATRIX_K_INV =
-//            new Expression("KINV^{ij}_{pq} = (1/2)*(d^i_p*d^j_q+d^i_q*d^j_p)-(1/4)*g_{pq}*g^{ij}+a*g_{pq}*g^{ij}");
+    //public final Expression MATRIX_K_INV =
+    //       new Expression("KINV^{ij}_{pq} = (1/2)*(d^i_p*d^j_q+d^i_q*d^j_p)-(1/4)*g_{pq}*g^{ij}+a*g_{pq}*g^{ij}");
     /*
      * The indexes ^{\\alpha\\beta}_{\\mu\\nu} are the matrix indexes
      */
@@ -117,13 +118,6 @@ public class OneLoop1 {
             new Expression("KINV^{\\alpha\\beta}_{\\mu\\nu} = P^{\\alpha\\beta}_{\\mu\\nu}+a*g_{\\mu\\nu}*g^{\\alpha\\beta}+"
             + "(1/4)*b*(n_{\\mu}*n^{\\alpha}*d^{\\beta}_{\\nu}+n_{\\mu}*n^{\\beta}*d^{\\alpha}_{\\nu}+n_{\\nu}*n^{\\alpha}*d^{\\beta}_{\\mu})+n_{\\nu}*n^{\\beta}*d^{\\alpha}_{\\mu}+"
             + "c*(n_{\\mu}*n_{\\nu}*g^{\\alpha\\beta}+n^{\\alpha}*n^{\\beta}*g_{\\mu\\nu})+d*n_{\\mu}*n_{\\nu}*n^{\\alpha}*n^{\\beta}");
-    private final Expression[] HATKs = new Expression[]{HATK_1, HATK_2, HATK_3, HATK_4};
-    public final Indicator<Tensor> matrices = new Indicator<Tensor>() {
-        public boolean is(Tensor tensor) {
-            return TTest.testEqualstensorStructure(tensor, CC.parse("K^{\\mu\\nu}"))
-                    || TTest.testEqualstensorStructure(tensor, CC.parse("KINV"));
-        }
-    };
 
     private Indexes createInsertingIndexes(Expression[] expressions) {
         IndexGenerator generator = new IndexGenerator();
@@ -143,7 +137,8 @@ public class OneLoop1 {
     }
 
     public OneLoop1() {
-        Transformation indexesInsertion = new IndexesInsertion(matrices, createInsertingIndexes(HATKs));
+        Transformation indexesInsertion;
+        indexesInsertion = new IndexesInsertion(matricesIndicator, createInsertingIndexes(HATKs));
         for (Expression hatK : HATKs)
             hatK.eval(
                     indexesInsertion,
@@ -157,9 +152,34 @@ public class OneLoop1 {
                     CalculateNumbers.INSTANCE,
                     CollectFactory.ccreateCollectAllScalars(),
                     CalculateNumbers.INSTANCE);
+
+        indexesInsertion = new IndexesInsertion(matricesIndicator, createInsertingIndexes(DELTAs));
         for (Expression delta : DELTAs)
-            delta.eval(L.asSubstitution(), CalculateNumbers.INSTANCE);
+            delta.eval(
+                    indexesInsertion,
+                    L.asSubstitution(),
+                    CalculateNumbers.INSTANCE);
+
+
         for (Expression termo : TERMs)
             termo.eval(L.asSubstitution(), CalculateNumbers.INSTANCE);
     }
+    public static final Tensor[] MATRICES = new Tensor[]{
+        CC.parse("K^{\\mu\\nu}"),
+        CC.parse("KINV"),
+        CC.parse("HATK"),
+        CC.parse("HATK^{\\mu}"),
+        CC.parse("HATK^{\\mu\\nu}"),
+        CC.parse("HATK^{\\mu\\nu\\alpha}"),
+        CC.parse("DELTA^{\\mu}"),
+        CC.parse("DELTA^{\\mu\\nu}"),
+        CC.parse("DELTA^{\\mu\\nu\\alpha}")};
+    public final Indicator<Tensor> matricesIndicator = new Indicator<Tensor>() {
+        public boolean is(Tensor tensor) {
+            for (Tensor m : MATRICES)
+                if (TTest.testEqualstensorStructure(tensor, m))
+                    return true;
+            return false;
+        }
+    };
 }
