@@ -23,9 +23,7 @@ import redberry.core.context.CC;
 import redberry.core.indexes.IndexType;
 import redberry.core.indexes.Indexes;
 import redberry.core.indexes.IndexesFactory;
-import redberry.core.indexes.SimpleIndexesImpl;
 import redberry.core.indexgenerator.IndexGenerator;
-import redberry.core.parser.ParserIndexes;
 import redberry.core.tensor.Expression;
 import redberry.core.tensor.Tensor;
 import redberry.core.tensor.test.TTest;
@@ -37,6 +35,7 @@ import redberry.core.transformation.Transformer;
 import redberry.core.transformation.collect.CollectFactory;
 import redberry.core.transformation.contractions.IndexesContractionsTransformation;
 import redberry.core.utils.Indicator;
+import static redberryphysics.util.IndexesFactoryUtil.*;
 
 /**
  *
@@ -118,27 +117,23 @@ public class OneLoop1 {
             new Expression("KINV^{\\alpha\\beta}_{\\mu\\nu} = P^{\\alpha\\beta}_{\\mu\\nu}+a*g_{\\mu\\nu}*g^{\\alpha\\beta}+"
             + "(1/4)*b*(n_{\\mu}*n^{\\alpha}*d^{\\beta}_{\\nu}+n_{\\mu}*n^{\\beta}*d^{\\alpha}_{\\nu}+n_{\\nu}*n^{\\alpha}*d^{\\beta}_{\\mu})+n_{\\nu}*n^{\\beta}*d^{\\alpha}_{\\mu}+"
             + "c*(n_{\\mu}*n_{\\nu}*g^{\\alpha\\beta}+n^{\\alpha}*n^{\\beta}*g_{\\mu\\nu})+d*n_{\\mu}*n_{\\nu}*n^{\\alpha}*n^{\\beta}");
-
-    private Indexes createInsertingIndexes(Expression[] expressions) {
-        IndexGenerator generator = new IndexGenerator();
-        Indexes expIndexes;
-        int i;
-        for (Expression exp : expressions) {
-            expIndexes = exp.getIndexes();
-            for (i = 0; i < expIndexes.size(); ++i)
-                generator.add(expIndexes.get(i));
-        }
-        int[] i_array = new int[4];
-        i_array[2] = generator.generate(IndexType.GreekLower.getId());
-        i_array[3] = generator.generate(IndexType.GreekLower.getId());
-        i_array[0] = 0x80000000 ^ i_array[2];
-        i_array[1] = 0x80000000 ^ i_array[3];
-        return IndexesFactory.create(i_array);
-    }
+    /*
+     * Collecting all matrices in expressions together
+     */
+    public static final Tensor[] MATRICES = new Tensor[]{
+        CC.parse("K^{\\mu\\nu}"),
+        CC.parse("KINV"),
+        CC.parse("HATK"),
+        CC.parse("HATK^{\\mu}"),
+        CC.parse("HATK^{\\mu\\nu}"),
+        CC.parse("HATK^{\\mu\\nu\\alpha}"),
+        CC.parse("DELTA^{\\mu}"),
+        CC.parse("DELTA^{\\mu\\nu}"),
+        CC.parse("DELTA^{\\mu\\nu\\alpha}")};
 
     public OneLoop1() {
         Transformation indexesInsertion;
-        indexesInsertion = new IndexesInsertion(matricesIndicator, createInsertingIndexes(HATKs));
+        indexesInsertion = new IndexesInsertion(matricesIndicator, createIndexes(HATKs, "^{\\mu\\nu}_{\\alpha\\beta}"));
         for (Expression hatK : HATKs)
             hatK.eval(
                     indexesInsertion,
@@ -153,27 +148,17 @@ public class OneLoop1 {
                     CollectFactory.ccreateCollectAllScalars(),
                     CalculateNumbers.INSTANCE);
 
-        indexesInsertion = new IndexesInsertion(matricesIndicator, createInsertingIndexes(DELTAs));
-        for (Expression delta : DELTAs)
-            delta.eval(
-                    indexesInsertion,
-                    L.asSubstitution(),
-                    CalculateNumbers.INSTANCE);
+        indexesInsertion = new IndexesInsertion(matricesIndicator, createIndexes(DELTAs, "^{\\mu\\nu}_{\\alpha\\beta}"));
+//        for (Expression delta : DELTAs)
+//            delta.eval(
+//                    indexesInsertion,
+//                    L.asSubstitution(),
+//                    CalculateNumbers.INSTANCE);
 
 
         for (Expression termo : TERMs)
             termo.eval(L.asSubstitution(), CalculateNumbers.INSTANCE);
     }
-    public static final Tensor[] MATRICES = new Tensor[]{
-        CC.parse("K^{\\mu\\nu}"),
-        CC.parse("KINV"),
-        CC.parse("HATK"),
-        CC.parse("HATK^{\\mu}"),
-        CC.parse("HATK^{\\mu\\nu}"),
-        CC.parse("HATK^{\\mu\\nu\\alpha}"),
-        CC.parse("DELTA^{\\mu}"),
-        CC.parse("DELTA^{\\mu\\nu}"),
-        CC.parse("DELTA^{\\mu\\nu\\alpha}")};
     public final Indicator<Tensor> matricesIndicator = new Indicator<Tensor>() {
         public boolean is(Tensor tensor) {
             for (Tensor m : MATRICES)
