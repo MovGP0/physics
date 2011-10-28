@@ -35,7 +35,7 @@ import redberry.core.transformation.Transformer;
 import redberry.core.transformation.collect.CollectFactory;
 import redberry.core.transformation.contractions.IndexesContractionsTransformation;
 import redberry.core.utils.Indicator;
-import static redberryphysics.util.IndexesFactoryUtil.*;
+import static redberryphysics.core.util.IndexesFactoryUtil.*;
 
 /**
  *
@@ -80,7 +80,7 @@ public class OneLoop1 {
             new Expression("DELTA^{\\mu\\nu\\alpha}=-(1/6)*L*(L-1)*(L-2)*HATK^{\\mu\\nu\\alpha}+(1/12)*L*L*(L-1)*(HATK^{\\mu\\nu}*HATK^{\\alpha}+HATK^{\\mu\\alpha}*HATK^{\\nu}+HATK^{\\alpha\\nu}*HATK^{\\mu}+HATK^{\\nu\\mu}*HATK^{\\alpha}+HATK^{\\nu\\alpha}*HATK^{\\mu}+HATK^{\\alpha\\mu}*HATK^{\\nu})+(1/2)*L*L*(L-1)*HATK^{\\mu}*HATK^{\\nu}*HATK^{\\alpha}");
     public final Expression DELTA_4 =
             new Expression("DELTA^{\\mu\\nu\\alpha\\beta} = DELTA^{\\mu\\nu\\alpha\\beta}");
-    private final Expression[] DELTAs = new Expression[]{DELTA_1, DELTA_2, DELTA_3, DELTA_4};
+    public final Expression[] DELTAs = new Expression[]{DELTA_1, DELTA_2, DELTA_3, DELTA_4};
     /*
      *Section for defining \hat K's 
      */
@@ -94,11 +94,6 @@ public class OneLoop1 {
             new Expression("HATK^{\\mu\\nu\\alpha\\beta} = HATK^{\\mu\\nu\\alpha\\beta}");
     private final Expression[] HATKs = new Expression[]{HATK_1, HATK_2, HATK_3, HATK_4};
     /*
-     *Section for defining matricesIndicator 
-     */
-    //public final Expression MATRIX_K =
-    //        new Expression("K^{\\mu\\nu}^{ij}_{pq} = g^{\\mu\\nu}*((1/2)*(d^i_p*d^j_q+d^i_q*d^j_p)-(1/4)*g_{pq}*g^{ij})");
-    /*
      * The indexes ^{\\alpha\\beta}_{\\gamma\\delta} are the matrix indexes
      */
     public final Expression MATRIX_K =
@@ -107,9 +102,6 @@ public class OneLoop1 {
             + "(1/4)*(d^{\\nu}_{\\gamma}*g^{\\alpha \\mu}*d^{\\beta}_{\\delta} + d^{\\nu}_{\\delta}*g^{\\alpha \\mu}*d^{\\beta}_{\\gamma}+d^{\\nu}_{\\gamma}*g^{\\beta \\mu}*d^{\\alpha}_{\\delta}+ d^{\\nu}_{\\delta}*g^{\\beta \\mu}*d^{\\alpha}_{\\gamma}) -"
             + "(1/4)*(g_{\\gamma\\delta}*g^{\\mu \\alpha}*g^{\\nu \\beta}+g_{\\gamma\\delta}*g^{\\mu \\beta}*g^{\\nu \\alpha})-"
             + "(1/4)*(g^{\\alpha\\beta}*d^{\\mu}_{\\gamma}*d^{\\nu}_{\\delta}+g^{\\alpha\\beta}*d^{\\mu}_{\\delta}*d^{\\nu}_{\\gamma})+(1/8)*g^{\\mu\\nu}*g_{\\gamma\\delta}*g^{\\alpha\\beta})");
-    //KINV^{ij}_{pq}
-    //public final Expression MATRIX_K_INV =
-    //       new Expression("KINV^{ij}_{pq} = (1/2)*(d^i_p*d^j_q+d^i_q*d^j_p)-(1/4)*g_{pq}*g^{ij}+a*g_{pq}*g^{ij}");
     /*
      * The indexes ^{\\alpha\\beta}_{\\mu\\nu} are the matrix indexes
      */
@@ -148,11 +140,22 @@ public class OneLoop1 {
                     CollectFactory.ccreateCollectAllScalars(),
                     CalculateNumbers.INSTANCE);
 
-        indexesInsertion = new IndexesInsertion(matricesIndicator, createIndexes(DELTAs, "^{\\mu\\nu}_{\\alpha\\beta}"));
+//        indexesInsertion = new IndexesInsertion(matricesIndicator, createIndexes(DELTAs, "^{\\mu\\nu}_{\\alpha\\beta}"));
 //        for (Expression delta : DELTAs)
 //            delta.eval(
 //                    indexesInsertion,
 //                    L.asSubstitution(),
+//                    CalculateNumbers.INSTANCE,
+//                    HATK_1.asSubstitution(),
+//                    HATK_2.asSubstitution(),
+//                    HATK_3.asSubstitution(),
+//                    HATK_4.asSubstitution(),
+//                    new Transformer(ExpandBrackets.INSTANCE),
+//                    IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+//                    KRONECKER_DIMENSION.asSubstitution(),
+//                    CollectFactory.createCollectEqualTerms(),
+//                    CalculateNumbers.INSTANCE,
+//                    CollectFactory.ccreateCollectAllScalars(),
 //                    CalculateNumbers.INSTANCE);
 
 

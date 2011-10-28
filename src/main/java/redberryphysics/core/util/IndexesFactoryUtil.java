@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package redberryphysics.util;
+package redberryphysics.core.util;
 
 import redberry.core.indexes.Indexes;
 import redberry.core.indexes.IndexesFactory;

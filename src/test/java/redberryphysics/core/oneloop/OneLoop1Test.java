@@ -21,12 +21,17 @@ package redberryphysics.core.oneloop;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import redberry.core.context.CC;
 import redberry.core.context.ToStringMode;
-import redberry.core.parser.ParserIndexes;
-import redberry.core.tensor.Tensor;
+import redberry.core.tensor.MultiTensor;
+import redberry.core.transformation.CalculateNumbers;
+import redberry.core.transformation.ExpandBrackets;
 import redberry.core.transformation.IndexesInsertion;
-import redberry.core.utils.Indicator;
+import redberry.core.transformation.Transformer;
+import redberry.core.transformation.collect.CollectFactory;
+import redberry.core.transformation.contractions.IndexesContractionsTransformation;
+import redberryphysics.core.util.IndexesFactoryUtil;
+import redberryphysics.core.util.ParallelCollect;
+import static core.TAssert.*;
 
 /**
  *
@@ -37,22 +42,69 @@ import redberry.core.utils.Indicator;
 public class OneLoop1Test {
     public OneLoop1Test() {
     }
-
+    
     @BeforeClass
     public static void setUpClass() throws Exception {
     }
+//
+//    @Test
+//    public void test() {
+//        OneLoop1 loop1 = new OneLoop1();
+//        System.out.println(loop1.MATRIX_K.toString(ToStringMode.UTF8));
+//        System.out.println(loop1.MATRIX_K_INV.toString(ToStringMode.UTF8));
+//    }
+//
+//    @Test
+//    public void test1() {
+//        OneLoop1 loop1 = new OneLoop1();
+//        System.out.println(loop1.HATK_1.toString(ToStringMode.UTF8));
+//        System.out.println(loop1.HATK_2.toString(ToStringMode.UTF8));
+//        System.out.println(loop1.DELTA_1.toString(ToStringMode.UTF8));
+//        System.out.println(loop1.DELTA_2.toString(ToStringMode.UTF8));
+//    }
 
     @Test
-    public void test() {
+    public void test2() {
         OneLoop1 loop1 = new OneLoop1();
-        System.out.println(loop1.MATRIX_K.toString(ToStringMode.UTF8));
-        System.out.println(loop1.MATRIX_K_INV.toString(ToStringMode.UTF8));
-    }
-
-    @Test
-    public void test1() {
-        OneLoop1 loop1 = new OneLoop1();
-        System.out.println(loop1.HATK_1.toString(ToStringMode.UTF8));
-        System.out.println(loop1.HATK_2.toString(ToStringMode.UTF8));
+        IndexesInsertion indexesInsertion = new IndexesInsertion(loop1.matricesIndicator, IndexesFactoryUtil.createIndexes(loop1.DELTAs, "^{\\mu\\nu}_{\\alpha\\beta}"));
+        
+        loop1.DELTA_2.eval(
+                indexesInsertion,
+                loop1.L.asSubstitution(),
+                CalculateNumbers.INSTANCE);
+        
+        System.out.println("HATK subs ... ");
+        loop1.DELTA_2.eval(
+                loop1.HATK_1.asSubstitution(),
+                loop1.HATK_2.asSubstitution(),
+                loop1.HATK_3.asSubstitution(),
+                loop1.HATK_4.asSubstitution());
+        System.out.println("HATK subs ... done");
+        
+        System.out.println("Expand brackets ...");
+        loop1.DELTA_2.eval(
+                new Transformer(ExpandBrackets.INSTANCE));
+        System.out.println("Expand brackets ... done");
+        
+        System.out.println("Indexes contractions ...");
+        loop1.DELTA_2.eval(
+                IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                loop1.KRONECKER_DIMENSION.asSubstitution(),
+                CalculateNumbers.INSTANCE);
+        System.out.println("Indexes contractions ... done");
+        assertIndexes(loop1.DELTA_2.right());
+        System.out.println("Collecting " + ((MultiTensor) loop1.DELTA_2.right()).size() + " elements ...");
+        loop1.DELTA_2.eval(
+                ParallelCollect.INSTANCE);
+        System.out.println("Collecting ... done: new size" + ((MultiTensor) loop1.DELTA_2.right()).size());
+        
+        System.out.println("Scalars ...");
+        loop1.DELTA_2.eval(
+                CalculateNumbers.INSTANCE,
+                CollectFactory.ccreateCollectAllScalars(),
+                CalculateNumbers.INSTANCE);
+        System.out.println("Scalars ... done");
+        
+        System.out.println(loop1.DELTA_1.toString(ToStringMode.UTF8));
     }
 }

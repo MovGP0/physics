@@ -17,8 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package redberryphysics.util;
+package redberryphysics.core.util;
 
+import redberryphysics.core.util.IndexesFactoryUtil;
 import org.junit.Test;
 import redberry.core.parser.ParserIndexes;
 import redberry.core.tensor.Tensor;
