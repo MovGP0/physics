@@ -123,7 +123,31 @@ public class OneLoop1 {
         CC.parse("DELTA^{\\mu\\nu}"),
         CC.parse("DELTA^{\\mu\\nu\\alpha}")};
 
-    public OneLoop1() {
+    public static enum EVAL {
+        INITIALIZE,
+        EVAL_HATK,
+        EVAL_HATK_DELTA,
+        EVAL_ALL
+    }
+
+    private OneLoop1() {
+    }
+
+    public OneLoop1(EVAL eval) {
+        switch (eval) {
+            case INITIALIZE:
+                break;
+            case EVAL_HATK:
+                evalHatK();
+                break;
+            case EVAL_HATK_DELTA:
+                evalHatK();
+                evalDelta();
+                break;
+        }
+    }
+
+    public final void evalHatK() {
         Transformation indexesInsertion;
         indexesInsertion = new IndexesInsertion(matricesIndicator, createIndexes(HATKs, "^{\\mu\\nu}_{\\alpha\\beta}"));
         for (Expression hatK : HATKs)
@@ -132,35 +156,37 @@ public class OneLoop1 {
                     MATRIX_K.asSubstitution(),
                     MATRIX_K_INV.asSubstitution(),
                     P.asSubstitution(),
-                    new Transformer(ExpandBrackets.INSTANCE),
+                    new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
                     IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                     KRONECKER_DIMENSION.asSubstitution(),
                     CollectFactory.createCollectEqualTerms(),
                     CalculateNumbers.INSTANCE,
                     CollectFactory.ccreateCollectAllScalars(),
                     CalculateNumbers.INSTANCE);
+    }
 
-//        indexesInsertion = new IndexesInsertion(matricesIndicator, createIndexes(DELTAs, "^{\\mu\\nu}_{\\alpha\\beta}"));
-//        for (Expression delta : DELTAs)
-//            delta.eval(
-//                    indexesInsertion,
-//                    L.asSubstitution(),
-//                    CalculateNumbers.INSTANCE,
-//                    HATK_1.asSubstitution(),
-//                    HATK_2.asSubstitution(),
-//                    HATK_3.asSubstitution(),
-//                    HATK_4.asSubstitution(),
-//                    new Transformer(ExpandBrackets.INSTANCE),
-//                    IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
-//                    KRONECKER_DIMENSION.asSubstitution(),
-//                    CollectFactory.createCollectEqualTerms(),
-//                    CalculateNumbers.INSTANCE,
-//                    CollectFactory.ccreateCollectAllScalars(),
-//                    CalculateNumbers.INSTANCE);
+    public final void evalDelta() {
+        Transformation indexesInsertion;
+        indexesInsertion = new IndexesInsertion(matricesIndicator, createIndexes(DELTAs, "^{\\mu\\nu}_{\\alpha\\beta}"));
+        for (Expression delta : DELTAs)
+            delta.eval(
+                    indexesInsertion,
+                    L.asSubstitution(),
+                    CalculateNumbers.INSTANCE,
+                    HATK_1.asSubstitution(),
+                    HATK_2.asSubstitution(),
+                    HATK_3.asSubstitution(),
+                    HATK_4.asSubstitution(),
+                    new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
+                    IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                    KRONECKER_DIMENSION.asSubstitution(),
+                    CollectFactory.createCollectEqualTerms(),
+                    CalculateNumbers.INSTANCE,
+                    CollectFactory.ccreateCollectAllScalars(),
+                    CalculateNumbers.INSTANCE);
+    }
 
-
-        for (Expression termo : TERMs)
-            termo.eval(L.asSubstitution(), CalculateNumbers.INSTANCE);
+    public final void evalAll() {
     }
     public final Indicator<Tensor> matricesIndicator = new Indicator<Tensor>() {
         public boolean is(Tensor tensor) {

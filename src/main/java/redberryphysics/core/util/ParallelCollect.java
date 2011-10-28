@@ -29,6 +29,7 @@ import redberry.core.transformation.collect.CollectFactory;
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
+@Deprecated
 public class ParallelCollect implements Transformation {
     public static final ParallelCollect INSTANCE = new ParallelCollect();
 
