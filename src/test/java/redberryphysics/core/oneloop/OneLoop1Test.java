@@ -19,6 +19,8 @@
  */
 package redberryphysics.core.oneloop;
 
+import redberry.core.tensor.Tensor;
+import redberry.core.tensor.Sum;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import redberry.core.context.ToStringMode;
@@ -42,7 +44,7 @@ import static core.TAssert.*;
 public class OneLoop1Test {
     public OneLoop1Test() {
     }
-    
+
     @BeforeClass
     public static void setUpClass() throws Exception {
     }
@@ -67,12 +69,12 @@ public class OneLoop1Test {
     public void test2() {
         OneLoop1 loop1 = new OneLoop1();
         IndexesInsertion indexesInsertion = new IndexesInsertion(loop1.matricesIndicator, IndexesFactoryUtil.createIndexes(loop1.DELTAs, "^{\\mu\\nu}_{\\alpha\\beta}"));
-        
+
         loop1.DELTA_2.eval(
                 indexesInsertion,
                 loop1.L.asSubstitution(),
                 CalculateNumbers.INSTANCE);
-        
+
         System.out.println("HATK subs ... ");
         loop1.DELTA_2.eval(
                 loop1.HATK_1.asSubstitution(),
@@ -80,12 +82,12 @@ public class OneLoop1Test {
                 loop1.HATK_3.asSubstitution(),
                 loop1.HATK_4.asSubstitution());
         System.out.println("HATK subs ... done");
-        
+
         System.out.println("Expand brackets ...");
         loop1.DELTA_2.eval(
                 new Transformer(ExpandBrackets.INSTANCE));
         System.out.println("Expand brackets ... done");
-        
+
         System.out.println("Indexes contractions ...");
         loop1.DELTA_2.eval(
                 IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
@@ -94,17 +96,25 @@ public class OneLoop1Test {
         System.out.println("Indexes contractions ... done");
         assertIndexes(loop1.DELTA_2.right());
         System.out.println("Collecting " + ((MultiTensor) loop1.DELTA_2.right()).size() + " elements ...");
+        Sum sum = new Sum();
+        int count = 0;
+        for (Tensor t : loop1.DELTA_2.right()) {
+            sum.add(t);
+            if (count++ >= 1000)
+                break;
+        }
+        loop1.DELTA_2.setRight(sum);
         loop1.DELTA_2.eval(
-                ParallelCollect.INSTANCE);
-        System.out.println("Collecting ... done: new size" + ((MultiTensor) loop1.DELTA_2.right()).size());
-        
+               CollectFactory.createCollectEqualTerms());
+        System.out.println("Collecting ... done. The new size: " + ((MultiTensor) loop1.DELTA_2.right()).size());
+
         System.out.println("Scalars ...");
         loop1.DELTA_2.eval(
                 CalculateNumbers.INSTANCE,
                 CollectFactory.ccreateCollectAllScalars(),
                 CalculateNumbers.INSTANCE);
         System.out.println("Scalars ... done");
-        
-        System.out.println(loop1.DELTA_1.toString(ToStringMode.UTF8));
+
+        System.out.println(loop1.DELTA_2.toString(ToStringMode.UTF8));
     }
 }

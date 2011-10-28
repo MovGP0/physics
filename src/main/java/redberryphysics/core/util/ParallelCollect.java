@@ -41,7 +41,7 @@ public class ParallelCollect implements Transformation {
             return tensor;
         Sum sum = (Sum) tensor;
         int size = sum.size();
-        if (size < 10000)
+        if (size < 1000)
             return CollectFactory.createCollectEqualTerms().transform(sum);
         int subSize = size / 2;
         Sum subSum1 = new Sum();
@@ -54,11 +54,11 @@ public class ParallelCollect implements Transformation {
                 subSum2.add(t);
             count++;
         }
-        Thread[] threads = new Thread[2];
+        ParallelCollectWorker[] threads = new ParallelCollectWorker[2];
 
         Sum[] parts = new Sum[]{subSum1, subSum2};
         for (int i = 0; i < 2; i++) {
-            Thread t = new ParallelCollectWorker(parts[i], i);
+            ParallelCollectWorker t = new ParallelCollectWorker(parts[i], i);
             t.start();
             threads[i] = t;
         }
@@ -68,16 +68,16 @@ public class ParallelCollect implements Transformation {
                 threads[i].join();
             } catch (InterruptedException ex) {
             }
-
+        
         Sum fin = new Sum();
-        fin.add(subSum1);
-        fin.add(subSum2);
+        fin.add(threads[0].toCollect.equivalent());
+        fin.add(threads[1].toCollect.equivalent());
         return CollectFactory.createCollectEqualTerms().transform(fin);
     }
 
     private static class ParallelCollectWorker extends Thread {
         private int index;
-        private Tensor toCollect;
+        public Tensor toCollect;
 
         public ParallelCollectWorker(Tensor toCollect, int index) {
             this.index = index;
