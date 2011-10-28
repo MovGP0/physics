@@ -37,6 +37,11 @@ public class TAssert {
         assertTrue(TensorUtils.testIndexesConsistent(tensor));
     }
 
+    public static void assertIndexes(Tensor[] tensors) {
+        for (Tensor tensor : tensors)
+            assertTrue(TensorUtils.testIndexesConsistent(tensor));
+    }
+
     public static void assertIndexesParity(Tensor... tensors) {
         for (int i = 1; i < tensors.length; ++i)
             assertTrue(tensors[0].getIndexes().equalsIgnoreOrder(tensors[i].getIndexes()));

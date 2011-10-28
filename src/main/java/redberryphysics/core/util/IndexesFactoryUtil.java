@@ -25,6 +25,7 @@ import redberry.core.indexes.IndexesStructure;
 import redberry.core.indexgenerator.IndexGenerator;
 import redberry.core.parser.ParserIndexes;
 import redberry.core.tensor.Tensor;
+import redberry.core.utils.TensorUtils;
 
 /**
  *
@@ -34,13 +35,11 @@ import redberry.core.tensor.Tensor;
 public class IndexesFactoryUtil {
     public static Indexes createIndexes(Tensor[] used_expressions, IndexesStructure indexesStructure) {
         IndexGenerator generator = new IndexGenerator();
-        Indexes expIndexes;
         int i;
-        for (Tensor exp : used_expressions) {
-            expIndexes = exp.getIndexes();
-            for (i = 0; i < expIndexes.size(); ++i)
-                generator.add(expIndexes.get(i));
-        }
+        Indexes expIndexes = TensorUtils.getAllIndexes(used_expressions);
+        for (i = 0; i < expIndexes.size(); ++i)
+            generator.add(expIndexes.get(i));
+
         int[] i_array = new int[indexesStructure.size()];
         byte type;
         for (i = 0; i < indexesStructure.size(); ++i) {

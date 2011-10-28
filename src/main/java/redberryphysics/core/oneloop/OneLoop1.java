@@ -19,18 +19,17 @@
  */
 package redberryphysics.core.oneloop;
 
+import redberry.core.transformation.substitutions.TensorTreeIndicatorImpl;
 import redberry.core.context.CC;
-import redberry.core.indexes.IndexType;
-import redberry.core.indexes.Indexes;
-import redberry.core.indexes.IndexesFactory;
-import redberry.core.indexgenerator.IndexGenerator;
 import redberry.core.tensor.Expression;
 import redberry.core.tensor.Tensor;
 import redberry.core.tensor.test.TTest;
 import redberry.core.transformation.CalculateNumbers;
 import redberry.core.transformation.ExpandBrackets;
 import redberry.core.transformation.IndexesInsertion;
+import redberry.core.transformation.RenameConflictingIndexes;
 import redberry.core.transformation.Transformation;
+import redberry.core.transformation.Transformations;
 import redberry.core.transformation.Transformer;
 import redberry.core.transformation.collect.CollectFactory;
 import redberry.core.transformation.contractions.IndexesContractionsTransformation;
@@ -53,6 +52,13 @@ public class OneLoop1 {
             + "(1/4)*g_{\\mu\\nu}*g^{\\alpha\\beta}");
     public final Expression KRONECKER_DIMENSION =
             new Expression("d^{\\alpha}_{\\alpha} = 4");
+    /*
+     * Additional input
+     */
+    public final Expression RICCI =
+            new Expression("R_{\\mu\\nu} = -g_{\\mu\\nu}*LAMBDA");
+    public final Expression RIMAN =
+            new Expression("R_{\\mu\\nu\\alpha\\beta} = (1/3)*(g_{\\mu\\beta}*g_{\\alpha\\nu}-g_{\\mu\\nu}*g_{\\alpha\\beta})*LAMBDA");
     /*
      * Effective action section
      */
@@ -79,7 +85,7 @@ public class OneLoop1 {
     public final Expression DELTA_3 =
             new Expression("DELTA^{\\mu\\nu\\alpha}=-(1/6)*L*(L-1)*(L-2)*HATK^{\\mu\\nu\\alpha}+(1/12)*L*L*(L-1)*(HATK^{\\mu\\nu}*HATK^{\\alpha}+HATK^{\\mu\\alpha}*HATK^{\\nu}+HATK^{\\alpha\\nu}*HATK^{\\mu}+HATK^{\\nu\\mu}*HATK^{\\alpha}+HATK^{\\nu\\alpha}*HATK^{\\mu}+HATK^{\\alpha\\mu}*HATK^{\\nu})+(1/2)*L*L*(L-1)*HATK^{\\mu}*HATK^{\\nu}*HATK^{\\alpha}");
     public final Expression DELTA_4 =
-            new Expression("DELTA^{\\mu\\nu\\alpha\\beta} = DELTA^{\\mu\\nu\\alpha\\beta}");
+            new Expression("DELTA^{\\mu\\nu\\alpha\\beta} = (1/4)*L*L*(L-1)*(L-1)*HATK^{\\mu\\nu}*HATK^{\\alpha\\beta}");
     public final Expression[] DELTAs = new Expression[]{DELTA_1, DELTA_2, DELTA_3, DELTA_4};
     /*
      *Section for defining \hat K's 
@@ -121,7 +127,8 @@ public class OneLoop1 {
         CC.parse("HATK^{\\mu\\nu\\alpha}"),
         CC.parse("DELTA^{\\mu}"),
         CC.parse("DELTA^{\\mu\\nu}"),
-        CC.parse("DELTA^{\\mu\\nu\\alpha}")};
+        CC.parse("DELTA^{\\mu\\nu\\alpha}"),
+        CC.parse("DELTA^{\\mu\\nu\\alpha\\beta}")};
 
     public static enum EVAL {
         INITIALIZE,
@@ -142,8 +149,23 @@ public class OneLoop1 {
                 break;
             case EVAL_HATK_DELTA:
                 evalHatK();
-                evalDelta();
+                evalHatKDelta();
                 break;
+            case EVAL_ALL:
+                evalRR();
+                evalDeltas();
+                for (Expression delta : DELTAs)
+                    RR.eval(delta.asSubstitution());
+                RR.eval(
+                        new Transformer(RenameConflictingIndexes.INSTANCE),
+//                        IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC
+//                        KRONECKER_DIMENSION.asSubstitution(),
+//                        CalculateNumbers.INSTANCE,
+//                        new Transformer(RenameConflictingIndexes.INSTANCE),
+                        new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS)
+//                        CollectFactory.createCollectEqualTerms(),
+//                        CalculateNumbers.INSTANCE
+                        );
         }
     }
 
@@ -165,7 +187,7 @@ public class OneLoop1 {
                     CalculateNumbers.INSTANCE);
     }
 
-    public final void evalDelta() {
+    public final void evalHatKDelta() {
         Transformation indexesInsertion;
         indexesInsertion = new IndexesInsertion(matricesIndicator, createIndexes(DELTAs, "^{\\mu\\nu}_{\\alpha\\beta}"));
         for (Expression delta : DELTAs)
@@ -186,14 +208,45 @@ public class OneLoop1 {
                     CalculateNumbers.INSTANCE);
     }
 
-    public final void evalAll() {
+    public final void evalDeltas() {
+        Transformation indexesInsertion;
+        indexesInsertion = new IndexesInsertion(matricesIndicator, createIndexes(DELTAs, "^{\\mu\\nu}_{\\alpha\\beta}"));
+        for (Expression delta : DELTAs)
+            delta.eval(
+                    indexesInsertion,
+                    L.asSubstitution(),
+                    CalculateNumbers.INSTANCE,
+                    new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
+                    IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                    KRONECKER_DIMENSION.asSubstitution(),
+                    CollectFactory.createCollectEqualTerms(),
+                    CalculateNumbers.INSTANCE,
+                    CollectFactory.ccreateCollectAllScalars(),
+                    CalculateNumbers.INSTANCE);
     }
-    public final Indicator<Tensor> matricesIndicator = new Indicator<Tensor>() {
+
+    public final void evalRR() {
+        Transformation indexesInsertion;
+        indexesInsertion = new IndexesInsertion(matricesIndicator, doubleAndDumpIndexes(createIndexes(TERMs, "^{\\mu\\nu}")));
+        RR.eval(
+                indexesInsertion,
+                L.asSubstitution(),
+                CalculateNumbers.INSTANCE,
+                RICCI.asSubstitution(),
+                RIMAN.asSubstitution(),
+                new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
+                IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                KRONECKER_DIMENSION.asSubstitution(),
+                CalculateNumbers.INSTANCE,
+                CollectFactory.createCollectEqualTerms());
+
+    }
+    public final Indicator<Tensor> matricesIndicator = new TensorTreeIndicatorImpl(new Indicator<Tensor>() {
         public boolean is(Tensor tensor) {
             for (Tensor m : MATRICES)
                 if (TTest.testEqualstensorStructure(tensor, m))
                     return true;
             return false;
         }
-    };
+    });
 }
