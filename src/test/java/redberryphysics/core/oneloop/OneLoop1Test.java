@@ -19,13 +19,19 @@
  */
 package redberryphysics.core.oneloop;
 
+import java.io.IOException;
+import junit.framework.AssertionFailedError;
+import org.junit.Ignore;
 import redberry.core.tensor.Sum;
+import redberry.core.tensor.Expression;
+import redberry.core.transformation.RenameConflictingIndexes;
+import redberry.core.transformation.Transformation;
 import redberry.core.tensor.Tensor;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import redberry.core.context.CC;
 import redberry.core.context.ToStringMode;
 import redberry.core.tensor.MultiTensor;
+import redberry.core.tensor.TensorIterator;
 import redberry.core.tensor.iterators.TensorFirstTreeIterator;
 import redberry.core.tensor.iterators.TensorTreeIterator;
 import redberry.core.tensor.test.TTest;
@@ -39,7 +45,8 @@ import redberry.core.transformation.contractions.IndexesContractionsTransformati
 import redberry.core.utils.TensorUtils;
 import redberryphysics.core.util.IndexesFactoryUtil;
 import static core.TAssert.*;
-import static org.junit.Assert.*;
+import static redberryphysics.core.util.IndexesFactoryUtil.*;
+
 /**
  *
  * @author Dmitry Bolotin
@@ -50,6 +57,7 @@ public class OneLoop1Test {
     public OneLoop1Test() {
     }
 
+    @Ignore
     @Test
     public void test() {
         OneLoop1 loop1 = new OneLoop1(OneLoop1.EVAL.INITIALIZE);
@@ -65,6 +73,7 @@ public class OneLoop1Test {
         loop1.DELTA_4.asSubstitution();
     }
 
+    @Ignore
     @Test
     public void testHATKs() {
         OneLoop1 loop1 = new OneLoop1(OneLoop1.EVAL.EVAL_HATK);
@@ -74,25 +83,16 @@ public class OneLoop1Test {
         System.out.println(loop1.DELTA_2.toString(ToStringMode.UTF8));
     }
 
+    @Ignore
     @Test
     public void testAll() {
         OneLoop1 loop1 = new OneLoop1(OneLoop1.EVAL.EVAL_ALL);
         System.out.println(loop1.RR.toString(ToStringMode.UTF8));
         System.out.println(((MultiTensor) loop1.RR.right()).size());
-//        Tensor t = loop1.RR.right();
-//        for (Tensor f : t)
-//            if (!TensorUtils.testIndexesConsistent(f))
-//                System.out.println(f);
-//        TensorTreeIterator iterator  = new TensorFirstTreeIterator(t);
-//        Tensor next;
-//        while(iterator.hasNext())
-//        {
-//            next = iterator.next();
-//            iterator.set(Transformations.renameConflictingIndexes(next));
-//        }
         assertIndexes(loop1.RR);
     }
 
+    @Ignore
     @Test
     public void testDelta2() {
         OneLoop1 loop1 = new OneLoop1(OneLoop1.EVAL.EVAL_HATK);
@@ -147,7 +147,76 @@ public class OneLoop1Test {
 
     @Test
     public void test1() {
-        Sum t = (Sum) CC.parse("g^{μν}*d_{ε}^{γ}*d_{ζ}^{δ}+g^{μν}*d_{ε}^{δ}*d_{ζ}^{γ}+g^{γδ}*g^{μν}*g_{ζε}+n_{ε}*n^{γ}*g^{μν}*d_{ζ}^{δ}+n_{ε}*n^{δ}*d_{ζ}^{γ}*g^{μν}+n_{ζ}*n^{γ}*g^{μν}*d_{ε}^{δ}+n_{ζ}*n^{δ}*d_{ε}^{γ}*g^{μν}+n_{ε}*n_{ζ}*g^{γδ}*g^{μν}+n^{γ}*n^{δ}*g^{μν}*g_{ζε}+n_{ε}*n_{ζ}*n^{γ}*n^{δ}*g^{μν}+n^{β}*n_{β}*g^{γδ}*g^{μν}*g_{εζ}+n^{β}*n_{β}*n^{γ}*n^{δ}*g^{μν}*g_{εζ}+g^{νγ}*d_{ζ}^{δ}*d^{μ}_{ε}+d_{ζ}^{γ}*g^{νδ}*d^{μ}_{ε}+g^{γδ}*d^{μ}_{ε}*d_{ζ}^{ν}+n^{ν}*n^{γ}*d_{ζ}^{δ}*d^{μ}_{ε}+n^{ν}*n^{δ}*d_{ζ}^{γ}*d^{μ}_{ε}+n_{ζ}*n^{γ}*g^{νδ}*d^{μ}_{ε}+n_{ζ}*n^{δ}*g^{νγ}*d^{μ}_{ε}+n^{ν}*n_{ζ}*g^{γδ}*d^{μ}_{ε}+n^{γ}*n^{δ}*d^{μ}_{ε}*d_{ζ}^{ν}+n^{ν}*n_{ζ}*n^{γ}*n^{δ}*d^{μ}_{ε}+g^{νγ}*d_{ε}^{δ}*d^{μ}_{ζ}+d_{ε}^{γ}*g^{νδ}*d^{μ}_{ζ}+g^{γδ}*d^{μ}_{ζ}*d_{ε}^{ν}+n^{ν}*n^{γ}*d_{ε}^{δ}*d^{μ}_{ζ}+n^{ν}*n^{δ}*d_{ε}^{γ}*d^{μ}_{ζ}+n_{ε}*n^{γ}*g^{νδ}*d^{μ}_{ζ}+n_{ε}*n^{δ}*g^{νγ}*d^{μ}_{ζ}+n^{ν}*n_{ε}*g^{γδ}*d^{μ}_{ζ}+n^{γ}*n^{δ}*d^{μ}_{ζ}*d_{ε}^{ν}+n^{ν}*n_{ε}*n^{γ}*n^{δ}*d^{μ}_{ζ}+g^{μγ}*d_{ζ}^{δ}*d^{ν}_{ε}+d_{ζ}^{γ}*g^{μδ}*d^{ν}_{ε}+n^{μ}*n^{γ}*d_{ζ}^{δ}*d^{ν}_{ε}+n^{μ}*n^{δ}*d_{ζ}^{γ}*d^{ν}_{ε}+n_{ζ}*n^{γ}*g^{μδ}*d^{ν}_{ε}+n_{ζ}*n^{δ}*g^{μγ}*d^{ν}_{ε}+n^{μ}*n_{ζ}*g^{γδ}*d^{ν}_{ε}+n^{μ}*n_{ζ}*n^{γ}*n^{δ}*d^{ν}_{ε}+g^{μγ}*d_{ε}^{δ}*d^{ν}_{ζ}+d_{ε}^{γ}*g^{μδ}*d^{ν}_{ζ}+n^{μ}*n^{γ}*d_{ε}^{δ}*d^{ν}_{ζ}+n^{μ}*n^{δ}*d_{ε}^{γ}*d^{ν}_{ζ}+n_{ε}*n^{γ}*g^{μδ}*d^{ν}_{ζ}+n_{ε}*n^{δ}*g^{μγ}*d^{ν}_{ζ}+n^{μ}*n_{ε}*g^{γδ}*d^{ν}_{ζ}+n^{μ}*n_{ε}*n^{γ}*n^{δ}*d^{ν}_{ζ}+g^{μγ}*g^{νδ}*g_{εζ}+g^{νγ}*g^{μδ}*g_{εζ}+n^{μ}*n^{γ}*g^{νδ}*g_{εζ}+n^{μ}*n^{δ}*g^{νγ}*g_{εζ}+n^{ν}*n^{γ}*g^{μδ}*g_{εζ}+n^{ν}*n^{δ}*g^{μγ}*g_{εζ}+n^{μ}*n^{ν}*g^{γδ}*g_{εζ}+n^{μ}*n^{ν}*n^{γ}*n^{δ}*g_{εζ}+n^{β}*n_{β}*g^{γδ}*d^{μ}_{ε}*d^{ν}_{ζ}+n^{β}*n_{β}*n^{γ}*n^{δ}*d^{μ}_{ε}*d^{ν}_{ζ}+n^{β}*n_{β}*g^{γδ}*d^{μ}_{ζ}*d^{ν}_{ε}+n^{β}*n_{β}*n^{γ}*n^{δ}*d^{μ}_{ζ}*d^{ν}_{ε}+n^{μ}*n^{ν}*d_{ε}^{γ}*d_{ζ}^{δ}+n^{μ}*n^{ν}*d_{ε}^{δ}*d_{ζ}^{γ}+n_{ε}*n^{γ}*n^{μ}*n^{ν}*d_{ζ}^{δ}+n_{ε}*n^{δ}*n^{μ}*n^{ν}*d_{ζ}^{γ}+n_{ζ}*n^{γ}*n^{μ}*n^{ν}*d_{ε}^{δ}+n_{ζ}*n^{δ}*n^{μ}*n^{ν}*d_{ε}^{γ}+n_{ε}*n_{ζ}*n^{μ}*n^{ν}*g^{γδ}+n_{ε}*n_{ζ}*n^{γ}*n^{δ}*n^{μ}*n^{ν}+n^{ι}*n_{ι}*n^{μ}*n^{ν}*g^{γδ}*g_{ζε}+n^{ι}*n_{ι}*n^{γ}*n^{δ}*n^{μ}*n^{ν}*g_{ζε}+n^{λ}*n^{γ}*n_{λ}*n^{ν}*d_{ζ}^{δ}*d_{ε}^{μ}+n^{λ}*n^{δ}*n_{λ}*n^{ν}*d_{ζ}^{γ}*d_{ε}^{μ}+n^{λ}*n_{ζ}*n_{λ}*n^{ν}*g^{γδ}*d_{ε}^{μ}+n^{λ}*n_{ζ}*n^{γ}*n^{δ}*n_{λ}*n^{ν}*d_{ε}^{μ}+n^{λ}*n^{γ}*n_{λ}*n^{ν}*d_{ε}^{δ}*d_{ζ}^{μ}+n^{λ}*n^{δ}*n_{λ}*n^{ν}*d_{ε}^{γ}*d_{ζ}^{μ}+n^{λ}*n_{ε}*n_{λ}*n^{ν}*g^{γδ}*d_{ζ}^{μ}+n^{λ}*n_{ε}*n^{γ}*n^{δ}*n_{λ}*n^{ν}*d_{ζ}^{μ}+n_{ε}*n^{ν}*g^{μγ}*d_{ζ}^{δ}+n_{ε}*n^{ν}*d_{ζ}^{γ}*g^{μδ}+n_{ζ}*n^{γ}*n_{ε}*n^{ν}*g^{μδ}+n_{ζ}*n^{δ}*n_{ε}*n^{ν}*g^{μγ}+n_{ζ}*n^{ν}*g^{μγ}*d_{ε}^{δ}+n_{ζ}*n^{ν}*d_{ε}^{γ}*g^{μδ}+n^{λ}*n^{γ}*n_{λ}*n^{ν}*g^{μδ}*g_{ζε}+n^{λ}*n^{δ}*n_{λ}*n^{ν}*g^{μγ}*g_{ζε}+n_{η}*n^{γ}*n^{μ}*n_{ε}*n^{η}*n^{ν}*d_{ζ}^{δ}+n_{η}*n^{δ}*n^{μ}*n_{ε}*n^{η}*n^{ν}*d_{ζ}^{γ}+n_{η}*n_{ζ}*n^{μ}*n_{ε}*n^{η}*n^{ν}*g^{γδ}+n_{η}*n_{ζ}*n^{γ}*n^{δ}*n^{μ}*n_{ε}*n^{η}*n^{ν}+n^{λ}*n_{η}*n_{λ}*n_{ε}*n^{η}*n^{ν}*g^{γδ}*d_{ζ}^{μ}+n^{λ}*n_{η}*n^{γ}*n^{δ}*n_{λ}*n_{ε}*n^{η}*n^{ν}*d_{ζ}^{μ}+n_{η}*n_{ε}*n^{η}*n^{ν}*g^{μγ}*d_{ζ}^{δ}+n_{η}*n_{ε}*n^{η}*n^{ν}*d_{ζ}^{γ}*g^{μδ}+n_{ζ}*n^{γ}*n_{η}*n_{ε}*n^{η}*n^{ν}*g^{μδ}+n_{ζ}*n^{δ}*n_{η}*n_{ε}*n^{η}*n^{ν}*g^{μγ}+n_{η}*n^{γ}*n^{μ}*n_{ζ}*n^{η}*n^{ν}*d_{ε}^{δ}+n_{η}*n^{δ}*n^{μ}*n_{ζ}*n^{η}*n^{ν}*d_{ε}^{γ}+n^{λ}*n_{η}*n_{λ}*n_{ζ}*n^{η}*n^{ν}*g^{γδ}*d_{ε}^{μ}+n^{λ}*n_{η}*n^{γ}*n^{δ}*n_{λ}*n_{ζ}*n^{η}*n^{ν}*d_{ε}^{μ}+n_{η}*n_{ζ}*n^{η}*n^{ν}*g^{μγ}*d_{ε}^{δ}+n_{η}*n_{ζ}*n^{η}*n^{ν}*d_{ε}^{γ}*g^{μδ}+n_{η}*n_{θ}*n^{μ}*n^{η}*n^{θ}*n^{ν}*g^{γδ}*g_{ζε}+n_{η}*n_{θ}*n^{γ}*n^{δ}*n^{μ}*n^{η}*n^{θ}*n^{ν}*g_{ζε}+n_{θ}*n^{γ}*n_{η}*n^{η}*n^{θ}*n^{ν}*g^{μδ}*g_{ζε}+n_{θ}*n^{δ}*n_{η}*n^{η}*n^{θ}*n^{ν}*g^{μγ}*g_{ζε}+n_{η}*n_{θ}*n^{μ}*n_{ε}*n_{ζ}*n^{η}*n^{θ}*n^{ν}*g^{γδ}+n_{η}*n_{θ}*n^{γ}*n^{δ}*n^{μ}*n_{ε}*n_{ζ}*n^{η}*n^{θ}*n^{ν}+n_{θ}*n^{γ}*n_{η}*n_{ε}*n_{ζ}*n^{η}*n^{θ}*n^{ν}*g^{μδ}+n_{θ}*n^{δ}*n_{η}*n_{ε}*n_{ζ}*n^{η}*n^{θ}*n^{ν}*g^{μγ}+n_{η}*n_{θ}*n^{μ}*n^{ξ}*n_{ξ}*n^{η}*n^{θ}*n^{ν}*g^{γδ}*g_{εζ}+n_{η}*n_{θ}*n^{γ}*n^{δ}*n^{μ}*n^{ξ}*n_{ξ}*n^{η}*n^{θ}*n^{ν}*g_{εζ}+n_{θ}*n^{γ}*n_{η}*n^{ξ}*n_{ξ}*n^{η}*n^{θ}*n^{ν}*g^{μδ}*g_{εζ}+n_{θ}*n^{δ}*n_{η}*n^{ξ}*n_{ξ}*n^{η}*n^{θ}*n^{ν}*g^{μγ}*g_{εζ}+n_{η}*n^{γ}*n^{μ}*n^{η}*d_{ζ}^{δ}*d^{ν}_{ε}+n_{η}*n^{δ}*n^{μ}*n^{η}*d_{ζ}^{γ}*d^{ν}_{ε}+n_{η}*n_{ζ}*n^{μ}*n^{η}*g^{γδ}*d^{ν}_{ε}+n_{η}*n_{ζ}*n^{γ}*n^{δ}*n^{μ}*n^{η}*d^{ν}_{ε}+n^{λ}*n_{η}*n_{λ}*n^{η}*g^{γδ}*d_{ζ}^{μ}*d^{ν}_{ε}+n^{λ}*n_{η}*n^{γ}*n^{δ}*n_{λ}*n^{η}*d_{ζ}^{μ}*d^{ν}_{ε}+n_{η}*n^{η}*g^{μγ}*d_{ζ}^{δ}*d^{ν}_{ε}+n_{η}*n^{η}*d_{ζ}^{γ}*g^{μδ}*d^{ν}_{ε}+n_{ζ}*n^{γ}*n_{η}*n^{η}*g^{μδ}*d^{ν}_{ε}+n_{ζ}*n^{δ}*n_{η}*n^{η}*g^{μγ}*d^{ν}_{ε}+n_{η}*n^{γ}*n^{μ}*n^{α}*n^{η}*n_{α}*d_{ζ}^{δ}*d^{ν}_{ε}+n_{η}*n^{δ}*n^{μ}*n^{α}*n^{η}*n_{α}*d_{ζ}^{γ}*d^{ν}_{ε}+n_{η}*n_{ζ}*n^{μ}*n^{α}*n^{η}*n_{α}*g^{γδ}*d^{ν}_{ε}+n_{η}*n_{ζ}*n^{γ}*n^{δ}*n^{μ}*n^{α}*n^{η}*n_{α}*d^{ν}_{ε}+n^{λ}*n_{η}*n_{λ}*n^{α}*n^{η}*n_{α}*g^{γδ}*d_{ζ}^{μ}*d^{ν}_{ε}+n^{λ}*n_{η}*n^{γ}*n^{δ}*n_{λ}*n^{α}*n^{η}*n_{α}*d_{ζ}^{μ}*d^{ν}_{ε}+n_{η}*n^{α}*n^{η}*n_{α}*g^{μγ}*d_{ζ}^{δ}*d^{ν}_{ε}+n_{η}*n^{α}*n^{η}*n_{α}*d_{ζ}^{γ}*g^{μδ}*d^{ν}_{ε}+n_{ζ}*n^{γ}*n_{η}*n^{α}*n^{η}*n_{α}*g^{μδ}*d^{ν}_{ε}+n_{ζ}*n^{δ}*n_{η}*n^{α}*n^{η}*n_{α}*g^{μγ}*d^{ν}_{ε}+n_{η}*n_{θ}*n^{μ}*n^{α}*n_{ζ}*n^{η}*n^{θ}*n_{α}*g^{γδ}*d^{ν}_{ε}+n_{η}*n_{θ}*n^{γ}*n^{δ}*n^{μ}*n^{α}*n_{ζ}*n^{η}*n^{θ}*n_{α}*d^{ν}_{ε}+n_{θ}*n^{γ}*n_{η}*n^{α}*n_{ζ}*n^{η}*n^{θ}*n_{α}*g^{μδ}*d^{ν}_{ε}+n_{θ}*n^{δ}*n_{η}*n^{α}*n_{ζ}*n^{η}*n^{θ}*n_{α}*g^{μγ}*d^{ν}_{ε}+n_{η}*n^{γ}*n^{μ}*n^{η}*d_{ε}^{δ}*d^{ν}_{ζ}+n_{η}*n^{δ}*n^{μ}*n^{η}*d_{ε}^{γ}*d^{ν}_{ζ}+n_{η}*n_{ε}*n^{μ}*n^{η}*g^{γδ}*d^{ν}_{ζ}+n_{η}*n_{ε}*n^{γ}*n^{δ}*n^{μ}*n^{η}*d^{ν}_{ζ}+n^{λ}*n_{η}*n_{λ}*n^{η}*g^{γδ}*d_{ε}^{μ}*d^{ν}_{ζ}+n^{λ}*n_{η}*n^{γ}*n^{δ}*n_{λ}*n^{η}*d_{ε}^{μ}*d^{ν}_{ζ}+n_{η}*n^{η}*g^{μγ}*d_{ε}^{δ}*d^{ν}_{ζ}+n_{η}*n^{η}*d_{ε}^{γ}*g^{μδ}*d^{ν}_{ζ}+n_{ε}*n^{γ}*n_{η}*n^{η}*g^{μδ}*d^{ν}_{ζ}+n_{ε}*n^{δ}*n_{η}*n^{η}*g^{μγ}*d^{ν}_{ζ}+n_{η}*n^{γ}*n^{μ}*n^{α}*n^{η}*n_{α}*d_{ε}^{δ}*d^{ν}_{ζ}+n_{η}*n^{δ}*n^{μ}*n^{α}*n^{η}*n_{α}*d_{ε}^{γ}*d^{ν}_{ζ}+n_{η}*n_{ε}*n^{μ}*n^{α}*n^{η}*n_{α}*g^{γδ}*d^{ν}_{ζ}+n_{η}*n_{ε}*n^{γ}*n^{δ}*n^{μ}*n^{α}*n^{η}*n_{α}*d^{ν}_{ζ}+n^{λ}*n_{η}*n_{λ}*n^{α}*n^{η}*n_{α}*g^{γδ}*d_{ε}^{μ}*d^{ν}_{ζ}+n^{λ}*n_{η}*n^{γ}*n^{δ}*n_{λ}*n^{α}*n^{η}*n_{α}*d_{ε}^{μ}*d^{ν}_{ζ}+n_{η}*n^{α}*n^{η}*n_{α}*g^{μγ}*d_{ε}^{δ}*d^{ν}_{ζ}+n_{η}*n^{α}*n^{η}*n_{α}*d_{ε}^{γ}*g^{μδ}*d^{ν}_{ζ}+n_{ε}*n^{γ}*n_{η}*n^{α}*n^{η}*n_{α}*g^{μδ}*d^{ν}_{ζ}+n_{ε}*n^{δ}*n_{η}*n^{α}*n^{η}*n_{α}*g^{μγ}*d^{ν}_{ζ}+n_{η}*n_{θ}*n^{μ}*n^{α}*n_{ε}*n^{η}*n^{θ}*n_{α}*g^{γδ}*d^{ν}_{ζ}+n_{η}*n_{θ}*n^{γ}*n^{δ}*n^{μ}*n^{α}*n_{ε}*n^{η}*n^{θ}*n_{α}*d^{ν}_{ζ}+n_{θ}*n^{γ}*n_{η}*n^{α}*n_{ε}*n^{η}*n^{θ}*n_{α}*g^{μδ}*d^{ν}_{ζ}+n_{θ}*n^{δ}*n_{η}*n^{α}*n_{ε}*n^{η}*n^{θ}*n_{α}*g^{μγ}*d^{ν}_{ζ}+n^{μ}*n_{ε}*g^{νγ}*d_{ζ}^{δ}+n^{μ}*n_{ε}*d_{ζ}^{γ}*g^{νδ}+n_{ζ}*n^{γ}*n^{μ}*n_{ε}*g^{νδ}+n_{ζ}*n^{δ}*n^{μ}*n_{ε}*g^{νγ}+n^{λ}*n^{γ}*n_{λ}*n_{ε}*d_{ζ}^{δ}*g^{νμ}+n^{λ}*n^{δ}*n_{λ}*n_{ε}*d_{ζ}^{γ}*g^{νμ}+n^{λ}*n_{ζ}*n_{λ}*n_{ε}*g^{γδ}*g^{νμ}+n^{λ}*n_{ζ}*n^{γ}*n^{δ}*n_{λ}*n_{ε}*g^{νμ}+n^{λ}*n^{γ}*n_{λ}*n_{ε}*g^{νδ}*d_{ζ}^{μ}+n^{λ}*n^{δ}*n_{λ}*n_{ε}*g^{νγ}*d_{ζ}^{μ}+n_{ζ}*n_{ε}*g^{μγ}*g^{νδ}+n_{ζ}*n_{ε}*g^{νγ}*g^{μδ}+n_{η}*n^{γ}*n^{μ}*n_{ζ}*n^{η}*n_{ε}*g^{νδ}+n_{η}*n^{δ}*n^{μ}*n_{ζ}*n^{η}*n_{ε}*g^{νγ}+n^{λ}*n_{η}*n_{λ}*n_{ζ}*n^{η}*n_{ε}*g^{γδ}*g^{νμ}+n^{λ}*n_{η}*n^{γ}*n^{δ}*n_{λ}*n_{ζ}*n^{η}*n_{ε}*g^{νμ}+n_{η}*n_{ζ}*n^{η}*n_{ε}*g^{μγ}*g^{νδ}+n_{η}*n_{ζ}*n^{η}*n_{ε}*g^{νγ}*g^{μδ}+n^{μ}*n_{ζ}*g^{νγ}*d_{ε}^{δ}+n^{μ}*n_{ζ}*d_{ε}^{γ}*g^{νδ}+n^{λ}*n^{γ}*n_{λ}*n_{ζ}*d_{ε}^{δ}*g^{νμ}+n^{λ}*n^{δ}*n_{λ}*n_{ζ}*d_{ε}^{γ}*g^{νμ}+n^{λ}*n^{γ}*n_{λ}*n_{ζ}*g^{νδ}*d_{ε}^{μ}+n^{λ}*n^{δ}*n_{λ}*n_{ζ}*g^{νγ}*d_{ε}^{μ}+n_{θ}*n^{γ}*n^{μ}*n^{θ}*g^{νδ}*g_{εζ}+n_{θ}*n^{δ}*n^{μ}*n^{θ}*g^{νγ}*g_{εζ}+n^{λ}*n_{θ}*n_{λ}*n^{θ}*g^{γδ}*g^{νμ}*g_{εζ}+n^{λ}*n_{θ}*n^{γ}*n^{δ}*n_{λ}*n^{θ}*g^{νμ}*g_{εζ}+n_{θ}*n^{θ}*g^{μγ}*g^{νδ}*g_{εζ}+n_{θ}*n^{θ}*g^{νγ}*g^{μδ}*g_{εζ}+n_{η}*n^{γ}*n^{μ}*n^{α}*n^{η}*n_{α}*g^{νδ}*g_{εζ}+n_{η}*n^{δ}*n^{μ}*n^{α}*n^{η}*n_{α}*g^{νγ}*g_{εζ}+n^{λ}*n_{η}*n_{λ}*n^{α}*n^{η}*n_{α}*g^{γδ}*g^{νμ}*g_{εζ}+n^{λ}*n_{η}*n^{γ}*n^{δ}*n_{λ}*n^{α}*n^{η}*n_{α}*g^{νμ}*g_{εζ}+n_{η}*n^{α}*n^{η}*n_{α}*g^{μγ}*g^{νδ}*g_{εζ}+n_{η}*n^{α}*n^{η}*n_{α}*g^{νγ}*g^{μδ}*g_{εζ}+n_{λ}*n_{ε}*n^{λ}*n^{μ}*g^{νγ}*d_{ζ}^{δ}+n_{λ}*n_{ε}*n^{λ}*n^{μ}*d_{ζ}^{γ}*g^{νδ}+n_{λ}*n_{ζ}*n^{λ}*n^{μ}*g^{νγ}*d_{ε}^{δ}+n_{λ}*n_{ζ}*n^{λ}*n^{μ}*d_{ε}^{γ}*g^{νδ}+n_{ξ}*n^{γ}*n_{λ}*n_{ε}*n_{ζ}*n^{λ}*n^{ξ}*n^{μ}*g^{νδ}+n_{ξ}*n^{δ}*n_{λ}*n_{ε}*n_{ζ}*n^{λ}*n^{ξ}*n^{μ}*g^{νγ}+n_{ξ}*n^{γ}*n_{λ}*n^{ι}*n_{ι}*n^{λ}*n^{ξ}*n^{μ}*g^{νδ}*g_{εζ}+n_{ξ}*n^{δ}*n_{λ}*n^{ι}*n_{ι}*n^{λ}*n^{ξ}*n^{μ}*g^{νγ}*g_{εζ}+n_{λ}*n^{λ}*g^{νγ}*d_{ζ}^{δ}*d^{μ}_{ε}+n_{λ}*n^{λ}*d_{ζ}^{γ}*g^{νδ}*d^{μ}_{ε}+n_{λ}*n^{γ}*n^{ν}*n^{ο}*n^{λ}*n_{ο}*d_{ζ}^{δ}*d^{μ}_{ε}+n_{λ}*n^{δ}*n^{ν}*n^{ο}*n^{λ}*n_{ο}*d_{ζ}^{γ}*d^{μ}_{ε}+n_{λ}*n^{ο}*n^{λ}*n_{ο}*g^{νγ}*d_{ζ}^{δ}*d^{μ}_{ε}+n_{λ}*n^{ο}*n^{λ}*n_{ο}*d_{ζ}^{γ}*g^{νδ}*d^{μ}_{ε}+n_{ζ}*n^{γ}*n_{λ}*n^{ο}*n^{λ}*n_{ο}*g^{νδ}*d^{μ}_{ε}+n_{ζ}*n^{δ}*n_{λ}*n^{ο}*n^{λ}*n_{ο}*g^{νγ}*d^{μ}_{ε}+n_{λ}*n_{ξ}*n^{ν}*n^{ο}*n_{ζ}*n^{λ}*n^{ξ}*n_{ο}*g^{γδ}*d^{μ}_{ε}+n_{λ}*n_{ξ}*n^{γ}*n^{δ}*n^{ν}*n^{ο}*n_{ζ}*n^{λ}*n^{ξ}*n_{ο}*d^{μ}_{ε}+n_{ξ}*n^{γ}*n_{λ}*n^{ο}*n_{ζ}*n^{λ}*n^{ξ}*n_{ο}*g^{νδ}*d^{μ}_{ε}+n_{ξ}*n^{δ}*n_{λ}*n^{ο}*n_{ζ}*n^{λ}*n^{ξ}*n_{ο}*g^{νγ}*d^{μ}_{ε}+n_{λ}*n^{λ}*g^{νγ}*d_{ε}^{δ}*d^{μ}_{ζ}+n_{λ}*n^{λ}*d_{ε}^{γ}*g^{νδ}*d^{μ}_{ζ}+n_{λ}*n^{γ}*n^{ν}*n^{ο}*n^{λ}*n_{ο}*d_{ε}^{δ}*d^{μ}_{ζ}+n_{λ}*n^{δ}*n^{ν}*n^{ο}*n^{λ}*n_{ο}*d_{ε}^{γ}*d^{μ}_{ζ}+n_{λ}*n^{ο}*n^{λ}*n_{ο}*g^{νγ}*d_{ε}^{δ}*d^{μ}_{ζ}+n_{λ}*n^{ο}*n^{λ}*n_{ο}*d_{ε}^{γ}*g^{νδ}*d^{μ}_{ζ}+n_{ε}*n^{γ}*n_{λ}*n^{ο}*n^{λ}*n_{ο}*g^{νδ}*d^{μ}_{ζ}+n_{ε}*n^{δ}*n_{λ}*n^{ο}*n^{λ}*n_{ο}*g^{νγ}*d^{μ}_{ζ}+n_{λ}*n_{ξ}*n^{ν}*n^{ο}*n_{ε}*n^{λ}*n^{ξ}*n_{ο}*g^{γδ}*d^{μ}_{ζ}+n_{λ}*n_{ξ}*n^{γ}*n^{δ}*n^{ν}*n^{ο}*n_{ε}*n^{λ}*n^{ξ}*n_{ο}*d^{μ}_{ζ}+n_{ξ}*n^{γ}*n_{λ}*n^{ο}*n_{ε}*n^{λ}*n^{ξ}*n_{ο}*g^{νδ}*d^{μ}_{ζ}+n_{ξ}*n^{δ}*n_{λ}*n^{ο}*n_{ε}*n^{λ}*n^{ξ}*n_{ο}*g^{νγ}*d^{μ}_{ζ}");
+        OneLoop1 loop1 = new OneLoop1(OneLoop1.EVAL.INITIALIZE);
+        loop1.evalRR();
+        loop1.evalDeltas();
+        for (Expression delta : loop1.DELTAs)
+            loop1.RR.eval(delta.asSubstitution());
+        loop1.RR.eval(
+                IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                loop1.KRONECKER_DIMENSION.asSubstitution(),
+                CalculateNumbers.INSTANCE,
+                new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
+                IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                CollectFactory.createCollectEqualTerms(),
+                CollectFactory.createCollectScalars(),
+                CalculateNumbers.INSTANCE);
 
+        Transformation indexesInsertion;
+        indexesInsertion = new IndexesInsertion(loop1.matricesIndicator, createIndexes(loop1.HATKs, "^{\\mu\\nu}_{\\alpha\\beta}"));
+        for (Expression hatK : loop1.HATKs) {
+            hatK.eval(indexesInsertion);
+            loop1.RR.eval(hatK.asSubstitution());
+        }
+
+        loop1.MATRIX_K.eval(loop1.P.asSubstitution(), CollectFactory.createCollectEqualTerms(), CalculateNumbers.INSTANCE);
+        loop1.MATRIX_K_INV.eval(loop1.P.asSubstitution(), CollectFactory.createCollectEqualTerms(), CalculateNumbers.INSTANCE);
+
+        loop1.RR.eval(loop1.MATRIX_K_INV.asSubstitution());//, CollectFactory.createCollectEqualTerms(), CalculateNumbers.INSTANCE, CollectFactory.ccreateCollectAllScalars());
+
+        System.out.println(" Evaluating RR's 1st element... ");
+        Tensor rhs = loop1.RR.right();
+        Tensor rhs_1 = ((MultiTensor) rhs).getElements().get(0);
+
+        System.out.println("contracting  ");
+        rhs_1 = IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC.transform(rhs_1);
+        rhs_1 = loop1.KRONECKER_DIMENSION.asSubstitution().transform(rhs_1);
+        rhs_1 = CalculateNumbers.INSTANCE.transform(rhs_1);
+        System.out.println("done");
+        System.out.println("expanding  ");
+        rhs_1 = new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS).transform(rhs_1);
+        System.out.println("done");
+        System.out.println("contracting  ");
+        rhs_1 = IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC.transform(rhs_1);
+        rhs_1 = loop1.KRONECKER_DIMENSION.asSubstitution().transform(rhs_1);
+        rhs_1 = CalculateNumbers.INSTANCE.transform(rhs_1);
+        System.out.println("done");
+        System.out.println(rhs_1.toString(ToStringMode.UTF8));
+
+        int oldSize = ((MultiTensor) rhs_1).size();
+        TensorIterator iterator = rhs_1.iterator();
+        Tensor c;
+        int count;
+        while (iterator.hasNext()) {
+            c = iterator.next();
+            count = 0;
+            for (Tensor n : c)
+                if (TTest.testEqualstensorStructure(n, CC.parse("n_{\\mu}")))
+                    count++;
+            if (count % 2 != 0)
+                iterator.remove();
+        }
+        int newSize = ((MultiTensor) rhs_1).size();
+        System.out.println("Old size: " + oldSize + ", new sizeL " + newSize + ".  Collecting");
+        Tensor nT = new Sum();
+        count = 0;
+        for (Tensor t : rhs_1) {
+            if (count > 1000)
+                break;
+            ((Sum) nT).add(t);
+        }
+        nT = CollectFactory.createCollectEqualTerms().transform(nT);
+        System.out.println(((Sum) nT).size());
+        System.out.println(nT.toString(ToStringMode.UTF8));
     }
 }

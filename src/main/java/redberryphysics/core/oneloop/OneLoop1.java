@@ -29,7 +29,6 @@ import redberry.core.transformation.ExpandBrackets;
 import redberry.core.transformation.IndexesInsertion;
 import redberry.core.transformation.RenameConflictingIndexes;
 import redberry.core.transformation.Transformation;
-import redberry.core.transformation.Transformations;
 import redberry.core.transformation.Transformer;
 import redberry.core.transformation.collect.CollectFactory;
 import redberry.core.transformation.contractions.IndexesContractionsTransformation;
@@ -98,7 +97,7 @@ public class OneLoop1 {
             new Expression("HATK^{\\mu\\nu\\alpha} = HATK^{\\mu\\nu\\alpha}");
     public final Expression HATK_4 =
             new Expression("HATK^{\\mu\\nu\\alpha\\beta} = HATK^{\\mu\\nu\\alpha\\beta}");
-    private final Expression[] HATKs = new Expression[]{HATK_1, HATK_2, HATK_3, HATK_4};
+    public final Expression[] HATKs = new Expression[]{HATK_1, HATK_2, HATK_3, HATK_4};
     /*
      * The indexes ^{\\alpha\\beta}_{\\gamma\\delta} are the matrix indexes
      */
@@ -157,15 +156,24 @@ public class OneLoop1 {
                 for (Expression delta : DELTAs)
                     RR.eval(delta.asSubstitution());
                 RR.eval(
+                        IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                        KRONECKER_DIMENSION.asSubstitution(),
+                        CalculateNumbers.INSTANCE,
                         new Transformer(RenameConflictingIndexes.INSTANCE),
-//                        IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC
-//                        KRONECKER_DIMENSION.asSubstitution(),
-//                        CalculateNumbers.INSTANCE,
-//                        new Transformer(RenameConflictingIndexes.INSTANCE),
-                        new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS)
-//                        CollectFactory.createCollectEqualTerms(),
-//                        CalculateNumbers.INSTANCE
-                        );
+                        new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
+                        CollectFactory.createCollectEqualTerms(),
+                        CalculateNumbers.INSTANCE);
+                evalHatK();
+                for (Expression hatK : HATKs)
+                    RR.eval(hatK.asSubstitution());
+                 RR.eval(
+                        IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                        KRONECKER_DIMENSION.asSubstitution(),
+                        CalculateNumbers.INSTANCE,
+                        new Transformer(RenameConflictingIndexes.INSTANCE),
+                        new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
+                        CollectFactory.createCollectEqualTerms(),
+                        CalculateNumbers.INSTANCE);
         }
     }
 
@@ -216,6 +224,7 @@ public class OneLoop1 {
                     indexesInsertion,
                     L.asSubstitution(),
                     CalculateNumbers.INSTANCE,
+                    new Transformer(RenameConflictingIndexes.INSTANCE),
                     new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
                     IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                     KRONECKER_DIMENSION.asSubstitution(),
@@ -234,6 +243,7 @@ public class OneLoop1 {
                 CalculateNumbers.INSTANCE,
                 RICCI.asSubstitution(),
                 RIMAN.asSubstitution(),
+                new Transformer(RenameConflictingIndexes.INSTANCE),
                 new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
                 IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                 KRONECKER_DIMENSION.asSubstitution(),
