@@ -19,18 +19,19 @@
  */
 package redberryphysics.core.oneloop;
 
-import java.io.IOException;
-import junit.framework.AssertionFailedError;
+import com.sun.org.apache.bcel.internal.generic.FASTORE;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Ignore;
 import redberry.core.tensor.Sum;
 import redberry.core.tensor.Expression;
-import redberry.core.transformation.RenameConflictingIndexes;
 import redberry.core.transformation.Transformation;
 import redberry.core.tensor.Tensor;
 import org.junit.Test;
-import redberry.core.context.CC;
+import redberry.concurrent.OutputPortUnsafe;
 import redberry.core.context.ToStringMode;
 import redberry.core.tensor.MultiTensor;
+import redberry.core.tensor.Product;
 import redberry.core.tensor.TensorIterator;
 import redberry.core.tensor.iterators.TensorFirstTreeIterator;
 import redberry.core.tensor.iterators.TensorTreeIterator;
@@ -40,9 +41,13 @@ import redberry.core.transformation.ExpandBrackets;
 import redberry.core.transformation.IndexesInsertion;
 import redberry.core.transformation.Transformations;
 import redberry.core.transformation.Transformer;
+import redberry.core.transformation.collect.AbstractCollectTerms;
 import redberry.core.transformation.collect.CollectFactory;
+import redberry.core.transformation.collect.EqualsSplitCriteria;
+import redberry.core.transformation.concurrent.ExpandBracketsOutput;
+import redberry.core.transformation.concurrent.ExpandBracketsOutputTransformation;
 import redberry.core.transformation.contractions.IndexesContractionsTransformation;
-import redberry.core.utils.TensorUtils;
+import redberry.core.utils.Indicator;
 import redberryphysics.core.util.IndexesFactoryUtil;
 import static core.TAssert.*;
 import static redberryphysics.core.util.IndexesFactoryUtil.*;
@@ -169,65 +174,103 @@ public class OneLoop1Test {
             loop1.RR.eval(hatK.asSubstitution());
         }
 
-        loop1.MATRIX_K.eval(loop1.P.asSubstitution(), CollectFactory.createCollectEqualTerms(), CalculateNumbers.INSTANCE);
-        loop1.MATRIX_K_INV.eval(loop1.P.asSubstitution(), CollectFactory.createCollectEqualTerms(), CalculateNumbers.INSTANCE);
 
+//        loop1.MATRIX_K.eval(
+//                loop1.P.asSubstitution(),
+//                new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
+//                CollectFactory.createCollectEqualTerms(),
+//                CollectFactory.createCollectEqualTerms());
+        System.out.println("matrix K evaluating");
+//        loop1.MATRIX_K.eval(loop1.P.asSubstitution(), CollectFactory.createCollectEqualTerms(), CalculateNumbers.INSTANCE);
+//        loop1.MATRIX_K_INV.eval(loop1.P.asSubstitution(), CollectFactory.createCollectEqualTerms(), CalculateNumbers.INSTANCE);
+        System.out.println("done");
         loop1.RR.eval(loop1.MATRIX_K_INV.asSubstitution());//, CollectFactory.createCollectEqualTerms(), CalculateNumbers.INSTANCE, CollectFactory.ccreateCollectAllScalars());
+        loop1.RR.eval(loop1.MATRIX_K.asSubstitution());
 
-        System.out.println(" Evaluating RR's 1st element... ");
-        Tensor rhs = loop1.RR.right();
-        Tensor rhs_1 = ((MultiTensor) rhs).getElements().get(0);
 
-        System.out.println("contracting  ");
-        rhs_1 = IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC.transform(rhs_1);
-        rhs_1 = loop1.KRONECKER_DIMENSION.asSubstitution().transform(rhs_1);
-        rhs_1 = CalculateNumbers.INSTANCE.transform(rhs_1);
-        System.out.println("done");
-        System.out.println("expanding  ");
-        rhs_1 = new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS).transform(rhs_1);
-        System.out.println("done");
-        System.out.println("contracting  ");
-        rhs_1 = IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC.transform(rhs_1);
-        rhs_1 = loop1.KRONECKER_DIMENSION.asSubstitution().transform(rhs_1);
-        rhs_1 = CalculateNumbers.INSTANCE.transform(rhs_1);
-        System.out.println("done");
-        System.out.println(rhs_1.toString(ToStringMode.UTF8));
+        Tensor rhs = ((MultiTensor) loop1.RR.right()).getElements().get(0).clone();
+        System.out.println(" Evaluating RR ");
 
-        int oldSize = ((MultiTensor) rhs_1).size();
-        TensorIterator iterator = rhs_1.iterator();
-        Tensor c;
-        int count;
+        List<Sum> sums = new ArrayList<>();
+        TensorIterator iterator = rhs.iterator();
+        Tensor current;
         while (iterator.hasNext()) {
-            c = iterator.next();
-            count = 0;
-            for (Tensor n : c)
-                if (TTest.testEqualstensorStructure(n, CC.parse("n_{\\mu}")))
-                    count++;
-            if (count % 2 != 0)
+            current = iterator.next();
+            if (current instanceof Sum && !TTest.testIsSymbol(current)) {
+                sums.add((Sum) current.clone());
                 iterator.remove();
+            }
         }
-        int newSize = ((MultiTensor) rhs_1).size();
-        System.out.println("Old size: " + oldSize + ", new sizeL " + newSize + ".  Collecting");
-        Tensor nT = ((MultiTensor) rhs_1).getElements().get(0);
-//        count = 0;
-//        for (Tensor t : rhs_1) {
-//            if (count > 10)
-//                break;
-//            ((Sum) nT).add(t);
-//        }
-        System.out.println(nT.toString(ToStringMode.UTF8));
-        nT = loop1.MATRIX_K.asSubstitution().transform(nT);
-        nT = Transformations.expandBrackets(nT);
-        nT = Transformations.contractMetrics(nT);
-        nT = loop1.KRONECKER_DIMENSION.asSubstitution().transform(nT);
-        nT = Transformations.calculateNumbers(nT);
-        System.out.println("Collecting");
 
-        nT = CollectFactory.createCollectEqualTerms().transform(nT);
-        System.out.println(((Sum) nT).size());
-        System.out.println(nT.toString(ToStringMode.UTF8));
+
+        System.out.println(" counting terms: ... ");
+        long start = System.currentTimeMillis();
+        ExpandBracketsOutputTransformation fS = ExpandBracketsOutputTransformation.EXPAND_COMMON;
+        for (Sum sum : sums) {
+            rhs = new Product(rhs.equivalent(), sum);
+            rhs = fS.transform(rhs.clone());
+            System.out.println("+");
+        }
+        rhs = loop1.KRONECKER_DIMENSION.asSubstitution().transform(rhs);
+        rhs = Transformations.calculateNumbers(rhs);
+        long stop = System.currentTimeMillis();
+        System.out.println("... . Evalution time = " + (stop - start) + "ms");
+        System.out.println(rhs.toString(ToStringMode.UTF8));
+//        System.out.println(fS.transform(rhs).toString(ToStringMode.UTF8));
+
+//        Tensor rhs_1 = ((MultiTensor) rhs).getElements().get(0);
+//
+//        System.out.println("contracting  ");
+//        rhs_1 = IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC.transform(rhs_1);
+//        rhs_1 = loop1.KRONECKER_DIMENSION.asSubstitution().transform(rhs_1);
+//        rhs_1 = CalculateNumbers.INSTANCE.transform(rhs_1);
+//        System.out.println("done");
+//        System.out.println("expanding  ");
+//        rhs_1 = new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS).transform(rhs_1);
+//        System.out.println("done");
+//        System.out.println("contracting  ");
+//        rhs_1 = IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC.transform(rhs_1);
+//        rhs_1 = loop1.KRONECKER_DIMENSION.asSubstitution().transform(rhs_1);
+//        rhs_1 = CalculateNumbers.INSTANCE.transform(rhs_1);
+//        System.out.println("done");
+//        System.out.println(rhs_1.toString(ToStringMode.UTF8));
+//
+//        int oldSize = ((MultiTensor) rhs_1).size();
+//        TensorIterator iterator = rhs_1.iterator();
+//        Tensor c;
+//        int count;
+//        while (iterator.hasNext()) {
+//            c = iterator.next();
+//            count = 0;
+//            for (Tensor n : c)
+//                if (TTest.testEqualstensorStructure(n, CC.parse("n_{\\mu}")))
+//                    count++;
+//            if (count % 2 != 0)
+//                iterator.remove();
+//        }
+//        int newSize = ((MultiTensor) rhs_1).size();
+//        System.out.println("Old size: " + oldSize + ", new sizeL " + newSize + ".  Collecting");
+//        Tensor nT = ((MultiTensor) rhs_1).getElements().get(0);
+////        count = 0;
+////        for (Tensor t : rhs_1) {
+////            if (count > 10)
+////                break;
+////            ((Sum) nT).add(t);
+////        }
+//        System.out.println(nT.toString(ToStringMode.UTF8));
+//        nT = loop1.MATRIX_K.asSubstitution().transform(nT);
+//        nT = Transformations.expandBrackets(nT);
+//        nT = Transformations.contractMetrics(nT);
+//        nT = loop1.KRONECKER_DIMENSION.asSubstitution().transform(nT);
+//        nT = Transformations.calculateNumbers(nT);
+//        System.out.println("Collecting");
+//
+//        nT = CollectFactory.createCollectEqualTerms().transform(nT);
+//        System.out.println(((Sum) nT).size());
+//        System.out.println(nT.toString(ToStringMode.UTF8));
     }
 
+    @Ignore
     @Test
     public void test2() {
         OneLoop1 loop1 = new OneLoop1(OneLoop1.EVAL.INITIALIZE);
@@ -250,13 +293,26 @@ public class OneLoop1Test {
         Tensor term = ((MultiTensor) loop1.RR.right()).getElements().get(0);
         System.out.println(term.toString(ToStringMode.UTF8));
         term = loop1.HATK_1.asSubstitution().transform(term);
-        term = loop1.HATK_2.asSubstitution().transform(term);
+//        term = loop1.HATK_2.asSubstitution().transform(term);
         term = loop1.HATK_3.asSubstitution().transform(term);
         System.out.println("Expanding...");
         term = new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS).transform(term);
         System.out.println("Contracting...");
         term = Transformations.contractMetrics(term);
-        System.out.println("Done");
+        System.out.println("Done. Result sum size = " + ((MultiTensor) term).size());
+
+        term = ((Sum) term).getElements().get(0);
+//        term = loop1.HATK_2.asSubstitution().transform(term);
+        term = loop1.HATK_2.asSubstitution().transform(term);
+        System.out.println("Expanding...");
+        term = new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS).transform(term);
+        System.out.println("Contracting...");
+        term = Transformations.contractMetrics(term);
+        System.out.println("Done. Result sum size = " + ((MultiTensor) term).size());
+        System.out.println("Collecting...");
+        term = CollectFactory.createCollectEqualTerms().transform(term);
+        System.out.println("Collecting scalars...");
+        term = CollectFactory.createCollectScalars().transform(term);
 
     }
 }

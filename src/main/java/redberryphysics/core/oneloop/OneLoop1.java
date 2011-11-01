@@ -166,7 +166,7 @@ public class OneLoop1 {
                 evalHatK();
                 for (Expression hatK : HATKs)
                     RR.eval(hatK.asSubstitution());
-                 RR.eval(
+                RR.eval(
                         IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                         KRONECKER_DIMENSION.asSubstitution(),
                         CalculateNumbers.INSTANCE,
@@ -241,8 +241,8 @@ public class OneLoop1 {
                 indexesInsertion,
                 L.asSubstitution(),
                 CalculateNumbers.INSTANCE,
-                RICCI.asSubstitution(),
-                RIMAN.asSubstitution(),
+                                RICCI.asSubstitution(),
+                                RIMAN.asSubstitution(),
                 new Transformer(RenameConflictingIndexes.INSTANCE),
                 new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
                 IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
