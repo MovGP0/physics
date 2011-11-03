@@ -65,7 +65,6 @@ public class OneLoop1 {
             new Expression("ACTION = Flat + WR + SR + SSR + FF + FR + RR ");
     public final Expression RR =
             new Expression("RR = (1/10)*L*L*HATK^{\\delta}*DELTA^{\\mu\\nu\\alpha\\beta}*HATK^{\\gamma}*n_{\\sigma}*n_{\\lambda}*R^{\\sigma}_{\\alpha\\beta\\gamma}*R^{\\lambda}_{\\mu\\nu\\delta} + "
-            + "L*L*(L-1)*(L-1)*(L-2)*HATK^{\\beta\\gamma\\delta}*DELTA^{\\alpha}*HATK^{\\mu\\nu}*n_{\\sigma}*n_{\\lambda}*((2/45)*R^{\\lambda}_{\\alpha\\delta\\nu}*R^{\\sigma}_{\\beta\\mu\\gamma}-(1/120)*R^{\\lambda}_{\\delta\\alpha\\nu}*R^{\\sigma}_{\\beta\\mu\\gamma}) + "
             + "L*L*(L-1)*HATK^{\\delta}*DELTA^{\\alpha\\beta\\gamma}*HATK^{\\mu\\nu}*n_{\\sigma}*n_{\\lambda}*(-(1/10)*R^{\\lambda}_{\\mu\\gamma\\nu}*R^{\\sigma}_{\\alpha\\delta\\beta}+(1/15)*R^{\\lambda}_{\\delta\\alpha\\nu}*R^{\\sigma}_{\\beta\\mu\\gamma}+(1/60)*R^{\\lambda}_{\\beta\\delta\\nu}*R^{\\sigma}_{\\gamma\\mu\\alpha})+"
             + "L*L*(L-1)*(L-1)*HATK^{\\gamma\\delta}*DELTA^{\\alpha\\beta}*HATK^{\\mu\\nu}*n_{\\sigma}*n_{\\lambda}*(-(1/20)*R^{\\lambda}_{\\mu\\beta\\nu}*R^{\\sigma}_{\\delta\\alpha\\gamma}+(1/180)*R^{\\lambda}_{\\alpha\\nu\\beta}*R^{\\sigma}_{\\gamma\\delta\\mu}-(7/360)*R^{\\lambda}_{\\mu\\gamma\\nu}*R^{\\sigma}_{\\alpha\\delta\\beta}-(1/240)*R^{\\lambda}_{\\delta\\beta\\nu}*R^{\\sigma}_{\\gamma\\alpha\\mu}-(1/120)*R^{\\lambda}_{\\beta\\gamma\\nu}*R^{\\sigma}_{\\alpha\\delta\\mu}-(1/30)*R^{\\lambda}_{\\delta\\beta\\nu}*R^{\\sigma}_{\\alpha\\gamma\\mu})+"
             + "L*L*(L-1)*HATK^{\\mu\\nu}*DELTA^{\\alpha\\beta\\gamma}*HATK^{\\delta}*n_{\\sigma}*n_{\\lambda}*((7/120)*R^{\\lambda}_{\\beta\\gamma\\nu}*R^{\\sigma}_{\\mu\\alpha\\delta}-(3/40)*R^{\\lambda}_{\\beta\\gamma\\delta}*R^{\\sigma}_{\\mu\\alpha\\nu}+(1/120)*R^{\\lambda}_{\\delta\\gamma\\nu}*R^{\\sigma}_{\\alpha\\beta\\mu})+"
@@ -82,9 +81,83 @@ public class OneLoop1 {
     public final Expression DELTA_2 =
             new Expression("DELTA^{\\mu\\nu} =-(1/2)*L*(L-1)*HATK^{\\mu\\nu}+L*L*HATK^{\\mu}*HATK^{\\nu}+L*L*HATK^{\\nu}*HATK^{\\mu}");
     public final Expression DELTA_3 =
-            new Expression("DELTA^{\\mu\\nu\\alpha}=-(1/6)*L*(L-1)*(L-2)*HATK^{\\mu\\nu\\alpha}+(1/12)*L*L*(L-1)*(HATK^{\\mu\\nu}*HATK^{\\alpha}+HATK^{\\mu\\alpha}*HATK^{\\nu}+HATK^{\\alpha\\nu}*HATK^{\\mu}+HATK^{\\nu\\mu}*HATK^{\\alpha}+HATK^{\\nu\\alpha}*HATK^{\\mu}+HATK^{\\alpha\\mu}*HATK^{\\nu})+(1/2)*L*L*(L-1)*HATK^{\\mu}*HATK^{\\nu}*HATK^{\\alpha}");
+            new Expression("DELTA^{\\mu\\nu\\alpha}="
+            + "(1/6)*L*L*(L-1)*(HATK^{\\mu\\nu}*HATK^{\\alpha}+HATK^{\\mu\\alpha}*HATK^{\\nu}+HATK^{\\alpha\\nu}*HATK^{\\mu})+"
+            + "(1/6)*L*L*(L-1)*(HATK^{\\alpha}*HATK^{\\mu\\nu}+HATK^{\\nu}*HATK^{\\mu\\alpha}+HATK^{\\mu}*HATK^{\\alpha\\nu})+"
+            + "-(1/6)*L*L*L*(HATK^{\\mu}*HATK^{\\nu}*HATK^{\\alpha}+HATK^{\\mu}*HATK^{\\alpha}*HATK^{\\nu}+HATK^{\\nu}*HATK^{\\mu}*HATK^{\\alpha}+HATK^{\\nu}*HATK^{\\alpha}*HATK^{\\mu}+HATK^{\\alpha}*HATK^{\\mu}*HATK^{\\nu}+HATK^{\\alpha}*HATK^{\\nu}*HATK^{\\mu})");
     public final Expression DELTA_4 =
-            new Expression("DELTA^{\\mu\\nu\\alpha\\beta} = (1/4)*L*L*(L-1)*(L-1)*HATK^{\\mu\\nu}*HATK^{\\alpha\\beta}");
+            new Expression("DELTA^{\\mu\\nu\\alpha\\beta}="
+            + "(1/24)*L*L*(L-1)*(L-1)*("
+            + "HATK^{\\mu\\nu}*HATK^{\\alpha\\beta}+"
+            + "HATK^{\\mu\\alpha}*HATK^{\\nu\\beta}+"
+            + "HATK^{\\mu\\beta}*HATK^{\\alpha\\nu}+"
+            + "HATK^{\\nu\\alpha}*HATK^{\\mu\\beta}+"
+            + "HATK^{\\nu\\beta}*HATK^{\\mu\\alpha}+"
+            + "HATK^{\\alpha\\beta}*HATK^{\\mu\\nu})"
+            + "-(1/24)*L*L*L*(L-1)*("
+            + "HATK^{\\mu\\nu}*HATK^{\\alpha}*HATK^{\\beta}+"
+            + "HATK^{\\mu\\nu}*HATK^{\\beta}*HATK^{\\alpha}+"
+            + "HATK^{\\mu\\alpha}*HATK^{\\nu}*HATK^{\\beta}+"
+            + "HATK^{\\mu\\alpha}*HATK^{\\beta}*HATK^{\\nu}+"
+            + "HATK^{\\mu\\beta}*HATK^{\\alpha}*HATK^{\\nu}+"
+            + "HATK^{\\mu\\beta}*HATK^{\\nu}*HATK^{\\alpha}+"
+            + "HATK^{\\nu\\alpha}*HATK^{\\mu}*HATK^{\\beta}+"
+            + "HATK^{\\nu\\alpha}*HATK^{\\beta}*HATK^{\\mu}+"
+            + "HATK^{\\nu\\beta}*HATK^{\\mu}*HATK^{\\alpha}+"
+            + "HATK^{\\nu\\beta}*HATK^{\\alpha}*HATK^{\\mu}+"
+            + "HATK^{\\alpha\\beta}*HATK^{\\nu}*HATK^{\\mu}+"
+            + "HATK^{\\alpha\\beta}*HATK^{\\mu}*HATK^{\\nu})"
+            + "-(1/24)*L*L*L*(L-1)*("
+            + "HATK^{\\alpha}*HATK^{\\mu\\nu}*HATK^{\\beta}+"
+            + "HATK^{\\beta}*HATK^{\\mu\\nu}*HATK^{\\alpha}+"
+            + "HATK^{\\nu}*HATK^{\\mu\\alpha}*HATK^{\\beta}+"
+            + "HATK^{\\beta}*HATK^{\\mu\\alpha}*HATK^{\\nu}+"
+            + "HATK^{\\alpha}*HATK^{\\mu\\beta}*HATK^{\\nu}+"
+            + "HATK^{\\nu}*HATK^{\\mu\\beta}*HATK^{\\alpha}+"
+            + "HATK^{\\mu}*HATK^{\\nu\\alpha}*HATK^{\\beta}+"
+            + "HATK^{\\beta}*HATK^{\\nu\\alpha}*HATK^{\\mu}+"
+            + "HATK^{\\mu}*HATK^{\\nu\\beta}*HATK^{\\alpha}+"
+            + "HATK^{\\alpha}*HATK^{\\nu\\beta}*HATK^{\\mu}+"
+            + "HATK^{\\nu}*HATK^{\\alpha\\beta}*HATK^{\\mu}+"
+            + "HATK^{\\mu}*HATK^{\\alpha\\beta}*HATK^{\\nu})"
+            + "-(1/24)*L*L*L*(L-1)*("
+            + "HATK^{\\alpha}*HATK^{\\beta}*HATK^{\\mu\\nu}+"
+            + "HATK^{\\beta}*HATK^{\\alpha}*HATK^{\\mu\\nu}+"
+            + "HATK^{\\nu}*HATK^{\\beta}*HATK^{\\mu\\alpha}+"
+            + "HATK^{\\beta}*HATK^{\\nu}*HATK^{\\mu\\alpha}+"
+            + "HATK^{\\alpha}*HATK^{\\nu}*HATK^{\\mu\\beta}+"
+            + "HATK^{\\nu}*HATK^{\\alpha}*HATK^{\\mu\\beta}+"
+            + "HATK^{\\mu}*HATK^{\\beta}*HATK^{\\nu\\alpha}+"
+            + "HATK^{\\beta}*HATK^{\\mu}*HATK^{\\nu\\alpha}+"
+            + "HATK^{\\mu}*HATK^{\\alpha}*HATK^{\\nu\\beta}+"
+            + "HATK^{\\alpha}*HATK^{\\mu}*HATK^{\\nu\\beta}+"
+            + "HATK^{\\nu}*HATK^{\\mu}*HATK^{\\alpha\\beta}+"
+            + "HATK^{\\mu}*HATK^{\\nu}*HATK^{\\alpha\\beta})"
+            + "+(1/24)*L*L*L*L*("
+            + "HATK^{\\mu}*HATK^{\\nu}*HATK^{\\alpha}*HATK^{\\beta}+"
+            + "HATK^{\\mu}*HATK^{\\nu}*HATK^{\\beta}*HATK^{\\alpha}+"
+            + "HATK^{\\mu}*HATK^{\\alpha}*HATK^{\\nu}*HATK^{\\beta}+"
+            + "HATK^{\\mu}*HATK^{\\alpha}*HATK^{\\beta}*HATK^{\\nu}+"
+            + "HATK^{\\mu}*HATK^{\\beta}*HATK^{\\nu}*HATK^{\\alpha}+"
+            + "HATK^{\\mu}*HATK^{\\beta}*HATK^{\\alpha}*HATK^{\\nu}+"
+            + "HATK^{\\nu}*HATK^{\\mu}*HATK^{\\alpha}*HATK^{\\beta}+"
+            + "HATK^{\\nu}*HATK^{\\mu}*HATK^{\\beta}*HATK^{\\alpha}+"
+            + "HATK^{\\nu}*HATK^{\\alpha}*HATK^{\\mu}*HATK^{\\beta}+"
+            + "HATK^{\\nu}*HATK^{\\alpha}*HATK^{\\beta}*HATK^{\\mu}+"
+            + "HATK^{\\nu}*HATK^{\\beta}*HATK^{\\mu}*HATK^{\\alpha}+"
+            + "HATK^{\\nu}*HATK^{\\beta}*HATK^{\\alpha}*HATK^{\\mu}+"
+            + "HATK^{\\alpha}*HATK^{\\nu}*HATK^{\\mu}*HATK^{\\beta}+"
+            + "HATK^{\\alpha}*HATK^{\\nu}*HATK^{\\beta}*HATK^{\\mu}+"
+            + "HATK^{\\alpha}*HATK^{\\mu}*HATK^{\\nu}*HATK^{\\beta}+"
+            + "HATK^{\\alpha}*HATK^{\\mu}*HATK^{\\beta}*HATK^{\\nu}+"
+            + "HATK^{\\alpha}*HATK^{\\beta}*HATK^{\\mu}*HATK^{\\nu}+"
+            + "HATK^{\\alpha}*HATK^{\\beta}*HATK^{\\nu}*HATK^{\\mu}+"          
+            + "HATK^{\\beta}*HATK^{\\nu}*HATK^{\\mu}*HATK^{\\alpha}+"
+            + "HATK^{\\beta}*HATK^{\\nu}*HATK^{\\alpha}*HATK^{\\mu}+"
+            + "HATK^{\\beta}*HATK^{\\mu}*HATK^{\\nu}*HATK^{\\alpha}+"
+            + "HATK^{\\beta}*HATK^{\\mu}*HATK^{\\alpha}*HATK^{\\nu}+"
+            + "HATK^{\\beta}*HATK^{\\alpha}*HATK^{\\mu}*HATK^{\\nu}+"
+            + "HATK^{\\beta}*HATK^{\\alpha}*HATK^{\\mu}*HATK^{\\nu})");
     public final Expression[] DELTAs = new Expression[]{DELTA_1, DELTA_2, DELTA_3, DELTA_4};
     /*
      *Section for defining \hat K's 
@@ -191,7 +264,7 @@ public class OneLoop1 {
                     KRONECKER_DIMENSION.asSubstitution(),
                     CollectFactory.createCollectEqualTerms(),
                     CalculateNumbers.INSTANCE,
-                    CollectFactory.ccreateCollectAllScalars(),
+                    CollectFactory.createCollectAllScalars(),
                     CalculateNumbers.INSTANCE);
     }
 
@@ -212,7 +285,7 @@ public class OneLoop1 {
                     KRONECKER_DIMENSION.asSubstitution(),
                     CollectFactory.createCollectEqualTerms(),
                     CalculateNumbers.INSTANCE,
-                    CollectFactory.ccreateCollectAllScalars(),
+                    CollectFactory.createCollectAllScalars(),
                     CalculateNumbers.INSTANCE);
     }
 
@@ -230,7 +303,7 @@ public class OneLoop1 {
                     KRONECKER_DIMENSION.asSubstitution(),
                     CollectFactory.createCollectEqualTerms(),
                     CalculateNumbers.INSTANCE,
-                    CollectFactory.ccreateCollectAllScalars(),
+                    CollectFactory.createCollectAllScalars(),
                     CalculateNumbers.INSTANCE);
     }
 
@@ -241,8 +314,8 @@ public class OneLoop1 {
                 indexesInsertion,
                 L.asSubstitution(),
                 CalculateNumbers.INSTANCE,
-                                RICCI.asSubstitution(),
-                                RIMAN.asSubstitution(),
+                RICCI.asSubstitution(),
+                RIMAN.asSubstitution(),
                 new Transformer(RenameConflictingIndexes.INSTANCE),
                 new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
                 IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,

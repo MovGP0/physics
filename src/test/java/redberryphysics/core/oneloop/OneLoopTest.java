@@ -27,7 +27,7 @@ import org.junit.Ignore;
 import redberry.core.tensor.Product;
 import redberry.core.tensor.Sum;
 import redberry.core.transformation.Transformation;
-import redberry.core.transformation.collect.AbstractCollectTerms;
+import redberry.core.transformation.collect.CollectTermsTransformation;
 import redberry.core.transformation.collect.EqualsSplitCriteria;
 import redberry.core.transformation.substitutions.TensorTreeIndicatorImpl;
 import redberry.core.tensor.Tensor;
@@ -148,7 +148,7 @@ public class OneLoopTest {
         RR = SubstitutionsFactory.createSubstitution("d^a_a=4").transform(RR);
         RR = Transformations.calculateNumbers(RR);
         assertIndexes(RR);
-        Transformation collect = new AbstractCollectTerms(EqualsSplitCriteria.INSTANCE);
+        Transformation collect = new CollectTermsTransformation(EqualsSplitCriteria.INSTANCE);
         RR = collect.transform(RR);
         System.out.println(((MultiTensor) RR).size());
         System.out.println(RR.toString(ToStringMode.UTF8));
