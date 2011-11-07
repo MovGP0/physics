@@ -27,7 +27,7 @@ import org.junit.Ignore;
 import redberry.core.tensor.Product;
 import redberry.core.tensor.Sum;
 import redberry.core.transformation.Transformation;
-import redberry.core.transformation.collect.CollectTermsTransformation;
+import redberry.core.transformation.collect.CollectTerms;
 import redberry.core.transformation.collect.EqualsSplitCriteria;
 import redberry.core.transformation.substitutions.TensorTreeIndicatorImpl;
 import redberry.core.tensor.Tensor;
@@ -42,7 +42,7 @@ import redberry.core.tensor.TensorIterator;
 import redberry.core.tensor.test.TTest;
 import redberry.core.transformation.IndexesInsertion;
 import redberry.core.transformation.Transformations;
-import redberry.core.transformation.collect.CollectManager;
+import redberry.core.transformation.collect.PatternCollectManager;
 import redberry.core.transformation.collect.SplitPattern;
 import redberry.core.transformation.substitutions.SubstitutionsFactory;
 import redberryphysics.core.oneloop.OneLoop;
@@ -80,7 +80,7 @@ public class OneLoopTest {
                 + "|HATK_{\\mu\\nu\\alpha\\beta}"
                 + "|n_{\\mu}"
                 + "|(R_{\\mu\\nu}|R_{\\mu\\nu\\alpha\\beta}))");
-        CollectManager collectManager = new CollectManager(deque);
+        PatternCollectManager collectManager = new PatternCollectManager(deque);
 
         RR = collectManager.transform(RR);
         assertTrue(TTest.testIsScalar(RR));
@@ -148,7 +148,7 @@ public class OneLoopTest {
         RR = SubstitutionsFactory.createSubstitution("d^a_a=4").transform(RR);
         RR = Transformations.calculateNumbers(RR);
         assertIndexes(RR);
-        Transformation collect = new CollectTermsTransformation(EqualsSplitCriteria.INSTANCE);
+        Transformation collect = new CollectTerms(EqualsSplitCriteria.INSTANCE);
         RR = collect.transform(RR);
         System.out.println(((MultiTensor) RR).size());
         System.out.println(RR.toString(ToStringMode.UTF8));

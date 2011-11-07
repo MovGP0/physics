@@ -26,7 +26,7 @@ import redberry.core.tensor.test.TTest;
 import redberry.core.transformation.IndexesInsertion;
 import redberry.core.transformation.Transformation;
 import redberry.core.transformation.Transformations;
-import redberry.core.transformation.collect.CollectTermsTransformation;
+import redberry.core.transformation.collect.CollectTerms;
 import redberry.core.transformation.collect.EqualsSplitCriteria;
 import redberry.core.transformation.substitutions.SubstitutionsFactory;
 import redberry.core.utils.Indicator;
@@ -152,7 +152,7 @@ public class OneLoop {
         HATK_1_SUB = Transformations.contractMetrics(HATK_1_SUB);
         HATK_2_SUB = Transformations.contractMetrics(HATK_2_SUB);
 
-        Transformation collect = new CollectTermsTransformation(EqualsSplitCriteria.INSTANCE);
+        Transformation collect = new CollectTerms(EqualsSplitCriteria.INSTANCE);
         HATK_1_SUB = collect.transform(HATK_1_SUB);
         HATK_2_SUB = collect.transform(HATK_2_SUB);
 

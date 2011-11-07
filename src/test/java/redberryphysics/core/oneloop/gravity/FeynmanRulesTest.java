@@ -19,16 +19,18 @@
  */
 package redberryphysics.core.oneloop.gravity;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
+import redberry.core.context.CC;
 import redberry.core.tensor.Expression;
+import redberry.core.tensor.Tensor;
+import redberry.core.tensor.TensorIterator;
+import redberry.core.tensor.test.TTest;
 import redberry.core.transformation.CalculateNumbers;
 import redberry.core.transformation.ExpandBrackets;
 import redberry.core.transformation.Transformer;
 import redberry.core.transformation.collect.CollectFactory;
+import redberry.core.transformation.collect.CollectPowers;
 import redberry.core.transformation.contractions.IndexesContractionsTransformation;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -42,17 +44,33 @@ public class FeynmanRulesTest {
     @Test
     public void test1() {
         FeynmanRules feynmanRules = new FeynmanRules();
-        Expression   loop1 =
-                new Expression("SC[k^a] = T^{mn}[p^a,p^a-k^a]*T_{mn}[p^a-k^a,p^a]");
+        Expression loop1 =
+                new Expression("SC[k^a] = T^{mn}[p^a,k^a-p^a]*T_{mn}[p^a-k^a,p^a]");
         loop1.eval(feynmanRules.scalar2_gluon_vertex.asSubstitution());
         loop1.eval(
                 new Transformer(ExpandBrackets.EXPAND_ALL),
                 IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                 feynmanRules.KRONECKER_DIMENSION.asSubstitution(),
                 CalculateNumbers.INSTANCE,
-//                CollectFactory.createCollectEqualTerms(),
+                CollectFactory.createCollectAllEqualTerms(),
                 CollectFactory.createCollectAllScalars(),
-                CalculateNumbers.INSTANCE);
+//                new Expression("p_a=x*k_a"),
+                CalculateNumbers.INSTANCE,
+                new Transformer(CollectPowers.INSTANCE));
+        Tensor rhs = loop1.right();
+        TensorIterator iterator = rhs.iterator();
+        Tensor current;
+        int count;
+        while (iterator.hasNext()) {
+            count = 0;
+            current = iterator.next();
+            for (Tensor t : current)
+                if (TTest.testEqualstensorStructure(t, CC.parse("p^a")))
+                    count++;
+            if (count % 2 != 0)
+                iterator.remove();
+
+        }
         System.out.println(loop1);
     }
 
@@ -60,7 +78,7 @@ public class FeynmanRulesTest {
     public void test2() {
         FeynmanRules feynmanRules = new FeynmanRules();
         Expression e = new Expression("A_mnab = G_mnab[p^q]");
-        e.eval(feynmanRules.propagator.asSubstitution(),IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC);
+        e.eval(feynmanRules.propagator.asSubstitution(), IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC);
         System.out.println(e);
     }
 }
