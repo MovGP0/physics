@@ -19,144 +19,321 @@
  */
 package redberryphysics.core.oneloop;
 
+import redberry.core.transformation.substitutions.TensorTreeIndicatorImpl;
 import redberry.core.context.CC;
-import redberry.core.parser.ParserIndexes;
+import redberry.core.tensor.Expression;
 import redberry.core.tensor.Tensor;
 import redberry.core.tensor.test.TTest;
+import redberry.core.transformation.CalculateNumbers;
+import redberry.core.transformation.ExpandBrackets;
 import redberry.core.transformation.IndexesInsertion;
+import redberry.core.transformation.RenameConflictingIndexes;
 import redberry.core.transformation.Transformation;
-import redberry.core.transformation.Transformations;
-import redberry.core.transformation.collect.CollectTerms;
-import redberry.core.transformation.collect.EqualsSplitCriteria;
-import redberry.core.transformation.substitutions.SubstitutionsFactory;
+import redberry.core.transformation.Transformer;
+import redberry.core.transformation.collect.CollectFactory;
+import redberry.core.transformation.collect.CollectPowers;
+import redberry.core.transformation.contractions.IndexesContractionsTransformation;
 import redberry.core.utils.Indicator;
+import static redberryphysics.core.util.IndexesFactoryUtil.*;
 
 /**
- * All hat tensors have prefix "HAT".
- * 
+ *
+ * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
+ * @author Konstantin Kiselev
  */
 public class OneLoop {
-    public static Tensor COUNTERTERMS = CC.parse("G1");
-    public final static Transformation COUNTERTERMS_SUBSTITUTION =
-            SubstitutionsFactory.createSubstitution("G1 = "
-            + "Flat + WR + SR + SSR + FF + FR + RR ");
-    public static Tensor RR = CC.parse("RR");
-    public static Tensor N = CC.parse("n_{\\mu}");
-    //temporary L=2
-    public static Tensor RR_SUB = CC.parse("(1/10)*L*L*HATK^{\\delta}*DELTA^{\\mu\\nu\\alpha\\beta}*HATK^{\\gamma}*n_{\\sigma}*n_{\\lambda}*R^{\\sigma}_{\\alpha\\beta\\gamma}*R^{\\lambda}_{\\mu\\nu\\delta} + "
-            + "L*L*(L-1)*(L-1)*(L-2)*HATK^{\\beta\\gamma\\delta}*DELTA^{\\alpha}*HATK^{\\mu\\nu}*n_{\\sigma}*n_{\\lambda}*((2/45)*R^{\\lambda}_{\\alpha\\delta\\nu}*R^{\\sigma}_{\\beta\\mu\\gamma}-(1/120)*R^{\\lambda}_{\\delta\\alpha\\nu}*R^{\\sigma}_{\\beta\\mu\\gamma}) + "
+    /*
+     * General definitions of auxilary tensors
+     */
+    public final Expression L = new Expression("L = 2");
+    public final Expression P =
+            new Expression("P^{\\alpha\\beta}_{\\mu\\nu} = (1/2)*(d^{\\alpha}_{\\mu}*d^{\\beta}_{\\nu}+d^{\\alpha}_{\\nu}*d^{\\beta}_{\\mu})-"
+            + "(1/4)*g_{\\mu\\nu}*g^{\\alpha\\beta}");
+    public final Expression KRONECKER_DIMENSION =
+            new Expression("d^{\\alpha}_{\\alpha} = 4");
+    /*
+     * Additional input
+     */
+    public final Expression RICCI =
+            new Expression("R_{\\mu\\nu} = -g_{\\mu\\nu}*LAMBDA");
+    public final Expression RIMAN =
+            new Expression("R_{\\mu\\nu\\alpha\\beta} = (1/3)*(g_{\\mu\\beta}*g_{\\alpha\\nu}-g_{\\mu\\nu}*g_{\\alpha\\beta})*LAMBDA");
+    /*
+     * Effective action section
+     */
+    public final Expression ACTION =
+            new Expression("ACTION = Flat + WR + SR + SSR + FF + FR + RR ");
+    public final Expression RR =
+            new Expression("RR = (1/10)*L*L*HATK^{\\delta}*DELTA^{\\mu\\nu\\alpha\\beta}*HATK^{\\gamma}*n_{\\sigma}*n_{\\lambda}*R^{\\sigma}_{\\alpha\\beta\\gamma}*R^{\\lambda}_{\\mu\\nu\\delta} + "
             + "L*L*(L-1)*HATK^{\\delta}*DELTA^{\\alpha\\beta\\gamma}*HATK^{\\mu\\nu}*n_{\\sigma}*n_{\\lambda}*(-(1/10)*R^{\\lambda}_{\\mu\\gamma\\nu}*R^{\\sigma}_{\\alpha\\delta\\beta}+(1/15)*R^{\\lambda}_{\\delta\\alpha\\nu}*R^{\\sigma}_{\\beta\\mu\\gamma}+(1/60)*R^{\\lambda}_{\\beta\\delta\\nu}*R^{\\sigma}_{\\gamma\\mu\\alpha})+"
             + "L*L*(L-1)*(L-1)*HATK^{\\gamma\\delta}*DELTA^{\\alpha\\beta}*HATK^{\\mu\\nu}*n_{\\sigma}*n_{\\lambda}*(-(1/20)*R^{\\lambda}_{\\mu\\beta\\nu}*R^{\\sigma}_{\\delta\\alpha\\gamma}+(1/180)*R^{\\lambda}_{\\alpha\\nu\\beta}*R^{\\sigma}_{\\gamma\\delta\\mu}-(7/360)*R^{\\lambda}_{\\mu\\gamma\\nu}*R^{\\sigma}_{\\alpha\\delta\\beta}-(1/240)*R^{\\lambda}_{\\delta\\beta\\nu}*R^{\\sigma}_{\\gamma\\alpha\\mu}-(1/120)*R^{\\lambda}_{\\beta\\gamma\\nu}*R^{\\sigma}_{\\alpha\\delta\\mu}-(1/30)*R^{\\lambda}_{\\delta\\beta\\nu}*R^{\\sigma}_{\\alpha\\gamma\\mu})+"
             + "L*L*(L-1)*HATK^{\\mu\\nu}*DELTA^{\\alpha\\beta\\gamma}*HATK^{\\delta}*n_{\\sigma}*n_{\\lambda}*((7/120)*R^{\\lambda}_{\\beta\\gamma\\nu}*R^{\\sigma}_{\\mu\\alpha\\delta}-(3/40)*R^{\\lambda}_{\\beta\\gamma\\delta}*R^{\\sigma}_{\\mu\\alpha\\nu}+(1/120)*R^{\\lambda}_{\\delta\\gamma\\nu}*R^{\\sigma}_{\\alpha\\beta\\mu})+"
-            + "L*L*HATK^{\\mu}*DELTA^{\\alpha\\beta\\gamma}*HATK^{\\nu}*{\\nu}_{\\lambda}*(-(1/8)*R_{\\beta\\gamma}*R^{\\lambda}_{\\nu\\alpha\\mu}+(3/20)*R_{\\beta\\gamma}*R^{\\lambda}_{\\mu\\alpha\\nu}+(3/40)*R_{\\alpha\\mu}*R^{\\lambda}_{\\beta\\gamma\\nu}+(1/40)*R^{\\sigma}_{\\beta\\gamma\\mu}*R^{\\lambda}_{\\nu\\alpha\\sigma}-(3/20)*R^{\\sigma}_{\\alpha\\beta\\mu}*R^{\\lambda}_{\\gamma\\nu\\sigma}+(1/10)*R^{\\sigma}_{\\alpha\\beta\\nu}*R^{\\lambda}_{\\gamma\\mu\\sigma})+"
+//            + "L*L*HATK^{\\mu}*DELTA^{\\alpha\\beta\\gamma}*HATK^{\\nu}*{\\nu}_{\\lambda}*(-(1/8)*R_{\\beta\\gamma}*R^{\\lambda}_{\\nu\\alpha\\mu}+(3/20)*R_{\\beta\\gamma}*R^{\\lambda}_{\\mu\\alpha\\nu}+(3/40)*R_{\\alpha\\mu}*R^{\\lambda}_{\\beta\\gamma\\nu}+(1/40)*R^{\\sigma}_{\\beta\\gamma\\mu}*R^{\\lambda}_{\\nu\\alpha\\sigma}-(3/20)*R^{\\sigma}_{\\alpha\\beta\\mu}*R^{\\lambda}_{\\gamma\\nu\\sigma}+(1/10)*R^{\\sigma}_{\\alpha\\beta\\nu}*R^{\\lambda}_{\\gamma\\mu\\sigma})+"
             + "L*L*(L-1)*HATK^{\\gamma}*DELTA^{\\alpha\\beta}*HATK^{\\mu\\nu}*n_{\\lambda}*((1/20)*R_{\\alpha\\nu}*R^{\\lambda}_{\\gamma\\beta\\mu}+(1/20)*R_{\\alpha\\gamma}*R^{\\lambda}_{\\mu\\beta\\nu}+(1/10)*R_{\\alpha\\beta}*R^{\\lambda}_{\\mu\\gamma\\nu}+(1/20)*R^{\\sigma}_{\\alpha\\nu\\gamma}*R^{\\lambda}_{\\sigma\\beta\\mu}-(1/60)*R^{\\sigma}_{\\mu\\alpha\\nu}*R^{\\lambda}_{\\beta\\sigma\\gamma}+(1/10)*R^{\\sigma}_{\\alpha\\beta\\gamma}*R^{\\lambda}_{\\mu\\sigma\\nu}-(1/12)*R^{\\sigma}_{\\alpha\\beta\\nu}*R^{\\lambda}_{\\mu\\sigma\\gamma})+"
             + "L*L*(L-1)*(L-1)*HATK^{\\alpha\\beta}*DELTA^{\\gamma}*HATK^{\\mu\\nu}*n_{\\lambda}*((1/60)*R_{\\alpha\\mu}*R^{\\lambda}_{\\beta\\nu\\gamma}-(1/20)*R_{\\alpha\\mu}*R^{\\lambda}_{\\gamma\\nu\\beta}+(1/120)*R_{\\alpha\\beta}*R^{\\lambda}_{\\mu\\nu\\gamma}+(3/40)*R_{\\alpha\\gamma}*R^{\\lambda}_{\\nu\\beta\\mu}+(1/20)*R^{\\sigma}_{\\gamma\\mu\\alpha}*R^{\\lambda}_{\\nu\\sigma\\beta}+(1/120)*R^{\\sigma}_{\\alpha\\mu\\gamma}*R^{\\lambda}_{\\beta\\nu\\sigma}-(1/40)*R^{\\sigma}_{\\alpha\\mu\\gamma}*R^{\\lambda}_{\\sigma\\nu\\beta}+(1/40)*R^{\\sigma}_{\\alpha\\mu\\beta}*R^{\\lambda}_{\\sigma\\nu\\gamma}-(1/20)*R^{\\sigma}_{\\alpha\\mu\\beta}*R^{\\lambda}_{\\gamma\\nu\\sigma}-(1/40)*R^{\\sigma}_{\\mu\\beta\\nu}*R^{\\lambda}_{\\gamma\\sigma\\alpha})+"
             + "L*L*(L-1)*HATK^{\\alpha\\beta}*DELTA^{\\mu\\nu}*HATK^{\\gamma}*n_{\\lambda}*((1/20)*R^{\\sigma}_{\\mu\\nu\\beta}*R^{\\lambda}_{\\gamma\\sigma\\alpha}-(7/60)*R^{\\sigma}_{\\beta\\mu\\alpha}*R^{\\lambda}_{\\gamma\\nu\\sigma}+(1/20)*R^{\\sigma}_{\\beta\\mu\\alpha}*R^{\\lambda}_{\\sigma\\nu\\gamma}+(1/10)*R^{\\sigma}_{\\mu\\beta\\gamma}*R^{\\lambda}_{\\nu\\alpha\\sigma}+(1/60)*R^{\\sigma}_{\\mu\\beta\\gamma}*R^{\\lambda}_{\\alpha\\nu\\sigma}+(7/120)*R_{\\alpha\\beta}*R^{\\lambda}_{\\nu\\gamma\\mu}+(11/60)*R_{\\beta\\mu}*R^{\\lambda}_{\\nu\\alpha\\gamma})");
-    public final Transformation RR_SUBSTITUTION;
-    public static Tensor DELTA_1 = CC.parse("DELTA^{\\mu}");
-    //temporary without symmetrization
-    public static Tensor DELTA_1_SUB = CC.parse("-L*HATK^{\\mu}");
-    public static Tensor DELTA_2 = CC.parse("DELTA^{\\mu\\nu}");
-    public static Tensor DELTA_2_SUB = CC.parse("-(1/2)*L*(L-1)*HATK^{\\mu\\nu}+L*L*HATK^{\\mu}*HATK^{\\nu}+L*L*HATK^{\\nu}*HATK^{\\mu}");
-    public static Tensor DELTA_3 = CC.parse("DELTA^{\\mu\\nu\\alpha}");
-    public static Tensor DELTA_3_SUB = CC.parse("-(1/6)*L*(L-1)*(L-2)*HATK^{\\mu\\nu\\alpha}+(1/12)*L*L*(L-1)*(HATK^{\\mu\\nu}*HATK^{\\alpha}+HATK^{\\mu\\alpha}*HATK^{\\nu}+HATK^{\\alpha\\nu}*HATK^{\\mu}+HATK^{\\nu\\mu}*HATK^{\\alpha}+HATK^{\\nu\\alpha}*HATK^{\\mu}+HATK^{\\alpha\\mu}*HATK^{\\nu})+(1/2)*L*L*(L-1)*HATK^{\\mu}*HATK^{\\nu}*HATK^{\\alpha}");
-    public static Tensor DELTA_4 = CC.parse("DELTA^{\\mu\\nu\\alpha\\beta}");
-    //temprory wrong
-    public static Tensor DELTA_4_SUB = CC.parse("-(1/6)*L*(L-1)*(L-2)*(L-3)*HATK^{\\mu\\nu\\alpha\\beta}");
-    public static Tensor HATK_1 = CC.parse("HATK^{\\mu}");
-    public static Tensor HATK_2 = CC.parse("HATK^{\\mu\\nu}");
-    public static Tensor HATK_3 = CC.parse("HATK^{\\mu\\nu\\alpha}");
-    public static Tensor HATK_4 = CC.parse("HATK^{\\mu\\nu\\alpha\\beta}");
-    //
-    public static Tensor MATRIX_HATK_1 = CC.parse("HATK^{ij}_{pq}^{\\mu}");
-    public static Tensor MATRIX_HATK_2 = CC.parse("HATK^{ij}_{pq}^{\\mu\\nu}");
-    public static Tensor MATRIX_HATK_3 = CC.parse("HATK^{ij}_{pq}^{\\mu\\nu\\alpha}");
-    public static Tensor MATRIX_HATK_4 = CC.parse("HATK^{ij}_{pq}^{\\mu\\nu\\alpha\\beta}");
-    public static Tensor K_2 = CC.parse("K^{\\mu\\nu}");
-    public static Tensor K_2_INV = CC.parse("KINV");
-    public static Tensor HATK_1_SUB = CC.parse("KINV*K^{\\mu\\nu}*n_{\\nu}");
-    public static Tensor HATK_2_SUB = CC.parse("KINV*K^{\\mu\\nu}");
-    public static Tensor HATK_3_SUB = CC.parse("HATK^{\\mu\\nu\\alpha}");
-    public static Tensor HATK_4_SUB = CC.parse("HATK^{\\mu\\nu\\alpha\\beta}");
+    public final Expression[] TERMs = new Expression[]{RR};
     /*
-     * Matrices
+     *Section for defining \Delta's 
      */
-    public static Tensor MATRIX_K_2 = CC.parse("K^{ij}_{pq}^{\\mu\\nu}");
-    //K^{\\mu\\nu}^{ij}_{pq}
-    public static Tensor MATRIX_K_2_SUB = CC.parse("g^{\\mu\\nu}*((1/2)*(d^i_p*d^j_q+d^i_q*d^j_p)-(1/4)*g_{pq}*g^{ij})");
-    //KINV^{ij}_{pq}
-    public static Tensor MATRIX_K_2_INV = CC.parse("KINV^{ij}_{pq}");
-    public static Tensor MATRIX_K_2_INV_SUB = CC.parse("(1/2)*(d^i_p*d^j_q+d^i_q*d^j_p)-(1/4)*g_{pq}*g^{ij}+a*g_{pq}*g^{ij}");
+    public final Expression DELTA_1 =
+            new Expression("DELTA^{\\mu} = -L*HATK^{\\mu}");
+    public final Expression DELTA_2 =
+            new Expression("DELTA^{\\mu\\nu} =-(1/2)*L*(L-1)*HATK^{\\mu\\nu}+L*L*HATK^{\\mu}*HATK^{\\nu}+L*L*HATK^{\\nu}*HATK^{\\mu}");
+    public final Expression DELTA_3 =
+            new Expression("DELTA^{\\mu\\nu\\alpha}="
+            + "(1/6)*L*L*(L-1)*(HATK^{\\mu\\nu}*HATK^{\\alpha}+HATK^{\\mu\\alpha}*HATK^{\\nu}+HATK^{\\alpha\\nu}*HATK^{\\mu})+"
+            + "(1/6)*L*L*(L-1)*(HATK^{\\alpha}*HATK^{\\mu\\nu}+HATK^{\\nu}*HATK^{\\mu\\alpha}+HATK^{\\mu}*HATK^{\\alpha\\nu})+"
+            + "-(1/6)*L*L*L*(HATK^{\\mu}*HATK^{\\nu}*HATK^{\\alpha}+HATK^{\\mu}*HATK^{\\alpha}*HATK^{\\nu}+HATK^{\\nu}*HATK^{\\mu}*HATK^{\\alpha}+HATK^{\\nu}*HATK^{\\alpha}*HATK^{\\mu}+HATK^{\\alpha}*HATK^{\\mu}*HATK^{\\nu}+HATK^{\\alpha}*HATK^{\\nu}*HATK^{\\mu})");
+    public final Expression DELTA_4 =
+            new Expression("DELTA^{\\mu\\nu\\alpha\\beta}="
+            + "(1/24)*L*L*(L-1)*(L-1)*("
+            + "HATK^{\\mu\\nu}*HATK^{\\alpha\\beta}+"
+            + "HATK^{\\mu\\alpha}*HATK^{\\nu\\beta}+"
+            + "HATK^{\\mu\\beta}*HATK^{\\alpha\\nu}+"
+            + "HATK^{\\nu\\alpha}*HATK^{\\mu\\beta}+"
+            + "HATK^{\\nu\\beta}*HATK^{\\mu\\alpha}+"
+            + "HATK^{\\alpha\\beta}*HATK^{\\mu\\nu})"
+            + "-(1/24)*L*L*L*(L-1)*("
+            + "HATK^{\\mu\\nu}*HATK^{\\alpha}*HATK^{\\beta}+"
+            + "HATK^{\\mu\\nu}*HATK^{\\beta}*HATK^{\\alpha}+"
+            + "HATK^{\\mu\\alpha}*HATK^{\\nu}*HATK^{\\beta}+"
+            + "HATK^{\\mu\\alpha}*HATK^{\\beta}*HATK^{\\nu}+"
+            + "HATK^{\\mu\\beta}*HATK^{\\alpha}*HATK^{\\nu}+"
+            + "HATK^{\\mu\\beta}*HATK^{\\nu}*HATK^{\\alpha}+"
+            + "HATK^{\\nu\\alpha}*HATK^{\\mu}*HATK^{\\beta}+"
+            + "HATK^{\\nu\\alpha}*HATK^{\\beta}*HATK^{\\mu}+"
+            + "HATK^{\\nu\\beta}*HATK^{\\mu}*HATK^{\\alpha}+"
+            + "HATK^{\\nu\\beta}*HATK^{\\alpha}*HATK^{\\mu}+"
+            + "HATK^{\\alpha\\beta}*HATK^{\\nu}*HATK^{\\mu}+"
+            + "HATK^{\\alpha\\beta}*HATK^{\\mu}*HATK^{\\nu})"
+            + "-(1/24)*L*L*L*(L-1)*("
+            + "HATK^{\\alpha}*HATK^{\\mu\\nu}*HATK^{\\beta}+"
+            + "HATK^{\\beta}*HATK^{\\mu\\nu}*HATK^{\\alpha}+"
+            + "HATK^{\\nu}*HATK^{\\mu\\alpha}*HATK^{\\beta}+"
+            + "HATK^{\\beta}*HATK^{\\mu\\alpha}*HATK^{\\nu}+"
+            + "HATK^{\\alpha}*HATK^{\\mu\\beta}*HATK^{\\nu}+"
+            + "HATK^{\\nu}*HATK^{\\mu\\beta}*HATK^{\\alpha}+"
+            + "HATK^{\\mu}*HATK^{\\nu\\alpha}*HATK^{\\beta}+"
+            + "HATK^{\\beta}*HATK^{\\nu\\alpha}*HATK^{\\mu}+"
+            + "HATK^{\\mu}*HATK^{\\nu\\beta}*HATK^{\\alpha}+"
+            + "HATK^{\\alpha}*HATK^{\\nu\\beta}*HATK^{\\mu}+"
+            + "HATK^{\\nu}*HATK^{\\alpha\\beta}*HATK^{\\mu}+"
+            + "HATK^{\\mu}*HATK^{\\alpha\\beta}*HATK^{\\nu})"
+            + "-(1/24)*L*L*L*(L-1)*("
+            + "HATK^{\\alpha}*HATK^{\\beta}*HATK^{\\mu\\nu}+"
+            + "HATK^{\\beta}*HATK^{\\alpha}*HATK^{\\mu\\nu}+"
+            + "HATK^{\\nu}*HATK^{\\beta}*HATK^{\\mu\\alpha}+"
+            + "HATK^{\\beta}*HATK^{\\nu}*HATK^{\\mu\\alpha}+"
+            + "HATK^{\\alpha}*HATK^{\\nu}*HATK^{\\mu\\beta}+"
+            + "HATK^{\\nu}*HATK^{\\alpha}*HATK^{\\mu\\beta}+"
+            + "HATK^{\\mu}*HATK^{\\beta}*HATK^{\\nu\\alpha}+"
+            + "HATK^{\\beta}*HATK^{\\mu}*HATK^{\\nu\\alpha}+"
+            + "HATK^{\\mu}*HATK^{\\alpha}*HATK^{\\nu\\beta}+"
+            + "HATK^{\\alpha}*HATK^{\\mu}*HATK^{\\nu\\beta}+"
+            + "HATK^{\\nu}*HATK^{\\mu}*HATK^{\\alpha\\beta}+"
+            + "HATK^{\\mu}*HATK^{\\nu}*HATK^{\\alpha\\beta})"
+            + "+(1/24)*L*L*L*L*("
+            + "HATK^{\\mu}*HATK^{\\nu}*HATK^{\\alpha}*HATK^{\\beta}+"
+            + "HATK^{\\mu}*HATK^{\\nu}*HATK^{\\beta}*HATK^{\\alpha}+"
+            + "HATK^{\\mu}*HATK^{\\alpha}*HATK^{\\nu}*HATK^{\\beta}+"
+            + "HATK^{\\mu}*HATK^{\\alpha}*HATK^{\\beta}*HATK^{\\nu}+"
+            + "HATK^{\\mu}*HATK^{\\beta}*HATK^{\\nu}*HATK^{\\alpha}+"
+            + "HATK^{\\mu}*HATK^{\\beta}*HATK^{\\alpha}*HATK^{\\nu}+"
+            + "HATK^{\\nu}*HATK^{\\mu}*HATK^{\\alpha}*HATK^{\\beta}+"
+            + "HATK^{\\nu}*HATK^{\\mu}*HATK^{\\beta}*HATK^{\\alpha}+"
+            + "HATK^{\\nu}*HATK^{\\alpha}*HATK^{\\mu}*HATK^{\\beta}+"
+            + "HATK^{\\nu}*HATK^{\\alpha}*HATK^{\\beta}*HATK^{\\mu}+"
+            + "HATK^{\\nu}*HATK^{\\beta}*HATK^{\\mu}*HATK^{\\alpha}+"
+            + "HATK^{\\nu}*HATK^{\\beta}*HATK^{\\alpha}*HATK^{\\mu}+"
+            + "HATK^{\\alpha}*HATK^{\\nu}*HATK^{\\mu}*HATK^{\\beta}+"
+            + "HATK^{\\alpha}*HATK^{\\nu}*HATK^{\\beta}*HATK^{\\mu}+"
+            + "HATK^{\\alpha}*HATK^{\\mu}*HATK^{\\nu}*HATK^{\\beta}+"
+            + "HATK^{\\alpha}*HATK^{\\mu}*HATK^{\\beta}*HATK^{\\nu}+"
+            + "HATK^{\\alpha}*HATK^{\\beta}*HATK^{\\mu}*HATK^{\\nu}+"
+            + "HATK^{\\alpha}*HATK^{\\beta}*HATK^{\\nu}*HATK^{\\mu}+"          
+            + "HATK^{\\beta}*HATK^{\\nu}*HATK^{\\mu}*HATK^{\\alpha}+"
+            + "HATK^{\\beta}*HATK^{\\nu}*HATK^{\\alpha}*HATK^{\\mu}+"
+            + "HATK^{\\beta}*HATK^{\\mu}*HATK^{\\nu}*HATK^{\\alpha}+"
+            + "HATK^{\\beta}*HATK^{\\mu}*HATK^{\\alpha}*HATK^{\\nu}+"
+            + "HATK^{\\beta}*HATK^{\\alpha}*HATK^{\\mu}*HATK^{\\nu}+"
+            + "HATK^{\\beta}*HATK^{\\alpha}*HATK^{\\mu}*HATK^{\\nu})");
+    public final Expression[] DELTAs = new Expression[]{DELTA_1, DELTA_2, DELTA_3, DELTA_4};
     /*
-     * Defining substitutions
+     *Section for defining \hat K's 
      */
-    public final Transformation DELTA_1_SUBSTITUTION;
-    public final Transformation DELTA_2_SUBSTITUTION;
-    public final Transformation DELTA_3_SUBSTITUTION;
-    public final Transformation DELTA_4_SUBSTITUTION;
-    //
-    public final Transformation HATK_1_SUBSTITUTION;
-    public final Transformation HATK_2_SUBSTITUTION;
-    public final Transformation HATK_3_SUBSTITUTION;
-    public final Transformation HATK_4_SUBSTITUTION;
-    //
-    public final Transformation MATRIX_HATK_1_SUBSTITUTION;
-    public final Transformation MATRIX_HATK_2_SUBSTITUTION;
-//    public final Transformation MATRIX_HATK_3_SUBSTITUTION;
-//    public final Transformation MATRIX_HATK_4_SUBSTITUTION;
-    public final Transformation MATRIX_K_2_SUBSTITUTION;
-    public final Transformation MATRIX_K_2_INV_SUBSTITUTION;
-    public final static Indicator<Tensor> matrices = new Indicator<Tensor>() {
-        public boolean is(Tensor tensor) {
-            return TTest.testEqualstensorStructure(tensor, K_2)
-                    || TTest.testEqualstensorStructure(tensor, K_2_INV)
-                    || TTest.testEqualstensorStructure(tensor, HATK_1)
-                    || TTest.testEqualstensorStructure(tensor, HATK_2)
-                    || TTest.testEqualstensorStructure(tensor, HATK_3)
-                    || TTest.testEqualstensorStructure(tensor, HATK_4)
-                    || TTest.testEqualstensorStructure(tensor, DELTA_1)
-                    || TTest.testEqualstensorStructure(tensor, DELTA_2)
-                    || TTest.testEqualstensorStructure(tensor, DELTA_3)
-                    || TTest.testEqualstensorStructure(tensor, DELTA_4);
-        }
-    };
+    public final Expression HATK_1 =
+            new Expression("HATK^{\\mu} = KINV*K^{\\mu\\nu}*n_{\\nu}");
+    public final Expression HATK_2 =
+            new Expression("HATK^{\\mu\\nu} = KINV*K^{\\mu\\nu}");
+    public final Expression HATK_3 =
+            new Expression("HATK^{\\mu\\nu\\alpha} = HATK^{\\mu\\nu\\alpha}");
+    public final Expression HATK_4 =
+            new Expression("HATK^{\\mu\\nu\\alpha\\beta} = HATK^{\\mu\\nu\\alpha\\beta}");
+    public final Expression[] HATKs = new Expression[]{HATK_1, HATK_2, HATK_3, HATK_4};
+    /*
+     * The indexes ^{\\alpha\\beta}_{\\gamma\\delta} are the matrix indexes
+     */
+    public final Expression MATRIX_K =
+            new Expression("K^{\\mu\\nu}^{\\alpha\\beta}_{\\gamma\\delta} = g^{\\mu\\nu}*P^{\\alpha\\beta}_{\\gamma\\delta}+"
+            + "(1+2*beta)*((1/4)*(d^{\\mu}_{\\gamma}*g^{\\alpha \\nu}*d^{\\beta}_{\\delta} + d^{\\mu}_{\\delta}*g^{\\alpha \\nu}*d^{\\beta}_{\\gamma}+d^{\\mu}_{\\gamma}*g^{\\beta \\nu}*d^{\\alpha}_{\\delta}+ d^{\\mu}_{\\delta}*g^{\\beta \\nu}*d^{\\alpha}_{\\gamma})+"
+            + "(1/4)*(d^{\\nu}_{\\gamma}*g^{\\alpha \\mu}*d^{\\beta}_{\\delta} + d^{\\nu}_{\\delta}*g^{\\alpha \\mu}*d^{\\beta}_{\\gamma}+d^{\\nu}_{\\gamma}*g^{\\beta \\mu}*d^{\\alpha}_{\\delta}+ d^{\\nu}_{\\delta}*g^{\\beta \\mu}*d^{\\alpha}_{\\gamma}) -"
+            + "(1/4)*(g_{\\gamma\\delta}*g^{\\mu \\alpha}*g^{\\nu \\beta}+g_{\\gamma\\delta}*g^{\\mu \\beta}*g^{\\nu \\alpha})-"
+            + "(1/4)*(g^{\\alpha\\beta}*d^{\\mu}_{\\gamma}*d^{\\nu}_{\\delta}+g^{\\alpha\\beta}*d^{\\mu}_{\\delta}*d^{\\nu}_{\\gamma})+(1/8)*g^{\\mu\\nu}*g_{\\gamma\\delta}*g^{\\alpha\\beta})");
+    /*
+     * The indexes ^{\\alpha\\beta}_{\\mu\\nu} are the matrix indexes
+     */
+    public final Expression MATRIX_K_INV =
+            new Expression("KINV^{\\alpha\\beta}_{\\mu\\nu} = P^{\\alpha\\beta}_{\\mu\\nu}+a*g_{\\mu\\nu}*g^{\\alpha\\beta}+"
+            + "(1/4)*b*(n_{\\mu}*n^{\\alpha}*d^{\\beta}_{\\nu}+n_{\\mu}*n^{\\beta}*d^{\\alpha}_{\\nu}+n_{\\nu}*n^{\\alpha}*d^{\\beta}_{\\mu})+n_{\\nu}*n^{\\beta}*d^{\\alpha}_{\\mu}+"
+            + "c*(n_{\\mu}*n_{\\nu}*g^{\\alpha\\beta}+n^{\\alpha}*n^{\\beta}*g_{\\mu\\nu})+d*n_{\\mu}*n_{\\nu}*n^{\\alpha}*n^{\\beta}");
+    /*
+     * Collecting all matrices in expressions together
+     */
+    public static final Tensor[] MATRICES = new Tensor[]{
+        CC.parse("K^{\\mu\\nu}"),
+        CC.parse("KINV"),
+        CC.parse("HATK"),
+        CC.parse("HATK^{\\mu}"),
+        CC.parse("HATK^{\\mu\\nu}"),
+        CC.parse("HATK^{\\mu\\nu\\alpha}"),
+        CC.parse("DELTA^{\\mu}"),
+        CC.parse("DELTA^{\\mu\\nu}"),
+        CC.parse("DELTA^{\\mu\\nu\\alpha}"),
+        CC.parse("DELTA^{\\mu\\nu\\alpha\\beta}")};
+
+    public static enum EVAL {
+        INITIALIZE,
+        EVAL_HATK,
+        EVAL_HATK_DELTA,
+        EVAL_ALL
+    }
 
     public OneLoop() {
-        this.RR_SUBSTITUTION = SubstitutionsFactory.createSubstitution(RR, RR_SUB);
-        this.DELTA_1_SUBSTITUTION = SubstitutionsFactory.createSubstitution(DELTA_1, DELTA_1_SUB);
-        this.DELTA_2_SUBSTITUTION = SubstitutionsFactory.createSubstitution(DELTA_2, DELTA_2_SUB);
-        this.DELTA_3_SUBSTITUTION = SubstitutionsFactory.createSubstitution(DELTA_3, DELTA_3_SUB);
-        this.DELTA_4_SUBSTITUTION = SubstitutionsFactory.createSubstitution(DELTA_4, DELTA_4_SUB);
-        this.HATK_1_SUBSTITUTION = SubstitutionsFactory.createSubstitution(HATK_1, HATK_1_SUB);
-        this.HATK_2_SUBSTITUTION = SubstitutionsFactory.createSubstitution(HATK_2, HATK_2_SUB);
-        this.HATK_3_SUBSTITUTION = SubstitutionsFactory.createSubstitution(HATK_3, HATK_3_SUB);
-        this.HATK_4_SUBSTITUTION = SubstitutionsFactory.createSubstitution(HATK_4, HATK_4_SUB);
-        this.MATRIX_K_2_SUBSTITUTION = SubstitutionsFactory.createSubstitution(MATRIX_K_2, MATRIX_K_2_SUB);
-        this.MATRIX_K_2_INV_SUBSTITUTION = SubstitutionsFactory.createSubstitution(MATRIX_K_2_INV, MATRIX_K_2_INV_SUB);
-
-        IndexesInsertion ii = new IndexesInsertion(matrices, ParserIndexes.parse("^{ij}_{pq}"));
-        HATK_1_SUB = ii.transform(HATK_1_SUB);
-        HATK_2_SUB = ii.transform(HATK_2_SUB);
-        HATK_3_SUB = ii.transform(HATK_3_SUB);
-        HATK_4_SUB = ii.transform(HATK_4_SUB);
-
-        HATK_1_SUB = MATRIX_K_2_SUBSTITUTION.transform(HATK_1_SUB);
-        HATK_1_SUB = MATRIX_K_2_INV_SUBSTITUTION.transform(HATK_1_SUB);
-
-        HATK_2_SUB = MATRIX_K_2_SUBSTITUTION.transform(HATK_2_SUB);
-        HATK_2_SUB = MATRIX_K_2_INV_SUBSTITUTION.transform(HATK_2_SUB);
-
-        HATK_1_SUB = Transformations.expandBrackets(HATK_1_SUB);
-        HATK_2_SUB = Transformations.expandBrackets(HATK_2_SUB);
-        HATK_1_SUB = Transformations.contractMetrics(HATK_1_SUB);
-        HATK_2_SUB = Transformations.contractMetrics(HATK_2_SUB);
-
-        Transformation collect = new CollectTerms(EqualsSplitCriteria.INSTANCE);
-        HATK_1_SUB = collect.transform(HATK_1_SUB);
-        HATK_2_SUB = collect.transform(HATK_2_SUB);
-
-        MATRIX_HATK_1_SUBSTITUTION = SubstitutionsFactory.createSubstitution(MATRIX_HATK_1, HATK_1_SUB);
-        MATRIX_HATK_2_SUBSTITUTION = SubstitutionsFactory.createSubstitution(MATRIX_HATK_2, HATK_2_SUB);
     }
+
+    public OneLoop(EVAL eval) {
+        switch (eval) {
+            case INITIALIZE:
+                break;
+            case EVAL_HATK:
+                evalHatK();
+                break;
+            case EVAL_HATK_DELTA:
+                evalHatK();
+                evalHatKDelta();
+                break;
+            case EVAL_ALL:
+                evalRR();
+                evalDeltas();
+                for (Expression delta : DELTAs)
+                    RR.eval(delta.asSubstitution());
+                RR.eval(
+                        IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                        KRONECKER_DIMENSION.asSubstitution(),
+                        CalculateNumbers.INSTANCE,
+                        new Transformer(RenameConflictingIndexes.INSTANCE),
+                        new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
+                        CollectFactory.createCollectEqualTerms(),
+                        CalculateNumbers.INSTANCE);
+                evalHatK();
+                for (Expression hatK : HATKs)
+                    RR.eval(hatK.asSubstitution());
+                RR.eval(
+                        IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                        KRONECKER_DIMENSION.asSubstitution(),
+                        CalculateNumbers.INSTANCE,
+                        new Transformer(RenameConflictingIndexes.INSTANCE),
+                        new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
+                        CollectFactory.createCollectEqualTerms(),
+                        CalculateNumbers.INSTANCE);
+        }
+    }
+
+    public final void evalHatK() {
+        Transformation indexesInsertion;
+        indexesInsertion = new IndexesInsertion(matricesIndicator, createIndexes(HATKs, "^{\\mu\\nu}_{\\alpha\\beta}"));
+        for (Expression hatK : HATKs)
+            hatK.eval(
+                    indexesInsertion,
+                    MATRIX_K.asSubstitution(),
+                    MATRIX_K_INV.asSubstitution(),
+                    P.asSubstitution(),
+                    new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
+                    IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                    KRONECKER_DIMENSION.asSubstitution(),
+                    CollectFactory.createCollectEqualTerms1(),
+                    CalculateNumbers.INSTANCE,
+                    CollectFactory.createCollectAllScalars(),
+                    CalculateNumbers.INSTANCE);
+    }
+
+    public final void evalHatKDelta() {
+        Transformation indexesInsertion;
+        indexesInsertion = new IndexesInsertion(matricesIndicator, createIndexes(DELTAs, "^{\\mu\\nu}_{\\alpha\\beta}"));
+        for (Expression delta : DELTAs)
+            delta.eval(
+                    indexesInsertion,
+                    L.asSubstitution(),
+                    CalculateNumbers.INSTANCE,
+                    HATK_1.asSubstitution(),
+                    HATK_2.asSubstitution(),
+                    HATK_3.asSubstitution(),
+                    HATK_4.asSubstitution(),
+                    new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
+                    IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                    KRONECKER_DIMENSION.asSubstitution(),
+                    CollectFactory.createCollectEqualTerms(),
+                    CalculateNumbers.INSTANCE,
+                    CollectFactory.createCollectAllScalars(),
+                    CalculateNumbers.INSTANCE);
+    }
+
+    public final void evalDeltas() {
+        Transformation indexesInsertion;
+        indexesInsertion = new IndexesInsertion(matricesIndicator, createIndexes(DELTAs, "^{\\mu\\nu}_{\\alpha\\beta}"));
+        for (Expression delta : DELTAs)
+            delta.eval(
+                    indexesInsertion,
+                    L.asSubstitution(),
+                    CalculateNumbers.INSTANCE,
+                    new Transformer(RenameConflictingIndexes.INSTANCE),
+                    new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
+//                    IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                    KRONECKER_DIMENSION.asSubstitution(),
+//                    CollectFactory.createCollectEqualTerms1(),
+                    CalculateNumbers.INSTANCE
+//                    ,
+//                    CollectFactory.createCollectAllScalars(),
+//                    CalculateNumbers.INSTANCE
+                    );
+    }
+
+    public final void evalRR() {
+        Transformation indexesInsertion;
+        indexesInsertion = new IndexesInsertion(matricesIndicator, doubleAndDumpIndexes(createIndexes(TERMs, "^{\\mu\\nu}")));
+        RR.eval(
+                indexesInsertion,
+                L.asSubstitution(),
+                CalculateNumbers.INSTANCE,
+                RICCI.asSubstitution(),
+                RIMAN.asSubstitution(),
+                new Transformer(RenameConflictingIndexes.INSTANCE),
+                new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
+                IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                KRONECKER_DIMENSION.asSubstitution(),
+                CalculateNumbers.INSTANCE,
+                new Transformer(CollectPowers.INSTANCE),
+                CollectFactory.createCollectEqualTerms1());
+
+    }
+    public final Indicator<Tensor> matricesIndicator = new TensorTreeIndicatorImpl(new Indicator<Tensor>() {
+        public boolean is(Tensor tensor) {
+            for (Tensor m : MATRICES)
+                if (TTest.testEqualstensorStructure(tensor, m))
+                    return true;
+            return false;
+        }
+    });
 }

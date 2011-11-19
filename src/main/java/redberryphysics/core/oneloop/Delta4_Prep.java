@@ -17,32 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package redberryphysics.core.util;
-
-import org.junit.Ignore;
-import org.junit.Test;
-import redberry.core.parser.ParserIndexes;
-import redberry.core.tensor.Tensor;
+package redberryphysics.core.oneloop;
 
 /**
  *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-@Ignore
-public class IndexesFactoryUtilTest {
-    public IndexesFactoryUtilTest() {
-    }
-
-    @Test
-    public void testCreate() {
-        System.out.println(IndexesFactoryUtil.createIndexes(new Tensor[0], ParserIndexes.parse("^{\\mu\\nu}_{\\alpha\\beta}")));
-
-    }
-    
-    @Test
-    public void testDump() {
-        System.out.println(IndexesFactoryUtil.doubleAndDumpIndexes(ParserIndexes.parse("^ab_mn")));
-
+public class Delta4_Prep {
+    public static void go(OneLoop loop){
+        
     }
 }

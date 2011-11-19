@@ -19,30 +19,34 @@
  */
 package redberryphysics.core.util;
 
-import org.junit.Ignore;
 import org.junit.Test;
-import redberry.core.parser.ParserIndexes;
+import redberry.core.context.CC;
+import redberry.core.tensor.SimpleTensor;
 import redberry.core.tensor.Tensor;
+import redberry.core.transformation.Transformation;
 
 /**
  *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-@Ignore
-public class IndexesFactoryUtilTest {
-    public IndexesFactoryUtilTest() {
+public class SqrSubsTest {
+    public SqrSubsTest() {
     }
 
     @Test
-    public void testCreate() {
-        System.out.println(IndexesFactoryUtil.createIndexes(new Tensor[0], ParserIndexes.parse("^{\\mu\\nu}_{\\alpha\\beta}")));
-
+    public void test1() {
+        SimpleTensor n = (SimpleTensor) CC.parse("n_{a}");
+        Transformation tr = new SqrSubs(n);
+        Tensor t = CC.parse("n_m*n^m*a*n_a*n^a*n_i*n^j*b");
+        System.out.println(tr.transform(t));
     }
-    
-    @Test
-    public void testDump() {
-        System.out.println(IndexesFactoryUtil.doubleAndDumpIndexes(ParserIndexes.parse("^ab_mn")));
 
+    @Test
+    public void test2() {
+        SimpleTensor n = (SimpleTensor) CC.parse("n_{a}");
+        Transformation tr = new SqrSubs(n);
+        Tensor t = CC.parse("n_m*n^m*n_a*n^a");
+        System.out.println(tr.transform(t));
     }
 }
