@@ -37,6 +37,7 @@ import redberry.core.tensor.Product;
 import redberry.core.tensor.Sum;
 import redberry.core.tensor.Tensor;
 import redberry.core.tensor.TensorIterator;
+import redberry.core.tensor.iterators.TensorTreeIterator;
 import redberry.core.tensor.test.TTest;
 import redberry.core.transformation.CalculateNumbers;
 import redberry.core.transformation.IndexesInsertion;
@@ -56,6 +57,7 @@ import static redberryphysics.core.util.IndexesFactoryUtil.*;
  * @author Stanislav Poslavsky
  */
 public class MainScenario {
+
     public static void main(String[] args) {
         OneLoop loop = new OneLoop();
 
@@ -71,11 +73,13 @@ public class MainScenario {
 
         loop.evalHatK();
 
-        for (Expression ex : loop.HATKs)
+        for (Expression ex : loop.HATKs) {
             ex.eval(CollectScalars.INSTANCE);
+        }
 
-        for (Tensor t : loop.HATKs)
+        for (Tensor t : loop.HATKs) {
             System.out.println(t.toString(ToStringMode.UTF8));
+        }
 
         Tensor firstSummand = ((Sum) loop.RR.right()).getElements().get(0);
 
@@ -117,8 +121,9 @@ public class MainScenario {
             for (int i = 0; i < hatkCombinations.length; ++i) {
 
                 Tensor hatkExpanded = hatkCombinations[i].clone();
-                for (Expression hK : loop.HATKs)
+                for (Expression hK : loop.HATKs) {
                     hK.asSubstitution().transform(hatkExpanded);
+                }
                 hatkExpanded = smartEC(hatkExpanded, ec);
                 hatkExpanded = CollectScalars.INSTANCE.transform(hatkExpanded);
                 // hatkExpanded = new Transformer(CollectPowers.INSTANCE).transform(hatkExpanded);
@@ -133,13 +138,15 @@ public class MainScenario {
 
         Tensor cur;
         int count;
-        for (Tensor t : hatkCombDone)
+        for (Tensor t : hatkCombDone) {
             System.out.println("Elements in HATKComb: " + getElementsCount(t));
+        }
 
         System.out.println("Substitution");
 
-        for (Expression t : hatkCombDone)
+        for (Expression t : hatkCombDone) {
             NaiveSubstitution.create(t).transform(loop.DELTA_4);
+        }
 
         System.out.println("Mem: " + getMemoryUse());
         System.out.println("Elements in Delta: " + getElementsCount(loop.DELTA_4));
@@ -158,19 +165,36 @@ public class MainScenario {
         System.out.println("Mem: " + getMemoryUse());
         System.out.println("Elements in Delta: " + getElementsCount(loop.DELTA_4));
 
-        System.out.println("Collect2");
-
-        loop.DELTA_4.eval(ec);
-
+        for (Expression h : loop.HATKs) {
+            h.asSubstitution().transform(loop.DELTA_4);
+        }
+        
         System.out.println("Mem: " + getMemoryUse());
         System.out.println("Elements in Delta: " + getElementsCount(loop.DELTA_4));
+        
+        Tensor dc = loop.DELTA_4.clone();
+        for (TensorTreeIterator it = new TensorFirstTreeIterator(dc); it.hasNext();) {
+            if (TTest.testIsSymbol(it.next())) {
+                it.remove();
+            }
+        }
+        System.out.println(dc.toString(ToStringMode.UTF8));
 
         System.out.println("Sustitution to FIRST");
 
-        for (Expression h : loop.HATKs)
+        for (Expression h : loop.HATKs) {
             h.asSubstitution().transform(firstSummand);
+        }
 
         loop.DELTA_4.asSubstitution().transform(firstSummand);
+
+        firstSummand = loop.KRONECKER_DIMENSION.asSubstitution().transform(firstSummand);
+        firstSummand = CalculateNumbers.INSTANCE.transform(firstSummand);
+        firstSummand = Transformations.contractMetrics(firstSummand);
+
+
+        System.out.println(((Sum) loop.DELTA_4.right()).size());
+        System.out.println(((Sum) loop.HATK_1.right()).size());
 
         System.out.println("First elements: " + getElementsCount(firstSummand));
 
@@ -187,6 +211,7 @@ public class MainScenario {
             new Transformation[]{CalculateNumbers.INSTANCE});
 
     private static class CollectScalars implements Transformation {
+
         public static final CollectScalars INSTANCE = new CollectScalars();
 
         private CollectScalars() {
@@ -213,12 +238,14 @@ public class MainScenario {
         if (tensor instanceof Sum) {
             Sum sum = (Sum) tensor;
             List<Tensor> result = new ArrayList<>();
-            for (Tensor summand : sum)
+            for (Tensor summand : sum) {
                 result.add(smartEC(summand, ec));
+            }
             return new Sum(result);
         }
-        if (!(tensor instanceof Product))
+        if (!(tensor instanceof Product)) {
             throw new IllegalArgumentException();
+        }
         ArrayList<Tensor> sums = new ArrayList<>();
         TensorIterator iterator = tensor.iterator();
         while (iterator.hasNext()) {
@@ -230,19 +257,24 @@ public class MainScenario {
         }
         ArrayList<Tensor> sumsNext = new ArrayList<>(), sumsTmp;
         while (sums.size() > 1) {
-            for (int i = 0; i < sums.size() / 2; ++i)
-                if (i * 2 + 1 < sums.size())
+            for (int i = 0; i < sums.size() / 2; ++i) {
+                if (i * 2 + 1 < sums.size()) {
+                    System.out.print("Iter: " + ((Sum) sums.get(i * 2)).size() + ", " + ((Sum) sums.get(i * 2 + 1)).size() + "; ");
                     sumsNext.add(ec.transform(new Product(sums.get(i * 2), sums.get(i * 2 + 1))));
-            if (sums.size() % 2 == 1)
+                }
+            }
+            if (sums.size() % 2 == 1) {
                 sumsNext.add(sums.get(sums.size() - 1));
+            }
             sumsTmp = sums;
             sums = sumsNext;
             sumsNext = sumsTmp;
             sumsNext.clear();
-            System.out.println("iter");
+            System.out.println("Done.");
         }
-        if (((Product) tensor).isEmpty())
+        if (((Product) tensor).isEmpty()) {
             return sums.get(0);
+        }
         ((Product) tensor).add(sums.get(0));
         return ec.transform(tensor);
     }
