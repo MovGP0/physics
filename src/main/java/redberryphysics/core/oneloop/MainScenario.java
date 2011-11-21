@@ -192,9 +192,13 @@ public class MainScenario {
         System.out.println("Exp+Collect");
 
         firstSummand = smartEC(firstSummand, ec);
-        firstSummand = CollectScalars.INSTANCE.transform(firstSummand);
-        
+
+        System.out.println(firstSummand);
         System.out.println("Collect Scalar");
+        Transformation sc = new ExpandAndCollectTransformation(ScalarsSplitCriteria.INSTANCE,
+                Indicator.FALSE_INDICATOR, new Transformation[]{CalculateNumbers.INSTANCE});
+        firstSummand = sc.transform(firstSummand);
+
         System.out.println(firstSummand);
         System.out.println("Done. Elements: " + getElementsCount(firstSummand));
     }
