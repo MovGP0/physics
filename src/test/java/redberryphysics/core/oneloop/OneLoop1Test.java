@@ -44,7 +44,7 @@ import redberry.core.transformation.IndexesInsertion;
 import redberry.core.transformation.Transformations;
 import redberry.core.transformation.Transformer;
 import redberry.core.transformation.collect.CollectFactory;
-import redberry.core.transformation.collect.CollectInputPort;
+import redberry.core.transformation.collect.CollectInputPortImpl;
 import redberry.core.transformation.collect.EqualsSplitCriteria;
 import redberry.core.transformation.collect.ScalarsSplitCriteria;
 import redberry.core.transformation.concurrent.ExpandAndCollectTransformation;
@@ -84,7 +84,7 @@ public class OneLoop1Test {
         loop1.evalDeltas();
         Sum s = (Sum) loop1.DELTA_3.right();
         loop1.evalHatK();
-        CollectInputPort cip = new CollectInputPort(EqualsSplitCriteria.INSTANCE1);
+        CollectInputPortImpl cip = new CollectInputPortImpl(EqualsSplitCriteria.INSTANCE1);
         System.out.println(s.size());
         Product p = (Product) s.getElements().get(6);
         for (Expression hatk : loop1.HATKs)
