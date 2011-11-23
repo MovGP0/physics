@@ -32,6 +32,7 @@ import redberry.core.transformation.Transformation;
 import redberry.core.transformation.Transformer;
 import redberry.core.transformation.collect.CollectFactory;
 import redberry.core.transformation.collect.CollectPowers;
+import redberry.core.transformation.concurrent.EACScalars;
 import redberry.core.transformation.contractions.IndexesContractionsTransformation;
 import redberry.core.utils.Indicator;
 import static redberryphysics.core.util.IndexesFactoryUtil.*;
@@ -69,7 +70,7 @@ public class OneLoop {
             + "L*L*(L-1)*HATK^{\\delta}*DELTA^{\\alpha\\beta\\gamma}*HATK^{\\mu\\nu}*n_{\\sigma}*n_{\\lambda}*(-(1/10)*R^{\\lambda}_{\\mu\\gamma\\nu}*R^{\\sigma}_{\\alpha\\delta\\beta}+(1/15)*R^{\\lambda}_{\\delta\\alpha\\nu}*R^{\\sigma}_{\\beta\\mu\\gamma}+(1/60)*R^{\\lambda}_{\\beta\\delta\\nu}*R^{\\sigma}_{\\gamma\\mu\\alpha})+"
             + "L*L*(L-1)*(L-1)*HATK^{\\gamma\\delta}*DELTA^{\\alpha\\beta}*HATK^{\\mu\\nu}*n_{\\sigma}*n_{\\lambda}*(-(1/20)*R^{\\lambda}_{\\mu\\beta\\nu}*R^{\\sigma}_{\\delta\\alpha\\gamma}+(1/180)*R^{\\lambda}_{\\alpha\\nu\\beta}*R^{\\sigma}_{\\gamma\\delta\\mu}-(7/360)*R^{\\lambda}_{\\mu\\gamma\\nu}*R^{\\sigma}_{\\alpha\\delta\\beta}-(1/240)*R^{\\lambda}_{\\delta\\beta\\nu}*R^{\\sigma}_{\\gamma\\alpha\\mu}-(1/120)*R^{\\lambda}_{\\beta\\gamma\\nu}*R^{\\sigma}_{\\alpha\\delta\\mu}-(1/30)*R^{\\lambda}_{\\delta\\beta\\nu}*R^{\\sigma}_{\\alpha\\gamma\\mu})+"
             + "L*L*(L-1)*HATK^{\\mu\\nu}*DELTA^{\\alpha\\beta\\gamma}*HATK^{\\delta}*n_{\\sigma}*n_{\\lambda}*((7/120)*R^{\\lambda}_{\\beta\\gamma\\nu}*R^{\\sigma}_{\\mu\\alpha\\delta}-(3/40)*R^{\\lambda}_{\\beta\\gamma\\delta}*R^{\\sigma}_{\\mu\\alpha\\nu}+(1/120)*R^{\\lambda}_{\\delta\\gamma\\nu}*R^{\\sigma}_{\\alpha\\beta\\mu})+"
-//            + "L*L*HATK^{\\mu}*DELTA^{\\alpha\\beta\\gamma}*HATK^{\\nu}*{\\nu}_{\\lambda}*(-(1/8)*R_{\\beta\\gamma}*R^{\\lambda}_{\\nu\\alpha\\mu}+(3/20)*R_{\\beta\\gamma}*R^{\\lambda}_{\\mu\\alpha\\nu}+(3/40)*R_{\\alpha\\mu}*R^{\\lambda}_{\\beta\\gamma\\nu}+(1/40)*R^{\\sigma}_{\\beta\\gamma\\mu}*R^{\\lambda}_{\\nu\\alpha\\sigma}-(3/20)*R^{\\sigma}_{\\alpha\\beta\\mu}*R^{\\lambda}_{\\gamma\\nu\\sigma}+(1/10)*R^{\\sigma}_{\\alpha\\beta\\nu}*R^{\\lambda}_{\\gamma\\mu\\sigma})+"
+            //            + "L*L*HATK^{\\mu}*DELTA^{\\alpha\\beta\\gamma}*HATK^{\\nu}*{\\nu}_{\\lambda}*(-(1/8)*R_{\\beta\\gamma}*R^{\\lambda}_{\\nu\\alpha\\mu}+(3/20)*R_{\\beta\\gamma}*R^{\\lambda}_{\\mu\\alpha\\nu}+(3/40)*R_{\\alpha\\mu}*R^{\\lambda}_{\\beta\\gamma\\nu}+(1/40)*R^{\\sigma}_{\\beta\\gamma\\mu}*R^{\\lambda}_{\\nu\\alpha\\sigma}-(3/20)*R^{\\sigma}_{\\alpha\\beta\\mu}*R^{\\lambda}_{\\gamma\\nu\\sigma}+(1/10)*R^{\\sigma}_{\\alpha\\beta\\nu}*R^{\\lambda}_{\\gamma\\mu\\sigma})+"
             + "L*L*(L-1)*HATK^{\\gamma}*DELTA^{\\alpha\\beta}*HATK^{\\mu\\nu}*n_{\\lambda}*((1/20)*R_{\\alpha\\nu}*R^{\\lambda}_{\\gamma\\beta\\mu}+(1/20)*R_{\\alpha\\gamma}*R^{\\lambda}_{\\mu\\beta\\nu}+(1/10)*R_{\\alpha\\beta}*R^{\\lambda}_{\\mu\\gamma\\nu}+(1/20)*R^{\\sigma}_{\\alpha\\nu\\gamma}*R^{\\lambda}_{\\sigma\\beta\\mu}-(1/60)*R^{\\sigma}_{\\mu\\alpha\\nu}*R^{\\lambda}_{\\beta\\sigma\\gamma}+(1/10)*R^{\\sigma}_{\\alpha\\beta\\gamma}*R^{\\lambda}_{\\mu\\sigma\\nu}-(1/12)*R^{\\sigma}_{\\alpha\\beta\\nu}*R^{\\lambda}_{\\mu\\sigma\\gamma})+"
             + "L*L*(L-1)*(L-1)*HATK^{\\alpha\\beta}*DELTA^{\\gamma}*HATK^{\\mu\\nu}*n_{\\lambda}*((1/60)*R_{\\alpha\\mu}*R^{\\lambda}_{\\beta\\nu\\gamma}-(1/20)*R_{\\alpha\\mu}*R^{\\lambda}_{\\gamma\\nu\\beta}+(1/120)*R_{\\alpha\\beta}*R^{\\lambda}_{\\mu\\nu\\gamma}+(3/40)*R_{\\alpha\\gamma}*R^{\\lambda}_{\\nu\\beta\\mu}+(1/20)*R^{\\sigma}_{\\gamma\\mu\\alpha}*R^{\\lambda}_{\\nu\\sigma\\beta}+(1/120)*R^{\\sigma}_{\\alpha\\mu\\gamma}*R^{\\lambda}_{\\beta\\nu\\sigma}-(1/40)*R^{\\sigma}_{\\alpha\\mu\\gamma}*R^{\\lambda}_{\\sigma\\nu\\beta}+(1/40)*R^{\\sigma}_{\\alpha\\mu\\beta}*R^{\\lambda}_{\\sigma\\nu\\gamma}-(1/20)*R^{\\sigma}_{\\alpha\\mu\\beta}*R^{\\lambda}_{\\gamma\\nu\\sigma}-(1/40)*R^{\\sigma}_{\\mu\\beta\\nu}*R^{\\lambda}_{\\gamma\\sigma\\alpha})+"
             + "L*L*(L-1)*HATK^{\\alpha\\beta}*DELTA^{\\mu\\nu}*HATK^{\\gamma}*n_{\\lambda}*((1/20)*R^{\\sigma}_{\\mu\\nu\\beta}*R^{\\lambda}_{\\gamma\\sigma\\alpha}-(7/60)*R^{\\sigma}_{\\beta\\mu\\alpha}*R^{\\lambda}_{\\gamma\\nu\\sigma}+(1/20)*R^{\\sigma}_{\\beta\\mu\\alpha}*R^{\\lambda}_{\\sigma\\nu\\gamma}+(1/10)*R^{\\sigma}_{\\mu\\beta\\gamma}*R^{\\lambda}_{\\nu\\alpha\\sigma}+(1/60)*R^{\\sigma}_{\\mu\\beta\\gamma}*R^{\\lambda}_{\\alpha\\nu\\sigma}+(7/120)*R_{\\alpha\\beta}*R^{\\lambda}_{\\nu\\gamma\\mu}+(11/60)*R_{\\beta\\mu}*R^{\\lambda}_{\\nu\\alpha\\gamma})");
@@ -152,7 +153,7 @@ public class OneLoop {
             + "HATK^{\\alpha}*HATK^{\\mu}*HATK^{\\nu}*HATK^{\\beta}+"
             + "HATK^{\\alpha}*HATK^{\\mu}*HATK^{\\beta}*HATK^{\\nu}+"
             + "HATK^{\\alpha}*HATK^{\\beta}*HATK^{\\mu}*HATK^{\\nu}+"
-            + "HATK^{\\alpha}*HATK^{\\beta}*HATK^{\\nu}*HATK^{\\mu}+"          
+            + "HATK^{\\alpha}*HATK^{\\beta}*HATK^{\\nu}*HATK^{\\mu}+"
             + "HATK^{\\beta}*HATK^{\\nu}*HATK^{\\mu}*HATK^{\\alpha}+"
             + "HATK^{\\beta}*HATK^{\\nu}*HATK^{\\alpha}*HATK^{\\mu}+"
             + "HATK^{\\beta}*HATK^{\\mu}*HATK^{\\nu}*HATK^{\\alpha}+"
@@ -172,6 +173,7 @@ public class OneLoop {
     public final Expression HATK_4 =
             new Expression("HATK^{\\mu\\nu\\alpha\\beta} = HATK^{\\mu\\nu\\alpha\\beta}");
     public final Expression[] HATKs = new Expression[]{HATK_1, HATK_2, HATK_3, HATK_4};
+    public final Expression[] ALL = new Expression[]{RR, DELTA_1, DELTA_2, DELTA_3, DELTA_4, HATK_1, HATK_2, HATK_3, HATK_4};
     /*
      * The indexes ^{\\alpha\\beta}_{\\gamma\\delta} are the matrix indexes
      */
@@ -211,6 +213,44 @@ public class OneLoop {
     }
 
     public OneLoop() {
+        for (Expression ex : ALL)
+            ex.eval(new Transformer(RenameConflictingIndexes.INSTANCE));
+    }
+
+    public void substituteL() {
+        for (Expression ex : ALL)
+            ex.eval(L.asSubstitution(), CalculateNumbers.INSTANCE);
+    }
+    private boolean indexesInserted = false;
+
+    public void insertIndexes() {
+        if (indexesInserted)
+            throw new IllegalAccessError("Indexes are already inserted");
+        Transformation indexesInsertion;
+        indexesInsertion = new IndexesInsertion(matricesIndicator, createIndexes(HATKs, "^{\\mu\\nu}_{\\alpha\\beta}"));
+        for (Expression hatK : HATKs)
+            hatK.eval(indexesInsertion);
+        indexesInsertion = new IndexesInsertion(matricesIndicator, createIndexes(DELTAs, "^{\\mu\\nu}_{\\alpha\\beta}"));
+        for (Expression delta : DELTAs)
+            delta.eval(indexesInsertion);
+        indexesInsertion = new IndexesInsertion(matricesIndicator, doubleAndDumpIndexes(createIndexes(TERMs, "^{\\mu\\nu}")));
+        for (Expression term : TERMs)
+            term.eval(indexesInsertion);
+        indexesInserted = true;
+    }
+
+    public final void evalHatK() {
+        for (Expression hatK : HATKs)
+            hatK.eval(
+                    MATRIX_K.asSubstitution(),
+                    MATRIX_K_INV.asSubstitution(),
+                    P.asSubstitution(),
+                    new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
+                    IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                    KRONECKER_DIMENSION.asSubstitution(),
+                    CollectFactory.createCollectEqualTerms1(),
+                    CalculateNumbers.INSTANCE,
+                    EACScalars.getTransformer());
     }
 
     public OneLoop(EVAL eval) {
@@ -251,24 +291,6 @@ public class OneLoop {
         }
     }
 
-    public final void evalHatK() {
-        Transformation indexesInsertion;
-        indexesInsertion = new IndexesInsertion(matricesIndicator, createIndexes(HATKs, "^{\\mu\\nu}_{\\alpha\\beta}"));
-        for (Expression hatK : HATKs)
-            hatK.eval(
-                    indexesInsertion,
-                    MATRIX_K.asSubstitution(),
-                    MATRIX_K_INV.asSubstitution(),
-                    P.asSubstitution(),
-                    new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
-                    IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
-                    KRONECKER_DIMENSION.asSubstitution(),
-                    CollectFactory.createCollectEqualTerms1(),
-                    CalculateNumbers.INSTANCE,
-                    CollectFactory.createCollectAllScalars(),
-                    CalculateNumbers.INSTANCE);
-    }
-
     public final void evalHatKDelta() {
         Transformation indexesInsertion;
         indexesInsertion = new IndexesInsertion(matricesIndicator, createIndexes(DELTAs, "^{\\mu\\nu}_{\\alpha\\beta}"));
@@ -300,13 +322,12 @@ public class OneLoop {
                     CalculateNumbers.INSTANCE,
                     new Transformer(RenameConflictingIndexes.INSTANCE),
                     new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
-//                    IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                    //                    IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                     KRONECKER_DIMENSION.asSubstitution(),
-//                    CollectFactory.createCollectEqualTerms1(),
-                    CalculateNumbers.INSTANCE
-//                    ,
-//                    CollectFactory.createCollectAllScalars(),
-//                    CalculateNumbers.INSTANCE
+                    //                    CollectFactory.createCollectEqualTerms1(),
+                    CalculateNumbers.INSTANCE //                    ,
+                    //                    CollectFactory.createCollectAllScalars(),
+                    //                    CalculateNumbers.INSTANCE
                     );
     }
 
