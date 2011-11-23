@@ -19,6 +19,7 @@
  */
 package redberryphysics.core.oneloop;
 
+import redberry.core.transformation.collect.CollectPowers;
 import java.util.List;
 import redberry.core.tensor.iterators.TensorLastTreeIterator;
 import redberry.core.tensor.iterators.TensorFirstTreeIterator;
@@ -26,7 +27,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import redberry.core.tensor.SimpleTensor;
-import redberry.core.transformation.collect.EqualsSplitCriteria;
 import redberry.core.transformation.contractions.IndexesContractionsTransformation;
 import redberry.core.utils.Indicator;
 import redberryphysics.core.util.SqrSubs;
@@ -190,6 +190,7 @@ public class MainScenario {
         System.out.println("First elements: " + getElementsCount(firstSummand));
 
         System.out.println("Exp+Collect");
+        long startTime = System.currentTimeMillis();
 
         firstSummand = smartEC(firstSummand, ec);
 
@@ -198,9 +199,25 @@ public class MainScenario {
         Transformation sc = new ExpandAndCollectTransformation(ScalarsSplitCriteria.INSTANCE,
                 Indicator.FALSE_INDICATOR, new Transformation[]{CalculateNumbers.INSTANCE});
         firstSummand = sc.transform(firstSummand);
+        firstSummand = CalculateNumbers.INSTANCE.transform(firstSummand);
+        long stopTime = System.currentTimeMillis();
+
 
         System.out.println(firstSummand);
         System.out.println("Done. Elements: " + getElementsCount(firstSummand));
+
+        System.out.println("First term time = " + (stopTime - startTime) + "ms");
+        System.out.println("Total RR tertms count " + ((Sum) loop.RR.right()).size());
+        firstSummand = new Transformer(CollectPowers.INSTANCE).transform(firstSummand);
+        System.out.println(firstSummand);
+//        System.out.println(firstSummand);
+//        System.out.println("Collect Scalar");
+//        Transformation sc = new ExpandAndCollectTransformation(ScalarsSplitCriteria.INSTANCE,
+//                Indicator.FALSE_INDICATOR, new Transformation[]{CalculateNumbers.INSTANCE});
+//        firstSummand = sc.transform(firstSummand);
+//
+//        System.out.println(firstSummand);
+//        System.out.println("Done. Elements: " + getElementsCount(firstSummand));
     }
     private static final Transformation scalarsCollectPort =
             new ExpandAndCollectTransformation(
