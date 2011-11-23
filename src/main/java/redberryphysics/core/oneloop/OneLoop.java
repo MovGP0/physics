@@ -51,7 +51,7 @@ public class OneLoop {
     public final Expression P =
             new Expression("P^{\\alpha\\beta}_{\\mu\\nu} = (1/2)*(d^{\\alpha}_{\\mu}*d^{\\beta}_{\\nu}+d^{\\alpha}_{\\nu}*d^{\\beta}_{\\mu})-"
             + "(1/4)*g_{\\mu\\nu}*g^{\\alpha\\beta}");
-    public final Expression KRONECKER_DIMENSION =
+    public static final Expression KRONECKER_DIMENSION =
             new Expression("d^{\\alpha}_{\\alpha} = 4");
     /*
      * Additional input
@@ -85,7 +85,7 @@ public class OneLoop {
     public final Expression DELTA_3 =
             new Expression("DELTA^{\\mu\\nu\\alpha}="
             + "(1/6)*L*L*(L-1)*(HATK^{\\mu\\nu}*HATK^{\\alpha}+HATK^{\\mu\\alpha}*HATK^{\\nu}+HATK^{\\alpha\\nu}*HATK^{\\mu})+"
-            + "(1/6)*L*L*(L-1)*(HATK^{\\alpha}*HATK^{\\mu\\nu}+HATK^{\\nu}*HATK^{\\mu\\alpha}+HATK^{\\mu}*HATK^{\\alpha\\nu})+"
+            + "(1/6)*L*L*(L-1)*(HATK^{\\alpha}*HATK^{\\mu\\nu}+HATK^{\\nu}*HATK^{\\mu\\alpha}+HATK^{\\mu}*HATK^{\\alpha\\nu})"
             + "-(1/6)*L*L*L*(HATK^{\\mu}*HATK^{\\nu}*HATK^{\\alpha}+HATK^{\\mu}*HATK^{\\alpha}*HATK^{\\nu}+HATK^{\\nu}*HATK^{\\mu}*HATK^{\\alpha}+HATK^{\\nu}*HATK^{\\alpha}*HATK^{\\mu}+HATK^{\\alpha}*HATK^{\\mu}*HATK^{\\nu}+HATK^{\\alpha}*HATK^{\\nu}*HATK^{\\mu})");
     public final Expression DELTA_4 =
             new Expression("DELTA^{\\mu\\nu\\alpha\\beta}="
@@ -250,7 +250,8 @@ public class OneLoop {
                     KRONECKER_DIMENSION.asSubstitution(),
                     CollectFactory.createCollectEqualTerms1(),
                     CalculateNumbers.INSTANCE,
-                    EACScalars.getTransformer());
+                    EACScalars.getTransformer(),
+                    CalculateNumbers.INSTANCE);
     }
 
     public OneLoop(EVAL eval) {
