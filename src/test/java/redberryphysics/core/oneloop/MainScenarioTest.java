@@ -55,4 +55,20 @@ public class MainScenarioTest {
         t = MainScenario.smartEC(t, ec);
         System.out.println(t);
     }
+    
+    @Test
+    public void testSmartEC1() {
+        Tensor t = CC.parse("((-1/15)*LAMBDA*LAMBDA+1/45*LAMBDA*LAMBDA+2/45*LAMBDA*LAMBDA)*(1/2*n_{b}*d_{r}^{e}*d_{s}^{k}+1/2*n_{b}*d_{r}^{k}*d_{s}^{e})*(G^brs_ek+G^bsr_ek)");
+        Transformation ec = new ExpandAndCollectTransformation(
+                new CollecctEqualsInputPort(),
+                Indicator.SYMBOL_INDICATOR,
+                new Transformation[]{
+                    IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                    OneLoop.KRONECKER_DIMENSION.asSubstitution(),
+                    new SqrSubs((SimpleTensor) CC.parse("n_{\\alpha}")),
+                    CalculateNumbers.INSTANCE});
+
+        t = MainScenario.smartEC(t, ec);
+        System.out.println(t);
+    }
 }

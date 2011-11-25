@@ -30,11 +30,13 @@ import redberry.core.transformation.contractions.IndexesContractionsTransformati
 import redberry.core.utils.Indicator;
 import redberryphysics.core.util.SqrSubs;
 import redberry.core.context.CC;
+import redberry.core.context.ToStringMode;
 import redberry.core.tensor.Expression;
 import redberry.core.tensor.Product;
 import redberry.core.tensor.Sum;
 import redberry.core.tensor.Tensor;
 import redberry.core.tensor.TensorIterator;
+import redberry.core.tensor.test.TTest;
 import redberry.core.transformation.CalculateNumbers;
 import redberry.core.transformation.Transformation;
 import redberry.core.transformation.Transformations;
@@ -51,7 +53,71 @@ import redberry.core.transformation.concurrent.ExpandAndCollectTransformation;
  * @author Stanislav Poslavsky
  */
 public class MainScenario {
+    private static final Transformation EAC = new ExpandAndCollectTransformation(
+            new CollecctEqualsInputPort(),
+            Indicator.SYMBOL_INDICATOR,
+            new Transformation[]{
+                IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                OneLoop.KRONECKER_DIMENSION.asSubstitution(),
+                new SqrSubs((SimpleTensor) CC.parse("n_{\\alpha}")),
+                CalculateNumbers.INSTANCE});
+    private static final Transformation SEAC = new ExpandAndCollectTransformation(ScalarsSplitCriteria.INSTANCE,
+            Indicator.FALSE_INDICATOR, new Transformation[]{CalculateNumbers.INSTANCE});
+
     public static void main(String[] args) {
+        OneLoop loop = new OneLoop();
+        loop.insertIndexes();
+        loop.substituteL();
+        loop.evalHatK();
+        System.out.println("Evaluating deltas's");
+        Delta_Prep.go(loop);
+        System.out.println("Done");
+
+        Tensor dSummand = ((Sum) loop.RR.right()).getElements().get(5);
+        long startTime = System.currentTimeMillis();
+        dSummand = dSummand.clone();
+        dSummand = loop.L.asSubstitution().transform(dSummand);
+        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
+        dSummand = loop.RIMAN.asSubstitution().transform(dSummand);
+        dSummand = loop.RICCI.asSubstitution().transform(dSummand);
+        dSummand = Transformations.expandBrackets(dSummand);
+        dSummand = Transformations.contractMetrics(dSummand);
+        dSummand = CollectFactory.createCollectEqualTerms1().transform(dSummand);
+        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
+
+        for (Expression h : loop.HATKs)
+            h.asSubstitution().transform(dSummand);
+        for (Expression delta : loop.DELTAs)
+            delta.asSubstitution().transform(dSummand);
+
+        dSummand = Transformations.contractMetrics(dSummand);
+        dSummand = OneLoop.KRONECKER_DIMENSION.asSubstitution().transform(dSummand);
+        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
+
+        System.out.println("Exp+Collect");
+        dSummand = smartEC(dSummand, EAC);
+
+        System.out.println("+++ Collect Scalar");
+        dSummand = SEAC.transform(dSummand);
+        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
+        long stopTime = System.currentTimeMillis();
+        System.out.println("+++ Done. Elements: " + getElementsCount(dSummand));
+        System.out.println("+++ Term time = " + (stopTime - startTime) + "ms");
+
+        System.out.println("Evaluating final result ");
+        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
+        dSummand = SEAC.transform(dSummand);
+        System.out.println("Done: ");
+        System.out.println(dSummand);
+        System.out.println(new Transformer(CollectPowers.INSTANCE).transform(dSummand.clone()));
+
+        if (true)
+            return;
+        System.out.println(CC.parse("L*L*(L-1)*HATK^{\\gamma}*DELTA^{\\alpha\\beta}*HATK^{\\mu\\nu}*n_{\\lambda}*((1/20)*R_{\\alpha\\nu}*R^{\\lambda}_{\\gamma\\beta\\mu}+(1/20)*R_{\\alpha\\gamma}*R^{\\lambda}_{\\mu\\beta\\nu}+(1/10)*R_{\\alpha\\beta}*R^{\\lambda}_{\\mu\\gamma\\nu}+(1/20)*R^{\\sigma}_{\\alpha\\nu\\gamma}*R^{\\lambda}_{\\sigma\\beta\\mu}-(1/60)*R^{\\sigma}_{\\mu\\alpha\\nu}*R^{\\lambda}_{\\beta\\sigma\\gamma}+(1/10)*R^{\\sigma}_{\\alpha\\beta\\gamma}*R^{\\lambda}_{\\mu\\sigma\\nu}-(1/12)*R^{\\sigma}_{\\alpha\\beta\\nu}*R^{\\lambda}_{\\mu\\sigma\\gamma})").toString(ToStringMode.UTF8));
+       
+    }
+
+    private static Tensor evalAll() {
 
         OneLoop loop = new OneLoop();
         loop.insertIndexes();
@@ -61,22 +127,11 @@ public class MainScenario {
         Delta_Prep.go(loop);
         System.out.println("Done");
 
-        Transformation ec = new ExpandAndCollectTransformation(
-                new CollecctEqualsInputPort(),
-                Indicator.SYMBOL_INDICATOR,
-                new Transformation[]{
-                    IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
-                    OneLoop.KRONECKER_DIMENSION.asSubstitution(),
-                    new SqrSubs((SimpleTensor) CC.parse("n_{\\alpha}")),
-                    CalculateNumbers.INSTANCE});
-
         Sum result = new Sum();
         int RRSize = ((Sum) loop.RR.right()).size();
         long[] times = new long[RRSize];
         int[] elementsCount = new int[RRSize];
         int count = 0;
-        Transformation sc = new ExpandAndCollectTransformation(ScalarsSplitCriteria.INSTANCE,
-                Indicator.FALSE_INDICATOR, new Transformation[]{CalculateNumbers.INSTANCE});
 
         for (Tensor dSummand : loop.RR.right()) {
             long startTime = System.currentTimeMillis();
@@ -100,10 +155,10 @@ public class MainScenario {
             dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
 
             System.out.println("Exp+Collect - " + count);
-            dSummand = smartEC(dSummand, ec);
+            dSummand = smartEC(dSummand, EAC);
 
             System.out.println("+++ Collect Scalar - " + count);
-            dSummand = sc.transform(dSummand);
+            dSummand = SEAC.transform(dSummand);
             dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
             long stopTime = System.currentTimeMillis();
             System.out.println("+++ Done. " + count + " elements: " + getElementsCount(dSummand));
@@ -115,246 +170,72 @@ public class MainScenario {
         }
         System.out.println("Evaluating final result ");
         Tensor finalResult = CalculateNumbers.INSTANCE.transform(result);
-        finalResult = sc.transform(result);
+        finalResult = SEAC.transform(result);
         System.out.println("Done: ");
         System.out.println(finalResult);
         System.out.println(new Transformer(CollectPowers.INSTANCE).transform(finalResult.clone()));
         try (PrintStream str = new PrintStream("RRresult.txt")) {
-            str.println(result);
+            str.println(finalResult);
             str.println("");
             str.println(new Transformer(CollectPowers.INSTANCE).transform(finalResult.clone()));
         } catch (IOException ex) {
         }
         System.out.println("Times : " + Arrays.toString(times));
         System.out.println("Elements : " + Arrays.toString(elementsCount));
+        return finalResult;
     }
-    /*
-    public static void main(String[] args) {
-    OneLoop loop = new OneLoop();
-    loop.insertIndexes();
-    loop.substituteL();
-    loop.evalHatK();
-    Delta_Prep.evalD3(loop);
-    
-    System.out.println(loop.DELTA_3.toString(ToStringMode.UTF8));
-    Transformation ec = new ExpandAndCollectTransformation(
-    new CollecctEqualsInputPort(),
-    Indicator.SYMBOL_INDICATOR,
-    new Transformation[]{
-    IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
-    loop.KRONECKER_DIMENSION.asSubstitution(),
-    new SqrSubs((SimpleTensor) CC.parse("n_{\\alpha}")),
-    CalculateNumbers.INSTANCE});
-    long startTime = System.currentTimeMillis();
-    System.out.println("Sustitution to FIRST");
-    
-    
-    Tensor firstSummand = ((Sum) loop.RR.right()).getElements().get(1);
-    
-    //System.out.println(firstSummand.toString(ToStringMode.UTF8));
-    
-    firstSummand = loop.L.asSubstitution().transform(firstSummand);
-    firstSummand = CalculateNumbers.INSTANCE.transform(firstSummand);
-    firstSummand = loop.RIMAN.asSubstitution().transform(firstSummand);
-    firstSummand = loop.RICCI.asSubstitution().transform(firstSummand);
-    firstSummand = Transformations.expandBrackets(firstSummand);
-    firstSummand = Transformations.contractMetrics(firstSummand);
-    firstSummand = CollectFactory.createCollectEqualTerms1().transform(firstSummand);
-    firstSummand = CalculateNumbers.INSTANCE.transform(firstSummand);
-    
-    for (Expression h : loop.HATKs)
-    h.asSubstitution().transform(firstSummand);
-    
-    loop.DELTA_3.asSubstitution().transform(firstSummand);
-    
-    firstSummand = Transformations.contractMetrics(firstSummand);
-    firstSummand = loop.KRONECKER_DIMENSION.asSubstitution().transform(firstSummand);
-    firstSummand = CalculateNumbers.INSTANCE.transform(firstSummand);
-    
-    System.out.println(((Sum) loop.DELTA_3.right()).size());
-    System.out.println(((Sum) loop.HATK_1.right()).size());
-    
-    System.out.println("First elements: " + MainScenario.getElementsCount(firstSummand));
-    
-    System.out.println("Exp+Collect");
-    
-    firstSummand = MainScenario.smartEC(firstSummand, ec);
-    
-    System.out.println(firstSummand);
-    System.out.println("Collect Scalar");
-    Transformation sc = new ExpandAndCollectTransformation(ScalarsSplitCriteria.INSTANCE,
-    Indicator.FALSE_INDICATOR, new Transformation[]{CalculateNumbers.INSTANCE});
-    firstSummand = sc.transform(firstSummand);
-    firstSummand = CalculateNumbers.INSTANCE.transform(firstSummand);
-    long stopTime = System.currentTimeMillis();
-    
-    
-    System.out.println(firstSummand);
-    System.out.println("Done. Elements: " + MainScenario.getElementsCount(firstSummand));
-    
-    System.out.println("First term time = " + (stopTime - startTime) + "ms");
-    System.out.println("Total RR tertms count " + ((Sum) loop.RR.right()).size());
-    firstSummand = new Transformer(CollectPowers.INSTANCE).transform(firstSummand);
-    System.out.println(firstSummand);
-    
-    if (true)
-    return;
-    //        Tensor[] hatkCombinations = CC.parse(
-    //                "HATK^{\\alpha\\beta}*HATK^{\\mu\\nu}",
-    //                "HATK^{\\beta}*HATK^{\\alpha}*HATK^{\\mu}*HATK^{\\nu}",
-    //                "HATK^{\\mu}*HATK^{\\nu}*HATK^{\\alpha\\beta}",
-    //                "HATK^{\\mu}*HATK^{\\alpha\\beta}*HATK^{\\nu}",
-    //                "HATK^{\\alpha\\beta}*HATK^{\\mu}*HATK^{\\nu}");
-    //        IndexesInsertion indexesInsertion = new IndexesInsertion(loop.matricesIndicator, createIndexes(hatkCombinations, "^{\\mu\\nu}_{\\alpha\\beta}"));
-    //
-    //        for (int i = 0; i < hatkCombinations.length; ++i) {
-    //            hatkCombinations[i] = indexesInsertion.transform(hatkCombinations[i]);
-    //            System.out.println(hatkCombinations[i].toString(ToStringMode.UTF8));
-    //        }
-    ////
-    //        Transformation ec = new ExpandAndCollectTransformation(
-    //                new CollecctEqualsInputPort(),
-    //                Indicator.SYMBOL_INDICATOR,
-    //                new Transformation[]{
-    //                    IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
-    //                    loop.KRONECKER_DIMENSION.asSubstitution(),
-    //                    new SqrSubs((SimpleTensor) CC.parse("n_{\\alpha}")),
-    //                    CalculateNumbers.INSTANCE});
-    ////
-    //        Expression[] hatkCombDone = new Expression[hatkCombinations.length];
-    //        try (PrintStream str = new PrintStream("tensors.txt")) {
-    //            for (int i = 0; i < hatkCombinations.length; ++i) {
-    //
-    //                Tensor hatkExpanded = hatkCombinations[i].clone();
-    //                for (Expression hK : loop.HATKs)
-    //                    hK.asSubstitution().transform(hatkExpanded);
-    //                hatkExpanded = smartEC(hatkExpanded, ec);
-    //                hatkExpanded = Transformations.expandAndCollectAllScalars(hatkExpanded);
-    //                // hatkExpanded = new Transformer(CollectPowers.INSTANCE).transform(hatkExpanded);
-    //                hatkCombDone[i] = new Expression(hatkCombinations[i], hatkExpanded);
-    //                //if (TensorUtils.testParentConsistent(hatkCombDone[i]))
-    //                //    System.out.println("AAAAAAAAAAAA");
-    //                System.out.println("Mem: " + getMemoryUse());
-    //                str.println(hatkCombDone[i].toString(ToStringMode.UTF8));
-    //            }
-    //        } catch (IOException ex) {
-    //        }
-    //
-    //        Tensor cur;
-    //        int count;
-    //        for (Tensor t : hatkCombDone)
-    //            System.out.println("Elements in HATKComb: " + getElementsCount(t));
-    //
-    //        System.out.println("Substitution");
-    //
-    //        for (Expression t : hatkCombDone)
-    //            NaiveSubstitution.create(t).transform(loop.DELTA_4);
-    //
-    //        System.out.println("Mem: " + getMemoryUse());
-    //        System.out.println("Elements in Delta: " + getElementsCount(loop.DELTA_4));
-    //
-    //        System.out.println("Collect");
-    //
-    //        loop.DELTA_4.eval(ec);
-    //
-    //        System.out.println("Mem: " + getMemoryUse());
-    //        System.out.println("Elements in Delta: " + getElementsCount(loop.DELTA_4));
-    //
-    //        System.out.println("Collect Scalar");
-    //
-    //        Transformations.expandAndCollectAllScalars(loop.DELTA_4);
-    //
-    //        System.out.println("Mem: " + getMemoryUse());
-    //        System.out.println("Elements in Delta: " + getElementsCount(loop.DELTA_4));
-    //
-    //        for (Expression h : loop.HATKs)
-    //            h.asSubstitution().transform(loop.DELTA_4);
-    //
-    //        System.out.println("Mem: " + getMemoryUse());
-    //        System.out.println("Elements in Delta: " + getElementsCount(loop.DELTA_4));
-    Delta_Prep.evalD4(loop);
-    Tensor dc = loop.DELTA_4.clone();
-    for (TensorTreeIterator it = new TensorFirstTreeIterator(dc); it.hasNext();)
-    if (TTest.testIsSymbol(it.next()))
-    it.remove();
-    System.out.println(dc.toString(ToStringMode.UTF8));
-    
-    //        long startTime = System.currentTimeMillis();
-    System.out.println("Sustitution to FIRST");
-    
-    
-    //        Tensor firstSummand = ((Sum) loop.RR.right()).getElements().get(0);
-    
-    //System.out.println(firstSummand.toString(ToStringMode.UTF8));
-    
-    firstSummand = loop.L.asSubstitution().transform(firstSummand);
-    firstSummand = CalculateNumbers.INSTANCE.transform(firstSummand);
-    firstSummand = loop.RIMAN.asSubstitution().transform(firstSummand);
-    firstSummand = loop.RICCI.asSubstitution().transform(firstSummand);
-    firstSummand = Transformations.expandBrackets(firstSummand);
-    firstSummand = Transformations.contractMetrics(firstSummand);
-    firstSummand = CollectFactory.createCollectEqualTerms1().transform(firstSummand);
-    
-    
-    for (Expression h : loop.HATKs)
-    h.asSubstitution().transform(firstSummand);
-    
-    loop.DELTA_4.asSubstitution().transform(firstSummand);
-    
-    firstSummand = Transformations.contractMetrics(firstSummand);
-    firstSummand = loop.KRONECKER_DIMENSION.asSubstitution().transform(firstSummand);
-    firstSummand = CalculateNumbers.INSTANCE.transform(firstSummand);
-    
-    System.out.println(((Sum) loop.DELTA_4.right()).size());
-    System.out.println(((Sum) loop.HATK_1.right()).size());
-    
-    System.out.println("First elements: " + getElementsCount(firstSummand));
-    
-    System.out.println("Exp+Collect");
-    //        long startTime = System.currentTimeMillis();
-    
-    firstSummand = smartEC(firstSummand, ec);
-    
-    System.out.println(firstSummand);
-    System.out.println("Collect Scalar");
-    //        Transformation sc = new ExpandAndCollectTransformation(ScalarsSplitCriteria.INSTANCE,
-    //                Indicator.FALSE_INDICATOR, new Transformation[]{CalculateNumbers.INSTANCE});
-    firstSummand = sc.transform(firstSummand);
-    firstSummand = CalculateNumbers.INSTANCE.transform(firstSummand);
-    //        long stopTime = System.currentTimeMillis();
-    
-    
-    System.out.println(firstSummand);
-    System.out.println("Done. Elements: " + getElementsCount(firstSummand));
-    
-    System.out.println("First term time = " + (stopTime - startTime) + "ms");
-    System.out.println("Total RR tertms count " + ((Sum) loop.RR.right()).size());
-    firstSummand = new Transformer(CollectPowers.INSTANCE).transform(firstSummand);
-    System.out.println(firstSummand);
-    //        System.out.println(firstSummand);
-    //        System.out.println("Collect Scalar");
-    //        Transformation sc = new ExpandAndCollectTransformation(ScalarsSplitCriteria.INSTANCE,
-    //                Indicator.FALSE_INDICATOR, new Transformation[]{CalculateNumbers.INSTANCE});
-    //        firstSummand = sc.transform(firstSummand);
-    //
-    //        System.out.println(firstSummand);
-    //        System.out.println("Done. Elements: " + getElementsCount(firstSummand));
-    
-    System.out.println("First term time = " + (stopTime - startTime) + "ms");
-    System.out.println("Total RR tertms count " + ((Sum) loop.RR.right()).size());
-    firstSummand = new Transformer(CollectPowers.INSTANCE).transform(firstSummand);
-    System.out.println(firstSummand);
-    
+
+    static Tensor evalRRTerm(int termIndex, OneLoop loop) {
+        Tensor dSummand = ((Sum) loop.RR.right()).getElements().get(termIndex);
+        long startTime = System.currentTimeMillis();
+        dSummand = dSummand.clone();
+        dSummand = loop.L.asSubstitution().transform(dSummand);
+        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
+        dSummand = loop.RIMAN.asSubstitution().transform(dSummand);
+        dSummand = loop.RICCI.asSubstitution().transform(dSummand);
+        dSummand = Transformations.expandBrackets(dSummand);
+        dSummand = Transformations.contractMetrics(dSummand);
+        dSummand = CollectFactory.createCollectEqualTerms1().transform(dSummand);
+        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
+
+        for (Expression h : loop.HATKs)
+            h.asSubstitution().transform(dSummand);
+        for (Expression delta : loop.DELTAs)
+            delta.asSubstitution().transform(dSummand);
+
+        dSummand = Transformations.contractMetrics(dSummand);
+        dSummand = OneLoop.KRONECKER_DIMENSION.asSubstitution().transform(dSummand);
+        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
+
+        System.out.println("Exp+Collect");
+        dSummand = smartEC(dSummand, EAC);
+
+        System.out.println("+++ Collect Scalar");
+        dSummand = SEAC.transform(dSummand);
+        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
+        long stopTime = System.currentTimeMillis();
+        System.out.println("+++ Done. Elements: " + getElementsCount(dSummand));
+        System.out.println("+++ Term time = " + (stopTime - startTime) + "ms");
+
+        System.out.println("Evaluating final result ");
+        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
+        dSummand = SEAC.transform(dSummand);
+        System.out.println("Done: ");
+        System.out.println(dSummand);
+        System.out.println(new Transformer(CollectPowers.INSTANCE).transform(dSummand.clone()));
+        return dSummand;
     }
-    
-     */
 
     static Tensor smartEC(Tensor tensor, Transformation ec) {
         if (tensor instanceof Sum) {
             Sum sum = (Sum) tensor;
             List<Tensor> result = new ArrayList<>();
-            for (Tensor summand : sum)
+            int i = 0;
+            for (Tensor summand : sum) {
+                System.out.println(summand.toString(ToStringMode.UTF8));
                 result.add(smartEC(summand, ec));
+                System.out.println(result.get(i++));
+            }
             return new Sum(result);
         }
         if (!(tensor instanceof Product))
@@ -363,7 +244,7 @@ public class MainScenario {
         TensorIterator iterator = tensor.iterator();
         while (iterator.hasNext()) {
             Tensor t = iterator.next();
-            if (t instanceof Sum) {
+            if (t instanceof Sum && !TTest.testIsSymbol(t)) {
                 sums.add(t);
                 iterator.remove();
             }
