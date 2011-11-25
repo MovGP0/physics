@@ -88,6 +88,7 @@ public class Delta_PrepTest {
         loop.evalHatK();
         Delta_Prep.evalD3(loop);
         loop.DELTA_3.asSubstitution();
+        loop.DELTA_3.eval(new Transformer(CollectPowers.INSTANCE));
         System.out.println(loop.DELTA_3.toString(ToStringMode.UTF8));
     }
 
@@ -101,6 +102,78 @@ public class Delta_PrepTest {
         loop.DELTA_4.asSubstitution();
         System.out.println(loop.DELTA_4.toString(ToStringMode.UTF8));
     }
+    
+     @Test
+    public void testEvalD2RR() {
+        OneLoop loop = new OneLoop();
+        loop.insertIndexes();
+        loop.substituteL();
+        loop.evalHatK();
+        Delta_Prep.evalD2(loop);
+
+        System.out.println(loop.DELTA_2.toString(ToStringMode.UTF8));
+        Transformation ec = new ExpandAndCollectTransformation(
+                new CollecctEqualsInputPort(),
+                Indicator.SYMBOL_INDICATOR,
+                new Transformation[]{
+                    IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                    loop.KRONECKER_DIMENSION.asSubstitution(),
+                    new SqrSubs((SimpleTensor) CC.parse("n_{\\alpha}")),
+                    CalculateNumbers.INSTANCE});
+        long startTime = System.currentTimeMillis();
+        System.out.println("Sustitution to FIRST");
+
+
+        Tensor dSummand = ((Sum) loop.RR.right()).getElements().get(2);
+
+        //System.out.println(firstSummand.toString(ToStringMode.UTF8));
+
+        dSummand = loop.L.asSubstitution().transform(dSummand);
+        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
+        dSummand = loop.RIMAN.asSubstitution().transform(dSummand);
+        dSummand = loop.RICCI.asSubstitution().transform(dSummand);
+        dSummand = Transformations.expandBrackets(dSummand);
+        dSummand = Transformations.contractMetrics(dSummand);
+        dSummand = CollectFactory.createCollectEqualTerms1().transform(dSummand);
+        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
+
+        for (Expression h : loop.HATKs)
+            h.asSubstitution().transform(dSummand);
+
+        loop.DELTA_2.asSubstitution().transform(dSummand);
+
+        dSummand = Transformations.contractMetrics(dSummand);
+        dSummand = loop.KRONECKER_DIMENSION.asSubstitution().transform(dSummand);
+        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
+
+        System.out.println(((Sum) loop.DELTA_2.right()).size());
+        System.out.println(((Sum) loop.HATK_1.right()).size());
+
+        System.out.println("First elements: " + MainScenario.getElementsCount(dSummand));
+
+        System.out.println("Exp+Collect");
+
+        dSummand = MainScenario.smartEC(dSummand, ec);
+
+        System.out.println(dSummand);
+        System.out.println("Collect Scalar");
+        Transformation sc = new ExpandAndCollectTransformation(ScalarsSplitCriteria.INSTANCE,
+                Indicator.FALSE_INDICATOR, new Transformation[]{CalculateNumbers.INSTANCE});
+        dSummand = sc.transform(dSummand);
+        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
+        long stopTime = System.currentTimeMillis();
+
+
+        System.out.println(dSummand);
+        System.out.println("Done. Elements: " + MainScenario.getElementsCount(dSummand));
+
+        System.out.println("First term time = " + (stopTime - startTime) + "ms");
+        System.out.println("Total RR tertms count " + ((Sum) loop.RR.right()).size());
+        dSummand = new Transformer(CollectPowers.INSTANCE).transform(dSummand);
+        System.out.println(dSummand);
+
+    }
+
 
     @Test
     public void testEvalD3RR() {
@@ -123,53 +196,53 @@ public class Delta_PrepTest {
         System.out.println("Sustitution to FIRST");
 
 
-        Tensor firstSummand = ((Sum) loop.RR.right()).getElements().get(1);
+        Tensor dSummand = ((Sum) loop.RR.right()).getElements().get(1);
 
         //System.out.println(firstSummand.toString(ToStringMode.UTF8));
 
-        firstSummand = loop.L.asSubstitution().transform(firstSummand);
-        firstSummand = CalculateNumbers.INSTANCE.transform(firstSummand);
-        firstSummand = loop.RIMAN.asSubstitution().transform(firstSummand);
-        firstSummand = loop.RICCI.asSubstitution().transform(firstSummand);
-        firstSummand = Transformations.expandBrackets(firstSummand);
-        firstSummand = Transformations.contractMetrics(firstSummand);
-        firstSummand = CollectFactory.createCollectEqualTerms1().transform(firstSummand);
-        firstSummand = CalculateNumbers.INSTANCE.transform(firstSummand);
+        dSummand = loop.L.asSubstitution().transform(dSummand);
+        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
+        dSummand = loop.RIMAN.asSubstitution().transform(dSummand);
+        dSummand = loop.RICCI.asSubstitution().transform(dSummand);
+        dSummand = Transformations.expandBrackets(dSummand);
+        dSummand = Transformations.contractMetrics(dSummand);
+        dSummand = CollectFactory.createCollectEqualTerms1().transform(dSummand);
+        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
 
         for (Expression h : loop.HATKs)
-            h.asSubstitution().transform(firstSummand);
+            h.asSubstitution().transform(dSummand);
 
-        loop.DELTA_3.asSubstitution().transform(firstSummand);
+        loop.DELTA_3.asSubstitution().transform(dSummand);
 
-        firstSummand = Transformations.contractMetrics(firstSummand);
-        firstSummand = loop.KRONECKER_DIMENSION.asSubstitution().transform(firstSummand);
-        firstSummand = CalculateNumbers.INSTANCE.transform(firstSummand);
+        dSummand = Transformations.contractMetrics(dSummand);
+        dSummand = loop.KRONECKER_DIMENSION.asSubstitution().transform(dSummand);
+        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
 
         System.out.println(((Sum) loop.DELTA_3.right()).size());
         System.out.println(((Sum) loop.HATK_1.right()).size());
 
-        System.out.println("First elements: " + MainScenario.getElementsCount(firstSummand));
+        System.out.println("First elements: " + MainScenario.getElementsCount(dSummand));
 
         System.out.println("Exp+Collect");
 
-        firstSummand = MainScenario.smartEC(firstSummand, ec);
+        dSummand = MainScenario.smartEC(dSummand, ec);
 
-        System.out.println(firstSummand);
+        System.out.println(dSummand);
         System.out.println("Collect Scalar");
         Transformation sc = new ExpandAndCollectTransformation(ScalarsSplitCriteria.INSTANCE,
                 Indicator.FALSE_INDICATOR, new Transformation[]{CalculateNumbers.INSTANCE});
-        firstSummand = sc.transform(firstSummand);
-        firstSummand = CalculateNumbers.INSTANCE.transform(firstSummand);
+        dSummand = sc.transform(dSummand);
+        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
         long stopTime = System.currentTimeMillis();
 
 
-        System.out.println(firstSummand);
-        System.out.println("Done. Elements: " + MainScenario.getElementsCount(firstSummand));
+        System.out.println(dSummand);
+        System.out.println("Done. Elements: " + MainScenario.getElementsCount(dSummand));
 
         System.out.println("First term time = " + (stopTime - startTime) + "ms");
         System.out.println("Total RR tertms count " + ((Sum) loop.RR.right()).size());
-        firstSummand = new Transformer(CollectPowers.INSTANCE).transform(firstSummand);
-        System.out.println(firstSummand);
+        dSummand = new Transformer(CollectPowers.INSTANCE).transform(dSummand);
+        System.out.println(dSummand);
 
     }
 }

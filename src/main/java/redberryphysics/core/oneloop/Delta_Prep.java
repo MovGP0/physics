@@ -19,15 +19,11 @@
  */
 package redberryphysics.core.oneloop;
 
-import java.io.IOException;
-import java.io.PrintStream;
 import redberry.core.context.CC;
-import redberry.core.context.ToStringMode;
 import redberry.core.tensor.Expression;
 import redberry.core.tensor.SimpleTensor;
 import redberry.core.tensor.Tensor;
 import redberry.core.transformation.CalculateNumbers;
-import redberry.core.transformation.ExpandBrackets;
 import redberry.core.transformation.IndexesInsertion;
 import redberry.core.transformation.Transformation;
 import redberry.core.transformation.Transformations;
@@ -47,7 +43,9 @@ import static redberryphysics.core.util.IndexesFactoryUtil.*;
  */
 public class Delta_Prep {
     public static void go(OneLoop loop) {
-        evalD4(loop);
+        evalD1(loop);
+        evalD2(loop);
+        evalD3(loop);
         evalD4(loop);
     }
     static final Transformation ec = new ExpandAndCollectTransformation(
