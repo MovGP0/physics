@@ -84,7 +84,9 @@ public class MainScenario {
         dSummand = Transformations.contractMetrics(dSummand);
         dSummand = CollectFactory.createCollectEqualTerms1().transform(dSummand);
         dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
-
+        dSummand = SEAC.transform(dSummand);
+        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
+        
         for (Expression h : loop.HATKs)
             h.asSubstitution().transform(dSummand);
         for (Expression delta : loop.DELTAs)
