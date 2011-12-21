@@ -17,8 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package redberryphysics.core.oneloop;
+package org.redberry.physics.kv;
 
+import org.redberry.physics.kv.MainScenario;
+import org.redberry.physics.kv.Delta_Prep;
+import org.redberry.physics.kv.OneLoop;
 import redberry.core.transformation.concurrent.EACScalars;
 import redberry.core.context.CC;
 import redberry.core.tensor.Tensor;
@@ -38,7 +41,7 @@ import redberry.core.transformation.collect.ScalarsSplitCriteria;
 import redberry.core.transformation.concurrent.ExpandAndCollectTransformation;
 import redberry.core.transformation.contractions.IndexesContractionsTransformation;
 import redberry.core.utils.Indicator;
-import redberryphysics.core.util.SqrSubs;
+import org.redberry.physics.util.SqrSubs;
 
 /**
  *

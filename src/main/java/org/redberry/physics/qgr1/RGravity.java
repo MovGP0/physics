@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package redberryphysics.qgravity;
+package org.redberry.physics.qgr1;
 
 import redberry.core.tensor.Expression;
 import redberry.core.transformation.CalculateNumbers;

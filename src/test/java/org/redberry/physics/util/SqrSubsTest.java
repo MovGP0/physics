@@ -17,25 +17,37 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package redberryphysics.core.oneloop;
+package org.redberry.physics.util;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.redberry.physics.util.SqrSubs;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import redberry.core.context.CC;
+import redberry.core.tensor.SimpleTensor;
+import redberry.core.tensor.Tensor;
+import redberry.core.transformation.Transformation;
 
 /**
  *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public class R2GravityTest {
-    public R2GravityTest() {
+public class SqrSubsTest {
+    public SqrSubsTest() {
     }
 
     @Test
-    public void testConstructor() {
-        R2Gravity gravity  = new R2Gravity();
-        System.out.println(gravity.Lagrange);
+    public void test1() {
+        SimpleTensor n = (SimpleTensor) CC.parse("n_{a}");
+        Transformation tr = new SqrSubs(n);
+        Tensor t = CC.parse("n_m*n^m*a*n_a*n^a*n_i*n^j*b");
+        System.out.println(tr.transform(t));
+    }
+
+    @Test
+    public void test2() {
+        SimpleTensor n = (SimpleTensor) CC.parse("n_{a}");
+        Transformation tr = new SqrSubs(n);
+        Tensor t = CC.parse("n_m*n^m*n_a*n^a");
+        System.out.println(tr.transform(t));
     }
 }

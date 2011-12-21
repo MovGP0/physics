@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package redberryphysics.core.oneloop;
+package org.redberry.physics.kv;
 
 import redberry.core.transformation.substitutions.TensorTreeIndicatorImpl;
 import redberry.core.context.CC;
@@ -35,7 +35,7 @@ import redberry.core.transformation.collect.CollectPowers;
 import redberry.core.transformation.concurrent.EACScalars;
 import redberry.core.transformation.contractions.IndexesContractionsTransformation;
 import redberry.core.utils.Indicator;
-import static redberryphysics.core.util.IndexesFactoryUtil.*;
+import static org.redberry.physics.util.IndexesFactoryUtil.*;
 
 /**
  *

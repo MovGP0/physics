@@ -17,10 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package redberryphysics.core.oneloop;
+package org.redberry.physics.kv;
 
+import org.redberry.physics.kv.OneLoop;
 import redberry.core.tensor.SimpleTensor;
-import redberryphysics.core.util.SqrSubs;
+import org.redberry.physics.util.SqrSubs;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Ignore;
@@ -51,9 +52,9 @@ import redberry.core.transformation.collect.ScalarsSplitCriteria;
 import redberry.core.transformation.concurrent.ExpandAndCollectTransformation;
 import redberry.core.transformation.contractions.IndexesContractionsTransformation;
 import redberry.core.utils.Indicator;
-import redberryphysics.core.util.IndexesFactoryUtil;
+import org.redberry.physics.util.IndexesFactoryUtil;
 import static core.TAssert.*;
-import static redberryphysics.core.util.IndexesFactoryUtil.*;
+import static org.redberry.physics.util.IndexesFactoryUtil.*;
 
 /**
  *

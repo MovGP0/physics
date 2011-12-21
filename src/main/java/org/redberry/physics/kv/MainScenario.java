@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package redberryphysics.core.oneloop;
+package org.redberry.physics.kv;
 
 import java.util.List;
 import redberry.core.tensor.iterators.TensorFirstTreeIterator;
@@ -28,7 +28,7 @@ import java.util.Arrays;
 import redberry.core.tensor.SimpleTensor;
 import redberry.core.transformation.contractions.IndexesContractionsTransformation;
 import redberry.core.utils.Indicator;
-import redberryphysics.core.util.SqrSubs;
+import org.redberry.physics.util.SqrSubs;
 import redberry.core.context.CC;
 import redberry.core.context.ToStringMode;
 import redberry.core.tensor.Expression;

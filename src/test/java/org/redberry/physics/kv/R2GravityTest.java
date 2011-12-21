@@ -17,36 +17,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package redberryphysics.core.util;
+package org.redberry.physics.kv;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import redberry.core.context.CC;
-import redberry.core.tensor.SimpleTensor;
-import redberry.core.tensor.Tensor;
-import redberry.core.transformation.Transformation;
+import org.redberry.physics.qgr2.R2Gravity;
+import static org.junit.Assert.*;
 
 /**
  *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public class SqrSubsTest {
-    public SqrSubsTest() {
+public class R2GravityTest {
+    public R2GravityTest() {
     }
 
     @Test
-    public void test1() {
-        SimpleTensor n = (SimpleTensor) CC.parse("n_{a}");
-        Transformation tr = new SqrSubs(n);
-        Tensor t = CC.parse("n_m*n^m*a*n_a*n^a*n_i*n^j*b");
-        System.out.println(tr.transform(t));
-    }
-
-    @Test
-    public void test2() {
-        SimpleTensor n = (SimpleTensor) CC.parse("n_{a}");
-        Transformation tr = new SqrSubs(n);
-        Tensor t = CC.parse("n_m*n^m*n_a*n^a");
-        System.out.println(tr.transform(t));
+    public void testConstructor() {
+        R2Gravity gravity  = new R2Gravity();
+        System.out.println(gravity.Lagrange);
     }
 }
