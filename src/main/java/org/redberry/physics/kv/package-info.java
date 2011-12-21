@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package redberryphysics.core.oneloop;
+package org.redberry.physics.kv;
 
 /**
  * This package contains classes and algorithms that implements method of 

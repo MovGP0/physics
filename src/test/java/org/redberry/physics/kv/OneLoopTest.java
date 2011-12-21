@@ -17,8 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package redberryphysics.core.oneloop;
+package org.redberry.physics.kv;
 
+import org.redberry.physics.kv.OneLoop;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;

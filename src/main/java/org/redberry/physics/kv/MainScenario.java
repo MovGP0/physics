@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package redberryphysics.core.oneloop;
+package org.redberry.physics.kv;
 
 import java.util.List;
 import redberry.core.tensor.iterators.TensorFirstTreeIterator;
@@ -28,7 +28,7 @@ import java.util.Arrays;
 import redberry.core.tensor.SimpleTensor;
 import redberry.core.transformation.contractions.IndexesContractionsTransformation;
 import redberry.core.utils.Indicator;
-import redberryphysics.core.util.SqrSubs;
+import org.redberry.physics.util.SqrSubs;
 import redberry.core.context.CC;
 import redberry.core.context.ToStringMode;
 import redberry.core.tensor.Expression;
@@ -65,60 +65,75 @@ public class MainScenario {
             Indicator.FALSE_INDICATOR, new Transformation[]{CalculateNumbers.INSTANCE});
 
     public static void main(String[] args) {
+        long start = System.currentTimeMillis();
         OneLoop loop = new OneLoop();
         loop.insertIndexes();
         loop.substituteL();
         loop.evalHatK();
-        System.out.println("Evaluating deltas's");
         Delta_Prep.go(loop);
-        System.out.println("Done");
-
-        Tensor dSummand = ((Sum) loop.RR.right()).getElements().get(5);
-        long startTime = System.currentTimeMillis();
-        dSummand = dSummand.clone();
-        dSummand = loop.L.asSubstitution().transform(dSummand);
-        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
-        dSummand = loop.RIMAN.asSubstitution().transform(dSummand);
-        dSummand = loop.RICCI.asSubstitution().transform(dSummand);
-        dSummand = Transformations.expandBrackets(dSummand);
-        dSummand = Transformations.contractMetrics(dSummand);
-        dSummand = CollectFactory.createCollectEqualTerms1().transform(dSummand);
-        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
-        dSummand = SEAC.transform(dSummand);
-        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
-        
-        for (Expression h : loop.HATKs)
-            h.asSubstitution().transform(dSummand);
-        for (Expression delta : loop.DELTAs)
-            delta.asSubstitution().transform(dSummand);
-
-        dSummand = Transformations.contractMetrics(dSummand);
-        dSummand = OneLoop.KRONECKER_DIMENSION.asSubstitution().transform(dSummand);
-        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
-
-        System.out.println("Exp+Collect");
-        dSummand = smartEC(dSummand, EAC);
-
-        System.out.println("+++ Collect Scalar");
-        dSummand = SEAC.transform(dSummand);
-        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
-        long stopTime = System.currentTimeMillis();
-        System.out.println("+++ Done. Elements: " + getElementsCount(dSummand));
-        System.out.println("+++ Term time = " + (stopTime - startTime) + "ms");
-
-        System.out.println("Evaluating final result ");
-        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
-        dSummand = SEAC.transform(dSummand);
-        System.out.println("Done: ");
-        System.out.println(dSummand);
-        System.out.println(new Transformer(CollectPowers.INSTANCE).transform(dSummand.clone()));
-
-        if (true)
-            return;
-        System.out.println(CC.parse("L*L*(L-1)*HATK^{\\gamma}*DELTA^{\\alpha\\beta}*HATK^{\\mu\\nu}*n_{\\lambda}*((1/20)*R_{\\alpha\\nu}*R^{\\lambda}_{\\gamma\\beta\\mu}+(1/20)*R_{\\alpha\\gamma}*R^{\\lambda}_{\\mu\\beta\\nu}+(1/10)*R_{\\alpha\\beta}*R^{\\lambda}_{\\mu\\gamma\\nu}+(1/20)*R^{\\sigma}_{\\alpha\\nu\\gamma}*R^{\\lambda}_{\\sigma\\beta\\mu}-(1/60)*R^{\\sigma}_{\\mu\\alpha\\nu}*R^{\\lambda}_{\\beta\\sigma\\gamma}+(1/10)*R^{\\sigma}_{\\alpha\\beta\\gamma}*R^{\\lambda}_{\\mu\\sigma\\nu}-(1/12)*R^{\\sigma}_{\\alpha\\beta\\nu}*R^{\\lambda}_{\\mu\\sigma\\gamma})").toString(ToStringMode.UTF8));
-       
+        evalRRTerm(5, loop);
+        long stop = System.currentTimeMillis();
+        System.out.println(" TOTAL ---- " + (stop - start));
     }
 
+    /*
+     * Calculating fifth element - there is a mistake 
+     *  
+     */
+//    public static void main(String[] args) {
+//        OneLoop loop = new OneLoop();
+//        loop.insertIndexes();
+//        loop.substituteL();
+//        loop.evalHatK();
+//        System.out.println("Evaluating deltas's");
+//        Delta_Prep.go(loop);
+//        System.out.println("Done");
+//
+//        Tensor dSummand = ((Sum) loop.RR.right()).getElements().get(5);
+//        long startTime = System.currentTimeMillis();
+//        dSummand = dSummand.clone();
+//        dSummand = loop.L.asSubstitution().transform(dSummand);
+//        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
+//        dSummand = loop.RIMAN.asSubstitution().transform(dSummand);
+//        dSummand = loop.RICCI.asSubstitution().transform(dSummand);
+//        dSummand = Transformations.expandBrackets(dSummand);
+//        dSummand = Transformations.contractMetrics(dSummand);
+//        dSummand = CollectFactory.createCollectEqualTerms1().transform(dSummand);
+//        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
+//        dSummand = SEAC.transform(dSummand);
+//        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
+//        
+//        for (Expression h : loop.HATKs)
+//            h.asSubstitution().transform(dSummand);
+//        for (Expression delta : loop.DELTAs)
+//            delta.asSubstitution().transform(dSummand);
+//
+//        dSummand = Transformations.contractMetrics(dSummand);
+//        dSummand = OneLoop.KRONECKER_DIMENSION.asSubstitution().transform(dSummand);
+//        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
+//
+//        System.out.println("Exp+Collect");
+//        dSummand = smartEC(dSummand, EAC);
+//
+//        System.out.println("+++ Collect Scalar");
+//        dSummand = SEAC.transform(dSummand);
+//        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
+//        long stopTime = System.currentTimeMillis();
+//        System.out.println("+++ Done. Elements: " + getElementsCount(dSummand));
+//        System.out.println("+++ Term time = " + (stopTime - startTime) + "ms");
+//
+//        System.out.println("Evaluating final result ");
+//        dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
+//        dSummand = SEAC.transform(dSummand);
+//        System.out.println("Done: ");
+//        System.out.println(dSummand);
+//        System.out.println(new Transformer(CollectPowers.INSTANCE).transform(dSummand.clone()));
+//
+//        if (true)
+//            return;
+//        System.out.println(CC.parse("L*L*(L-1)*HATK^{\\gamma}*DELTA^{\\alpha\\beta}*HATK^{\\mu\\nu}*n_{\\lambda}*((1/20)*R_{\\alpha\\nu}*R^{\\lambda}_{\\gamma\\beta\\mu}+(1/20)*R_{\\alpha\\gamma}*R^{\\lambda}_{\\mu\\beta\\nu}+(1/10)*R_{\\alpha\\beta}*R^{\\lambda}_{\\mu\\gamma\\nu}+(1/20)*R^{\\sigma}_{\\alpha\\nu\\gamma}*R^{\\lambda}_{\\sigma\\beta\\mu}-(1/60)*R^{\\sigma}_{\\mu\\alpha\\nu}*R^{\\lambda}_{\\beta\\sigma\\gamma}+(1/10)*R^{\\sigma}_{\\alpha\\beta\\gamma}*R^{\\lambda}_{\\mu\\sigma\\nu}-(1/12)*R^{\\sigma}_{\\alpha\\beta\\nu}*R^{\\lambda}_{\\mu\\sigma\\gamma})").toString(ToStringMode.UTF8));
+//       
+//    }
     private static Tensor evalAll() {
 
         OneLoop loop = new OneLoop();

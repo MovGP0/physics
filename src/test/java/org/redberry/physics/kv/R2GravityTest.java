@@ -17,26 +17,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package redberryphysics.core.oneloop.gravity;
+package org.redberry.physics.kv;
 
-import redberry.core.tensor.Expression;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.redberry.physics.qgr2.R2Gravity;
+import static org.junit.Assert.*;
 
 /**
  *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public class FeynmanRules {
-    public final Expression KRONECKER_DIMENSION =
-            new Expression("d^{m}_{m} = 4");
-    public final Expression P =
-            new Expression("P^{mnab} = (1/2)*(g^{ma}*g^{nb}+g^{mb}*g^{na}-g^{mn}*g^{ab}) ");
-    public final Expression propagator =
-            new Expression("G^{mnab}[k_n] = (I*P^{mnab})/(k_n*k^n)");
-    public final Expression scalar2_gluon_vertex =
-            new Expression("T^{mn}[k^n,p^n] = -(I/2)*G*(k^n*p^m+k^m*p^n-g^{mn}*(k_a*p^a-m*m))");
+public class R2GravityTest {
+    public R2GravityTest() {
+    }
 
-    public FeynmanRules() {
-        propagator.eval(P.asSubstitution());
+    @Test
+    public void testConstructor() {
+        R2Gravity gravity  = new R2Gravity();
+        System.out.println(gravity.Lagrange);
     }
 }

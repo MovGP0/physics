@@ -17,8 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package redberryphysics.core.util;
+package org.redberry.physics.util;
 
+import org.redberry.physics.util.SqrSubs;
 import org.junit.Test;
 import redberry.core.context.CC;
 import redberry.core.tensor.SimpleTensor;
