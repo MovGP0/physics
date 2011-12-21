@@ -37,10 +37,9 @@ import redberry.core.transformation.contractions.IndexesContractionsTransformati
 
 /**
  *
- * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public class R2Gravity {
+public class Qgr {
     public static final Expression Ric =
             new Expression("Ric_ab=E^r_a*E^d_c*R^c_bdr");
     public static final Expression Riman =
@@ -58,14 +57,16 @@ public class R2Gravity {
     public static final Expression tetradGaugeFix =
             new Expression("Gf_a=f1*h^b_a*p_b+f2*g^pq*g_ab*h^b_q*p_p+f3*h^q_q*p_a");
     public static final Expression Lagrangian =
-            new Expression("Lagrange = sqrt*(g^ab*Ric_ab+(e1*g_ab*G^xp*G^yq+e2*E^x_a*E^p_b*G^yq+e3*E^x_b*E^p_a*G^yq)*T^a_xy*T^b_pq+e6*Ric_ab*Ric_cd*g^ab*g^cd+e5*Ric_ab*Ric_cd*g^ac*g^bd+Gf_a*Gf_b*g^ab)+f*g^pq*g_ab*i*h^b_q*p_p*g^cd*I*h^a_d*p_c");
+            new Expression("Lagrangian = sqrt*(g^ab*Ric_ab+(e1*g_ab*G^xp*G^yq+e2*E^x_a*E^p_b*G^yq+e3*E^x_b*E^p_a*G^yq)*T^a_xy*T^b_pq+e6*Ric_ab*Ric_cd*g^ab*g^cd+e5*Ric_ab*Ric_cd*g^ac*g^bd+Gf_a*Gf_b*g^ab)+f*g^pq*g_ab*i*h^b_q*p_p*g^cd*I*h^a_d*p_c");
+    public static final Expression Action =
+            new Expression("S = Integral[Lagrange,x_m]");
     public final Expression Lagrange;
     public static final Expression[] substitutionsQueue = {
         Ric, Riman, Torsion, eTetrad, ETetrad, metricUP, sqrt, tetradGaugeFix};
     public static final SimpleTensor h = (SimpleTensor) CC.parse("h^a_b");
     public static final SimpleTensor w = (SimpleTensor) CC.parse("w^a_bc");
 
-    public R2Gravity() {
+    public Qgr() {
         Lagrange = Lagrangian.clone();
         Lagrange.eval(substitutionsQueue);
         Lagrange.eval(

@@ -17,26 +17,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.redberry.physics.kv;
+package org.redberry.physics.qgr2;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import org.redberry.physics.qgr2.Qgr;
-import static org.junit.Assert.*;
+import redberry.core.tensor.Expression;
 
 /**
  *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public class R2GravityTest {
-    public R2GravityTest() {
+public class QgrTest {
+    public QgrTest() {
     }
 
     @Test
-    public void testConstructor() {
-        Qgr gravity  = new Qgr();
-        System.out.println(gravity.Lagrange);
+    public void test1() {
+        Qgr qgr = new Qgr();
+        Expression Action =
+            new Expression("S = Integral[Lagrange,x_m]");
+//        CC.parse("Integral[Lagrange,x_m]");
+//        System.out.println(Qgr.Action);
     }
 }

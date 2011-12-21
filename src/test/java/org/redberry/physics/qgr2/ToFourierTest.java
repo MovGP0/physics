@@ -17,26 +17,39 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.redberry.physics.kv;
+package org.redberry.physics.qgr2;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import org.redberry.physics.qgr2.Qgr;
-import static org.junit.Assert.*;
+import redberry.core.context.CC;
+import redberry.core.tensor.Tensor;
 
 /**
  *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public class R2GravityTest {
-    public R2GravityTest() {
+public class ToFourierTest {
+    public ToFourierTest() {
     }
 
     @Test
-    public void testConstructor() {
-        Qgr gravity  = new Qgr();
-        System.out.println(gravity.Lagrange);
+    public void test1() {
+        ToFourier fourier = new ToFourier("x", "y");
+        Tensor target = CC.parse("Integral[f[x],x]");
+        System.out.println(fourier.transform(target));
+    }
+
+    @Test
+    public void test2() {
+        ToFourier fourier = new ToFourier("x", "y");
+        Tensor target = CC.parse("Integral[a*f[x]*b,x]");
+        System.out.println(fourier.transform(target));
+    }
+
+    @Test
+    public void test3() {
+        ToFourier fourier = new ToFourier("x", "y");
+        Tensor target = CC.parse("Integral[a*f[x]*g[x]*b,x]");
+        System.out.println(fourier.transform(target));
     }
 }
