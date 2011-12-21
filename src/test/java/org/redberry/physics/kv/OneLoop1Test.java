@@ -53,7 +53,7 @@ import redberry.core.transformation.concurrent.ExpandAndCollectTransformation;
 import redberry.core.transformation.contractions.IndexesContractionsTransformation;
 import redberry.core.utils.Indicator;
 import org.redberry.physics.util.IndexesFactoryUtil;
-import static core.TAssert.*;
+import static org.redberry.physics.TAssert.*;
 import static org.redberry.physics.util.IndexesFactoryUtil.*;
 
 /**

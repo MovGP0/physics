@@ -1,4 +1,4 @@
-package core;
+package org.redberry.physics;
 
 import redberry.core.indexes.Indexes;
 import redberry.core.context.CC;
