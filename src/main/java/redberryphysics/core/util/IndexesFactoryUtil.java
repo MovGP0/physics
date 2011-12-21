@@ -46,7 +46,7 @@ public class IndexesFactoryUtil {
             type = indexesStructure.get(i);
             i_array[i] = (generator.generate((byte) (type & 0x7F))) | (type << 24);
         }
-        return IndexesFactory.create(i_array);
+        return IndexesFactory.createSimple(i_array);
     }
 
     public static Indexes createIndexes(Tensor[] used_expressions, Indexes sample) {
@@ -64,7 +64,7 @@ public class IndexesFactoryUtil {
         System.arraycopy(i_array, 0, res, 0, length);
         for (int i = 0; i < length; ++i)
             res[i + length] = 0x80000000 ^ i_array[i];
-        return IndexesFactory.create(res);
+        return IndexesFactory.createSimple(res);
     }
 
     public static Indexes doubleAndDumpIndexes(String indexes) {
