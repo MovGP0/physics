@@ -24,6 +24,7 @@ import java.util.List;
 import redberry.core.context.CC;
 import redberry.core.indexes.SimpleIndexes;
 import redberry.core.indexgenerator.IntGenerator;
+import redberry.core.tensor.Derivative;
 import redberry.core.tensor.Integral;
 import redberry.core.tensor.Product;
 import redberry.core.tensor.SimpleTensor;
@@ -32,8 +33,10 @@ import redberry.core.tensor.Tensor;
 import redberry.core.tensor.TensorField;
 import redberry.core.tensor.TensorIterator;
 import redberry.core.tensor.TensorNumber;
+import redberry.core.tensor.indexmapping.IndexMappingDirect;
 import redberry.core.tensor.iterators.TensorFirstTreeIterator;
 import redberry.core.tensor.iterators.TensorTreeIterator;
+import redberry.core.transformation.ApplyIndexMappingDirectTransformation;
 import redberry.core.transformation.Transformation;
 import redberry.core.utils.TensorUtils;
 
@@ -67,6 +70,22 @@ public class ToFourier implements Transformation {
     }
 
     private TransformMode mode(final Tensor tensor) {
+        if (tensor instanceof Derivative) {
+            Derivative d = (Derivative) tensor;
+            Tensor[] vars = d.getVars();
+
+            boolean c = true;
+            for (int i = 0; i < vars.length; ++i)
+                if (((SimpleTensor) vars[i]).getName() != from.getName()) {
+                    c = false;
+                    break;
+                }
+            if (c)
+                if (mode(d.getTarget()) == TransformMode.TRANSFORM)
+                    return TransformMode.TRANSFORM;
+                else
+                    return TransformMode.ERROR;
+        }
         if (tensor instanceof SimpleTensor) {
             final int name = ((SimpleTensor) tensor).getName();
             if (name == from.getName() || name == to.getName())
@@ -117,20 +136,29 @@ public class ToFourier implements Transformation {
                     throw new UnsupportedOperationException("Not supported.");
             }
         }
+        if (target instanceof Derivative)
+            switch (mode(target)) {
+                case TRANSFORM:
+                    return TensorNumber.createZERO();
+                case SKIP:
+                case ERROR:
+                    throw new UnsupportedOperationException("Not supported.");
+            }
         if (target instanceof Product) {
             final Product product = (Product) target.clone();
             final TensorIterator iterator = product.iterator();
-            final List<TensorField> toFourier = new ArrayList<>();
+            final List<Tensor> toFourier = new ArrayList<>();
             Tensor current;
+            out_while:
             while (iterator.hasNext()) {
                 current = iterator.next();
                 switch (mode(current)) {
                     case ERROR:
                         throw new UnsupportedOperationException("Not supported.");
                     case SKIP:
-                        continue;
+                        continue out_while;
                     case TRANSFORM:
-                        toFourier.add((TensorField) current);
+                        toFourier.add(current);
                         iterator.remove();
                 }
             }
@@ -138,8 +166,11 @@ public class ToFourier implements Transformation {
             if (toFourier.isEmpty())
                 throw new UnsupportedOperationException("Not supported.");
             if (toFourier.size() == 1) {
-                final TensorField tf = toFourier.get(0);
-                product.add(CC.createTensorField(tf.getName(), tf.getIndexes(), TensorNumber.createZERO()));
+                final Tensor tf = toFourier.get(0);
+                if (tf instanceof Derivative)
+                    return TensorNumber.createZERO();
+                if (tf instanceof TensorField)
+                    product.add(CC.createTensorField(((TensorField) tf).getName(), ((TensorField) tf).getIndexes().clone(), TensorNumber.createZERO()));
                 return product;
             }
 
@@ -150,18 +181,46 @@ public class ToFourier implements Transformation {
             for (int i = 0; i < size; ++i) {
                 if (i == size - 1) {
                     final Sum sum = new Sum();
-                    sum.add(to);
                     for (Tensor generated : generatedArgs)
-                        sum.add(new Product(TensorNumber.createMINUSONE(), generated));
-                    product.add(CC.createTensorField(to.getName(), to.getIndexes(), sum.equivalent()));
+                        sum.add(new Product(TensorNumber.createMINUSONE(), generated.clone()));
+                    product.add(processTensor(toFourier.get(i), sum.equivalent(),generatedArgs.get(0).getIndexes()));
                     return new Integral(product, generatedArgs.toArray(new SimpleTensor[generatedArgs.size()]));
                 }
                 currentArg = generator.getNext();
                 generatedArgs.add(currentArg);
-                product.add(CC.createTensorField(to.getName(), to.getIndexes(), currentArg));
+                product.add(processTensor(toFourier.get(i), currentArg,currentArg.getIndexes()));
             }
         }
         throw new UnsupportedOperationException("Not supported.");
+    }
+
+    private Tensor processTensor(final Tensor t, final Tensor newArg, final SimpleIndexes newArgSimpleIndexes) {
+        if (t instanceof TensorField) {
+            TensorField field = (TensorField) t;
+            return CC.createTensorField(field.getName(), field.getIndexes(), newArg.clone());
+        }
+        if (t instanceof Derivative) {
+            final Derivative d = (Derivative) t;
+            final Tensor[] vars = d.getVars();
+            final int vC = vars.length;
+            final TensorNumber image =
+                    vC % 4 == 0 ? TensorNumber.createONE()
+                    : vC + 1 % 4 == 0 ? TensorNumber.createIMAGE_MINUSONE()
+                    : vC % 2 == 0 ? TensorNumber.createMINUSONE() : TensorNumber.createIMAGE_ONE();
+            final Product result = new Product();
+            result.add(image);
+            IndexMappingDirect im;
+            Tensor newArg_;
+            for (int i = 0; i < vC; ++i) {
+                newArg_ = newArg.clone();
+                im = new IndexMappingDirect(newArgSimpleIndexes, vars[i].getIndexes().getInverseIndexes());
+                newArg_ = ApplyIndexMappingDirectTransformation.INSTANCE.perform(newArg_, im);
+                result.add(newArg_);
+            }
+            result.add(processTensor(d.getTarget(), newArg.clone(),newArgSimpleIndexes));
+            return result;
+        }
+        throw new RuntimeException();
     }
 
     private class Generator {
@@ -202,8 +261,7 @@ public class ToFourier implements Transformation {
         }
 
         SimpleTensor getNext() {
-            int val = generator.getNext();
-            return CC.createSimpleTensor(sampleName + val, indexes);
+            return CC.createSimpleTensor(sampleName + generator.getNext(), indexes);
         }
     }
 }
