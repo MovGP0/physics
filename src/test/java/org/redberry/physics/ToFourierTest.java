@@ -17,11 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.redberry.physics.qgr2;
+package org.redberry.physics;
 
+import org.redberry.physics.ToFourier;
 import org.junit.Test;
 import redberry.core.context.CC;
 import redberry.core.tensor.Tensor;
+import redberry.core.transformation.Transformations;
+import redberry.core.transformation.Transformer;
+import redberry.core.transformation.collect.CollectPowers;
 import static org.redberry.physics.TAssert.*;
 
 /**
@@ -77,12 +81,49 @@ public class ToFourierTest {
         Tensor target = CC.parse("Integral[D[f[x],x],x]");
         assertParity(fourier.transform(target), "0");
     }
-    
+
     @Test
     public void testD2() {
         ToFourier fourier = new ToFourier("x", "y");
         Tensor target = CC.parse("Integral[f[x]*D[f[x],x],x]");
-        System.out.println(fourier.transform(target));
         assertParity(fourier.transform(target), "Integral[f[y0]*I*(-1)*y0*f[(-1)*y0],y0]");
+    }
+
+    @Test
+    public void testD3() {
+        ToFourier fourier = new ToFourier("x", "y");
+        Tensor target = CC.parse("Integral[D[f[x],x]*f[x],x]");
+        assertOpposite(fourier.transform(target), "Integral[f[y0]*I*(-1)*y0*f[(-1)*y0],y0]");
+    }
+
+    @Test
+    public void testD23() {
+        ToFourier fourier = new ToFourier("x", "y");
+        Tensor target1 = CC.parse("Integral[D[f[x],x]*f[x],x]");
+        Tensor target2 = CC.parse("Integral[f[x]*D[f[x],x],x]");
+        assertOpposite(fourier.transform(target1), fourier.transform(target2));
+    }
+
+    @Test
+    public void testD4() {
+        ToFourier fourier = new ToFourier("x", "y");
+        Tensor target = CC.parse("Integral[D[f[x],x,x]*f[x],x]");
+        assertParity(fourier.transform(target), "Integral[-f[y0]*y0*y0*f[(-1)*y0],y0]");
+    }
+
+    @Test
+    public void testD5() {
+        ToFourier fourier = new ToFourier("x", "y");
+        Tensor target = CC.parse("Integral[f[x]*D[f[x],x,x],x]");
+        assertParity(Transformations.calculateNumbers(fourier.transform(target)), "Integral[-f[y0]*y0*y0*f[(-1)*y0],y0]");
+    }
+
+    @Test
+    public void testD6() {
+        ToFourier fourier = new ToFourier("x", "y");
+        Tensor target = CC.parse("Integral[D[g[x],x,x]*D[f[x],x,x],x]");
+        target = new Transformer(CollectPowers.INSTANCE).transform(
+                Transformations.calculateNumbers(fourier.transform(target)));
+        assertParity(target, "Integral[g[y0]*f[(-1)*y0]*Pow[y0,4],y0]");
     }
 }

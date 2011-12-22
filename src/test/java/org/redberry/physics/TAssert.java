@@ -29,6 +29,14 @@ public class TAssert {
         assertParity(target, CC.parse(expected));
     }
 
+    public static void assertOpposite(Tensor target, Tensor expected) {
+        assertTrue(TTest.testOpposite(target, expected));
+    }
+
+    public static void assertOpposite(Tensor target, String expected) {
+        assertOpposite(target, CC.parse(expected));
+    }
+
     public static void assertParent(Tensor tensor) {
         assertTrue(TensorUtils.testParentConsistent(tensor));
     }
