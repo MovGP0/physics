@@ -19,7 +19,6 @@
  */
 package org.redberry.physics;
 
-import org.redberry.physics.ToFourier;
 import org.junit.Test;
 import redberry.core.context.CC;
 import redberry.core.tensor.Tensor;
@@ -55,14 +54,14 @@ public class ToFourierTest {
     public void test3() {
         ToFourier fourier = new ToFourier("x", "y");
         Tensor target = CC.parse("Integral[a*f[x]*g[x]*b,x]");
-        assertParity(fourier.transform(target), "Integral[a*f[y0]*g[-y0]*b,y0]");
+        assertParity(fourier.transform(target), "Integral[a*f[y]*g[-y]*b,y]");
     }
 
     @Test
     public void test4() {
         ToFourier fourier = new ToFourier("x", "y");
         Tensor target = CC.parse("Integral[a*f[x]*g[x]*f[x]*f[x]*X[y1]*b,x]");
-        assertParity(fourier.transform(target), "Integral[a*X[y1]*f[y0]*g[y2]*f[y3]*f[-y0-y2-y3]*b,y0,y2,y3]");
+        assertParity(fourier.transform(target), "Integral[a*X[y1]*f[y]*g[y0]*f[y2]*f[-y-y0-y2]*b,y,y2,y0]");
     }
 
     @Test(expected = UnsupportedOperationException.class)
@@ -86,14 +85,14 @@ public class ToFourierTest {
     public void testD2() {
         ToFourier fourier = new ToFourier("x", "y");
         Tensor target = CC.parse("Integral[f[x]*D[f[x],x],x]");
-        assertParity(fourier.transform(target), "Integral[f[y0]*I*(-1)*y0*f[(-1)*y0],y0]");
+        assertParity(fourier.transform(target), "Integral[f[y]*I*(-1)*y*f[(-1)*y],y]");
     }
 
     @Test
     public void testD3() {
         ToFourier fourier = new ToFourier("x", "y");
         Tensor target = CC.parse("Integral[D[f[x],x]*f[x],x]");
-        assertOpposite(fourier.transform(target), "Integral[f[y0]*I*(-1)*y0*f[(-1)*y0],y0]");
+        assertOpposite(fourier.transform(target), "Integral[f[y]*I*(-1)*y*f[(-1)*y],y]");
     }
 
     @Test
@@ -108,14 +107,14 @@ public class ToFourierTest {
     public void testD4() {
         ToFourier fourier = new ToFourier("x", "y");
         Tensor target = CC.parse("Integral[D[f[x],x,x]*f[x],x]");
-        assertParity(fourier.transform(target), "Integral[-f[y0]*y0*y0*f[(-1)*y0],y0]");
+        assertParity(fourier.transform(target), "Integral[-f[y]*y*y*f[(-1)*y],y]");
     }
 
     @Test
     public void testD5() {
         ToFourier fourier = new ToFourier("x", "y");
         Tensor target = CC.parse("Integral[f[x]*D[f[x],x,x],x]");
-        assertParity(Transformations.calculateNumbers(fourier.transform(target)), "Integral[-f[y0]*y0*y0*f[(-1)*y0],y0]");
+        assertParity(Transformations.calculateNumbers(fourier.transform(target)), "Integral[-f[y]*y*y*f[(-1)*y],y]");
     }
 
     @Test
@@ -124,6 +123,15 @@ public class ToFourierTest {
         Tensor target = CC.parse("Integral[D[g[x],x,x]*D[f[x],x,x],x]");
         target = new Transformer(CollectPowers.INSTANCE).transform(
                 Transformations.calculateNumbers(fourier.transform(target)));
-        assertParity(target, "Integral[g[y0]*f[(-1)*y0]*Pow[y0,4],y0]");
+        assertParity(target, "Integral[g[y]*f[(-1)*y]*Pow[y,4],y]");
+    }
+
+    @Test
+    public void testD7() {
+        ToFourier fourier = new ToFourier("x_m", "p_m");
+        Tensor target = CC.parse("Integral[D[g[x_m],x_a,x_b]*D[f[x_h],x_c,x_d],x^c]");
+        target = new Transformer(CollectPowers.INSTANCE).transform(
+                Transformations.calculateNumbers(fourier.transform(target)));
+        assertParity(target, "Integral[p^a*p^b*p^c*p^d*g[p_y]*f[-p_x],p_x]");
     }
 }
