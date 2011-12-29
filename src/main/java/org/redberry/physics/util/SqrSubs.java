@@ -72,7 +72,7 @@ public class SqrSubs implements Transformation {
             if (st.getName() != name)
                 continue;
             int indexName;
-            if (cs.contractions[index].equals(contraction)
+            if (cs.get(index).equals(contraction)
                     && ((indexName = st.getIndexes().get(0)) & 0x80000000) == 0)
                 list.add(indexName);
         } while (index < sIndexes.length - 1 && sIndexes[++index] == si);

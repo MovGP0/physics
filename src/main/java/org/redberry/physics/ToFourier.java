@@ -197,7 +197,7 @@ public class ToFourier implements Transformation {
 
     private Tensor processTensor(final Tensor t, final Tensor newArg, final SimpleIndexes newArgSimpleIndexes) {
         if (t instanceof TensorField) {
-            TensorField field = (TensorField) t;
+            final TensorField field = (TensorField) t;
             return CC.createTensorField(field.getName(), IndexesFactory.createSimple(field.getIndexes()), newArg.clone());
         }
         if (t instanceof Derivative) {
@@ -206,7 +206,7 @@ public class ToFourier implements Transformation {
             final int vC = vars.length;
             final TensorNumber image =
                     vC % 4 == 0 ? TensorNumber.createONE()
-                    : vC + 1 % 4 == 0 ? TensorNumber.createIMAGE_MINUSONE()
+                    : (vC + 1) % 4 == 0 ? TensorNumber.createIMAGE_MINUSONE()
                     : vC % 2 == 0 ? TensorNumber.createMINUSONE() : TensorNumber.createIMAGE_ONE();
             final Product result = new Product();
             result.add(image);
@@ -239,7 +239,7 @@ public class ToFourier implements Transformation {
                 current = iterator.next();
                 if (!(current instanceof SimpleTensor))
                     continue;
-                String name = CC.getNameDescriptor(((SimpleTensor) current).getName()).getName();
+                final String name = CC.getNameDescriptor(((SimpleTensor) current).getName()).getName();
 
                 if (name.length() < sampleName.length() || !name.substring(0, sampleName.length()).equals(sampleName))
                     continue;
@@ -254,7 +254,7 @@ public class ToFourier implements Transformation {
             if (integers.isEmpty())
                 generator = new IntGenerator();
             else {
-                int[] engagedData = new int[integers.size()];
+                final int[] engagedData = new int[integers.size()];
                 for (int i = 0; i < integers.size(); ++i)
                     engagedData[i] = integers.get(i).intValue();
                 generator = new IntGenerator(engagedData);
