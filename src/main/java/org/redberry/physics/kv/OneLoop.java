@@ -248,7 +248,7 @@ public class OneLoop {
                     new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
                     IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                     KRONECKER_DIMENSION.asSubstitution(),
-                    CollectFactory.createCollectEqualTerms1(),
+                    CollectFactory.createCollectEqualTerms(),
                     CalculateNumbers.INSTANCE,
                     EACScalars.getTransformer(),
                     CalculateNumbers.INSTANCE);
@@ -347,7 +347,7 @@ public class OneLoop {
                 KRONECKER_DIMENSION.asSubstitution(),
                 CalculateNumbers.INSTANCE,
                 new Transformer(CollectPowers.INSTANCE),
-                CollectFactory.createCollectEqualTerms1());
+                CollectFactory.createCollectEqualTerms());
 
     }
     public final Indicator<Tensor> matricesIndicator = new TensorTreeIndicatorImpl(new Indicator<Tensor>() {

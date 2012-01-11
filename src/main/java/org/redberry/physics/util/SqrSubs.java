@@ -54,7 +54,7 @@ public class SqrSubs implements Transformation {
         Product product = (Product) tensor;
         ProductContent content = product.getContent();
         ContractionStructure cs = content.getContractionStructure();
-        short si = content.getStratchIndexByHash(hashCode);
+        short si = content.getStretchIndexByHash(hashCode);
         if (si == -1)
             return tensor;
 
