@@ -23,6 +23,7 @@ import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+import redberry.core.number.ComplexElement;
 import redberry.core.tensor.*;
 import redberry.core.tensor.generator.GeneratedTensor;
 import redberry.core.tensor.generator.TensorGeneratorSP;
@@ -61,14 +62,14 @@ public class InverseTensor {
         Expression inverse = new Expression(inverseLhs, generatedTensor.generatedTensor);
 
         Transformation[] transformations1 = new Transformation[transformations.length + 2];
-        System.arraycopy(transformations, 0, transformations1, 0, transformations.length);
-        transformations1[transformations.length] =
+        transformations1[0] =
                 IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC;
+        System.arraycopy(transformations, 0, transformations1, 1, transformations.length);
         transformations1[transformations.length + 1] = CalculateNumbers.INSTANCE;
         final Transformation expandCollect =
                 new ExpandAndCollectTransformation(
                 FullScalarsSplitCriteria.INSTANCE,
-                Indicator.FALSE_INDICATOR,
+                Indicator.SYMBOL_INDICATOR,
                 transformations1);
 
         equation.eval(
@@ -76,14 +77,24 @@ public class InverseTensor {
                 inverse.asSubstitution(),
                 expandCollect);
 
+        List<Split> rightSplit = new ArrayList<>();
 
-        Split rightSplit = split(equation.right());
+        if (equation.right() instanceof Sum)
+            for (Tensor summand : equation.right())
+                rightSplit.add(split(summand));
+        else
+            rightSplit.add(split(equation.right()));
         linearEquations = new ArrayList<>();
         for (Tensor summand : equation.left()) {
             Split current = split(summand);
-            if (TTest.testParity(current.nonScalar, rightSplit.nonScalar))
-                linearEquations.add(new Expression(current.scalar, rightSplit.scalar));
-            else
+            boolean one = false;
+            for (Split split : rightSplit)
+                if (TTest.testParity(current.nonScalar, split.nonScalar)) {
+                    linearEquations.add(new Expression(current.scalar, split.scalar));
+                    one = true;
+                    break;
+                }
+            if (!one)
                 linearEquations.add(new Expression(current.scalar, TensorNumber.createZERO()));
         }
         generateMapleFile();
@@ -105,8 +116,8 @@ public class InverseTensor {
         if (tensor instanceof Product) {
             ProductContent pc = (ProductContent) tensor.getContent();
             if (pc.getScalarContents().length == 0) {
-                nonScalar = tensor;
-                scalar = TensorNumber.createONE();
+                nonScalar = new Product(pc.getRange(0,pc.size()));
+                scalar = new TensorNumber(pc.getFactor());
             } else {
                 scalar = new Product();
                 if (!pc.getFactor().isOne())
@@ -120,10 +131,10 @@ public class InverseTensor {
             nonScalar = tensor;
             scalar = TensorNumber.createONE();
         }
-        return new Split(scalar, nonScalar);
+        return new Split(scalar.equivalent(), nonScalar.equivalent());
     }
 
-    public void generateMapleFile() {
+    private void generateMapleFile() {
         try {
             FileOutputStream output = new FileOutputStream("equations.maple");
             PrintStream file = new PrintStream(output);
@@ -151,7 +162,7 @@ public class InverseTensor {
                 else
                     file.append(variables[i] + ",");
             file.append("]);\n");
-            
+
             file.println("file:=fopen(\"/home/stas/NetBeansProjects/redberry-physics/" + "equations.mapleOut\",WRITE);");
             //    file.append("try\n");
             file.append("fprintf(file,\"ans" + variables.length + ":=array(1.." + variables.length + ");\\n\");\n");
