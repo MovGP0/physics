@@ -23,11 +23,11 @@ import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
-import redberry.core.number.ComplexElement;
 import redberry.core.tensor.*;
 import redberry.core.tensor.generator.GeneratedTensor;
 import redberry.core.tensor.generator.TensorGeneratorSP;
 import redberry.core.tensor.indexmapping.IndexMappings;
+import redberry.core.tensor.permutations.Symmetries;
 import redberry.core.tensor.test.TTest;
 import redberry.core.transformation.CalculateNumbers;
 import redberry.core.transformation.Transformation;
@@ -46,10 +46,14 @@ public class InverseTensor {
     final Tensor[] variables;
 
     public InverseTensor(Expression toInverse, Expression equation, Tensor[] samples) {
-        this(toInverse, equation, samples, new Transformation[0]);
+        this(toInverse, equation, null, samples, new Transformation[0]);
     }
 
     public InverseTensor(Expression toInverse, Expression equation, Tensor[] samples, Transformation[] transformations) {
+        this(toInverse, equation, null, samples, transformations);
+    }
+
+    public InverseTensor(Expression toInverse, Expression equation, Symmetries symmeties, Tensor[] samples, Transformation[] transformations) {
         Product leftEq = (Product) equation.left();
         Tensor inverseLhs = null;
         for (Tensor t : leftEq)
@@ -57,7 +61,7 @@ public class InverseTensor {
                 inverseLhs = t.clone();
                 break;
             }
-        GeneratedTensor generatedTensor = TensorGeneratorSP.generateStructure(inverseLhs.getIndexes(), samples);
+        GeneratedTensor generatedTensor = TensorGeneratorSP.generateStructure(inverseLhs.getIndexes(), symmeties, samples);
         variables = generatedTensor.coefficients;
         Expression inverse = new Expression(inverseLhs, generatedTensor.generatedTensor);
 
@@ -87,6 +91,7 @@ public class InverseTensor {
         linearEquations = new ArrayList<>();
         for (Tensor summand : equation.left()) {
             Split current = split(summand);
+            System.out.println(current.nonScalar);
             boolean one = false;
             for (Split split : rightSplit)
                 if (TTest.testParity(current.nonScalar, split.nonScalar)) {
@@ -116,7 +121,7 @@ public class InverseTensor {
         if (tensor instanceof Product) {
             ProductContent pc = (ProductContent) tensor.getContent();
             if (pc.getScalarContents().length == 0) {
-                nonScalar = new Product(pc.getRange(0,pc.size()));
+                nonScalar = new Product(pc.getRange(0, pc.size()));
                 scalar = new TensorNumber(pc.getFactor());
             } else {
                 scalar = new Product();

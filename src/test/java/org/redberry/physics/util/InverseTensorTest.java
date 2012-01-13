@@ -23,6 +23,7 @@ import org.junit.Test;
 import redberry.core.context.CC;
 import redberry.core.tensor.Expression;
 import redberry.core.tensor.Tensor;
+import redberry.core.tensor.permutations.Symmetries;
 import redberry.core.transformation.Transformation;
 import redberry.core.transformation.Transformations;
 
@@ -76,9 +77,10 @@ public class InverseTensorTest {
         Expression equation = new Expression(CC.parse("K^abc_pqr*KINV^pqr_ijk"),
                 Transformations.expandBracketsExceptSymbols(Symmetrize.INSTANCE.transform(eqRhs)));
 
+        Symmetries symmetries = Symmetries.getFullSymmetriesForSortedIndexes(3, 3);
         Tensor[] samples = {CC.parse("g_mn"), CC.parse("g^mn"), CC.parse("d_m^n"), CC.parse("n_m"), CC.parse("n^b")};
-        InverseTensor it = new InverseTensor(toInverse, equation, samples, transformations);
-        for (Expression eq : it.linearEquations)
-            System.out.println(eq);
+        InverseTensor it = new InverseTensor(toInverse, equation, symmetries, samples, transformations);
+        for (Expression eq : it.linearEquations){}
+//            System.out.println(eq);
     }
 }
