@@ -137,6 +137,6 @@ public class Delta_Prep {
             h.asSubstitution().transform(loop.DELTA_4);
         int c2 = MainScenario.getElementsCount(loop.DELTA_4);
 
-        assert c1 == c2;
+//        assert c1 == c2;
     }
 }

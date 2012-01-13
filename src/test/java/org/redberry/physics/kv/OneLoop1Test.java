@@ -86,16 +86,16 @@ public class OneLoop1Test {
         loop1.evalDeltas();
         Sum s = (Sum) loop1.DELTA_3.right();
         loop1.evalHatK();
-        CollectInputPortImpl cip = new CollectInputPortImpl(EqualsSplitCriteria.INSTANCE1);
+        CollectInputPortImpl cip = new CollectInputPortImpl(EqualsSplitCriteria.INSTANCE);
         System.out.println(s.size());
         Product p = (Product) s.getElements().get(6);
         for (Expression hatk : loop1.HATKs)
             hatk.asSubstitution().transform(p);
 
         Tensor p1 = new Product(p.getElements().get(1).clone(), p.getElements().get(2).clone());
-        p1 = ExpandAndCollectTransformation.EXPAND_AND_COLLECT1.transform(p1);
+        p1 = ExpandAndCollectTransformation.EXPAND_AND_COLLECT.transform(p1);
         Tensor p2 = new Product(p1, p.getElements().get(3).clone());
-        p2 = ExpandAndCollectTransformation.EXPAND_AND_COLLECT1.transform(p2);
+        p2 = ExpandAndCollectTransformation.EXPAND_AND_COLLECT.transform(p2);
         System.out.println(p2.toString(ToStringMode.UTF8));
 //        for (int i = 0; i < s.size(); ++i) {
 //            Tensor t = s.getElements().get(i);
@@ -392,7 +392,7 @@ public class OneLoop1Test {
 
         long start = System.currentTimeMillis();
         Transformation ec = new ExpandAndCollectTransformation(
-                EqualsSplitCriteria.INSTANCE1,
+                EqualsSplitCriteria.INSTANCE,
                 Indicator.SYMBOL_INDICATOR,
                 new Transformation[]{
                     IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,

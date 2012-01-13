@@ -50,7 +50,7 @@ public class OneLoopTest {
                 loop.RIMAN.asSubstitution(),
                 new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
                 IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
-                CollectFactory.createCollectEqualTerms1(),
+                CollectFactory.createCollectEqualTerms(),
                 CalculateNumbers.INSTANCE);
         System.out.println(t.toString(ToStringMode.UTF8));
     }

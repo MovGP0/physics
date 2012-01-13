@@ -137,7 +137,7 @@ public class Delta_PrepTest {
         dSummand = loop.RICCI.asSubstitution().transform(dSummand);
         dSummand = Transformations.expandBrackets(dSummand);
         dSummand = Transformations.contractMetrics(dSummand);
-        dSummand = CollectFactory.createCollectEqualTerms1().transform(dSummand);
+        dSummand = CollectFactory.createCollectEqualTerms().transform(dSummand);
         dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
 
         for (Expression h : loop.HATKs)
@@ -209,7 +209,7 @@ public class Delta_PrepTest {
         dSummand = loop.RICCI.asSubstitution().transform(dSummand);
         dSummand = Transformations.expandBrackets(dSummand);
         dSummand = Transformations.contractMetrics(dSummand);
-        dSummand = CollectFactory.createCollectEqualTerms1().transform(dSummand);
+        dSummand = CollectFactory.createCollectEqualTerms().transform(dSummand);
         dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
 
         for (Expression h : loop.HATKs)
