@@ -19,7 +19,6 @@
  */
 package org.redberry.physics.kv;
 
-import org.redberry.physics.kv.OneLoop;
 import redberry.core.tensor.SimpleTensor;
 import org.redberry.physics.util.SqrSubs;
 import java.util.ArrayList;
@@ -46,7 +45,6 @@ import redberry.core.transformation.Transformations;
 import redberry.core.transformation.Transformer;
 import redberry.core.transformation.collect.CollectFactory;
 import redberry.core.transformation.collect.CollectInputPortImpl;
-import redberry.core.transformation.collect.CollectPowers;
 import redberry.core.transformation.collect.EqualsSplitCriteria;
 import redberry.core.transformation.collect.ScalarsSplitCriteria;
 import redberry.core.transformation.concurrent.ExpandAndCollectTransformation;

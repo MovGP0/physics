@@ -71,4 +71,12 @@ public class TAssert {
     public static Tensor _(String tensor) {
         return CC.parse(tensor);
     }
+
+    public static void assertTrue(boolean assertion) {
+        org.junit.Assert.assertTrue(assertion);
+    }
+
+    public static void assertFalse(boolean assertion) {
+        org.junit.Assert.assertFalse(assertion);
+    }
 }
