@@ -44,6 +44,7 @@ import redberry.core.utils.Indicator;
 public class InverseTensor {
     final List<Expression> linearEquations;
     final Tensor[] variables;
+    final Expression inverse;
 
     public InverseTensor(Expression toInverse, Expression equation, Tensor[] samples) {
         this(toInverse, equation, null, samples, new Transformation[0]);
@@ -61,9 +62,9 @@ public class InverseTensor {
                 inverseLhs = t.clone();
                 break;
             }
-        GeneratedTensor generatedTensor = TensorGeneratorSP.generateStructure(inverseLhs.getIndexes(), symmeties, samples);
+        GeneratedTensor generatedTensor = TensorGenerator.generateStructure(inverseLhs.getIndexes(), symmeties, samples);
         variables = generatedTensor.coefficients;
-        Expression inverse = new Expression(inverseLhs, generatedTensor.generatedTensor);
+        inverse = new Expression(inverseLhs, generatedTensor.generatedTensor);
 
         Transformation[] transformations1 = new Transformation[transformations.length + 2];
         transformations1[0] =
@@ -91,7 +92,6 @@ public class InverseTensor {
         linearEquations = new ArrayList<>();
         for (Tensor summand : equation.left()) {
             Split current = split(summand);
-            System.out.println(current.nonScalar);
             boolean one = false;
             for (Split split : rightSplit)
                 if (TTest.testParity(current.nonScalar, split.nonScalar)) {
@@ -104,6 +104,10 @@ public class InverseTensor {
         }
         generateMapleFile();
 
+    }
+
+    public Expression inverse() {
+        return inverse;
     }
 
     private static class Split {
@@ -170,9 +174,10 @@ public class InverseTensor {
 
             file.println("file:=fopen(\"/home/stas/NetBeansProjects/redberry-physics/" + "equations.mapleOut\",WRITE);");
             //    file.append("try\n");
-            file.append("fprintf(file,\"ans" + variables.length + ":=array(1.." + variables.length + ");\\n\");\n");
+//            file.append("fprintf(file,\"ans" + variables.length + ":=array(1.." + variables.length + ");\\n\");\n");
             file.append("for k from 1 to " + variables.length + " do\n");
-            file.append("fprintf(file,\"ans" + variables.length + "[%a]:=%a=%a;\\n\",k,ans" + variables.length + "[k],rhs(Result[1][k]))\n");
+//            file.append("fprintf(file,\"ans" + variables.length + "[%a]:=%a=%a;\\n\",k,ans" + variables.length + "[k],rhs(Result[1][k]))\n");
+            file.append("fprintf(file,\"%a=%a;\\n\",lhs(Result[1][k]),rhs(Result[1][k]))\n");
             file.append("od;\n");
             // file.append("finally fclose(file) end try;");
             file.append("fclose(file);");
