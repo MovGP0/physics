@@ -65,12 +65,12 @@ public class MainScenario {
             Indicator.FALSE_INDICATOR, new Transformation[]{CalculateNumbers.INSTANCE});
 
     public static void main(String[] args) {
-        long start = System.currentTimeMillis();
         OneLoop loop = new OneLoop();
         loop.insertIndexes();
         loop.substituteL();
         loop.evalHatK();
         Delta_Prep.go(loop);
+        long start = System.currentTimeMillis();
         evalRRTerm(5, loop);
         long stop = System.currentTimeMillis();
         System.out.println(" TOTAL ---- " + (stop - start));
