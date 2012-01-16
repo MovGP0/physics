@@ -25,8 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 import redberry.core.number.ComplexElement;
 import redberry.core.tensor.*;
-import redberry.core.tensor.generator.GeneratedTensor;
-import redberry.core.tensor.generator.TensorGeneratorSP;
+import redberry.core.utils.tensorgenerator.GeneratedTensor;
+import redberry.core.utils.tensorgenerator.TensorGenerator;
 import redberry.core.tensor.indexmapping.IndexMappings;
 import redberry.core.tensor.test.TTest;
 import redberry.core.transformation.CalculateNumbers;
@@ -57,7 +57,7 @@ public class InverseTensor {
                 inverseLhs = t.clone();
                 break;
             }
-        GeneratedTensor generatedTensor = TensorGeneratorSP.generateStructure(inverseLhs.getIndexes(), samples);
+        GeneratedTensor generatedTensor = TensorGenerator.generateStructure(inverseLhs.getIndexes(), samples);
         variables = generatedTensor.coefficients;
         Expression inverse = new Expression(inverseLhs, generatedTensor.generatedTensor);
 

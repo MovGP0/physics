@@ -27,7 +27,7 @@ import redberry.core.tensor.Product;
 import redberry.core.tensor.Sum;
 import redberry.core.tensor.Tensor;
 import redberry.core.tensor.TensorNumber;
-import redberry.core.tensor.generator.IndexMappingPermutationsGenerator;
+import redberry.core.utils.tensorgenerator.IndexMappingPermutationsGenerator;
 import redberry.core.transformation.Transformation;
 
 /**
