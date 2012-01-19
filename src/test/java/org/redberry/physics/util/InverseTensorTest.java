@@ -107,4 +107,5 @@ public class InverseTensorTest {
         System.out.println(it.inverse);
 
     }
+
 }
