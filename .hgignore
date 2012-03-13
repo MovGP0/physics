@@ -9,3 +9,10 @@ nb-configuration.xml$
 \.log$
 \.tar\.gz$
 \.class$
+\.DS_Store$
+\.iml$
+\.ipr$
+\.iws$
+\.directory$
+\.idea\/
+\.idea\\
