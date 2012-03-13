@@ -19,23 +19,21 @@
  */
 package org.redberry.physics.kv;
 
-import redberry.core.transformation.substitutions.TensorTreeIndicatorImpl;
-import redberry.core.context.CC;
-import redberry.core.tensor.Expression;
-import redberry.core.tensor.Tensor;
-import redberry.core.tensor.test.TTest;
-import redberry.core.transformation.CalculateNumbers;
-import redberry.core.transformation.ExpandBrackets;
-import redberry.core.transformation.IndexesInsertion;
-import redberry.core.transformation.RenameConflictingIndexes;
-import redberry.core.transformation.Transformation;
-import redberry.core.transformation.Transformer;
-import redberry.core.transformation.collect.CollectFactory;
-import redberry.core.transformation.collect.CollectPowers;
-import redberry.core.transformation.concurrent.EACScalars;
-import redberry.core.transformation.contractions.IndexesContractionsTransformation;
-import redberry.core.utils.Indicator;
-import static org.redberry.physics.util.IndexesFactoryUtil.*;
+import cc.redberry.core.context.CC;
+import cc.redberry.core.tensor.Expression;
+import cc.redberry.core.tensor.Tensor;
+import cc.redberry.core.tensor.testing.TTest;
+import cc.redberry.core.transformations.RenameConflictingIndices;
+import cc.redberry.core.utils.Indicator;
+import cc.redberry.transformation.*;
+import cc.redberry.transformation.collect.CollectFactory;
+import cc.redberry.transformation.collect.CollectPowers;
+import cc.redberry.transformation.concurrent.EACScalars;
+import cc.redberry.transformation.contractions.IndicesContractionsTransformation;
+import cc.redberry.transformation.substitutions.TensorTreeIndicatorImpl;
+import static org.redberry.physics.util.IndicesFactoryUtil.createIndices;
+import static org.redberry.physics.util.IndicesFactoryUtil.doubleAndDumpIndices;
+
 
 /**
  *
@@ -175,7 +173,7 @@ public class OneLoop {
     public final Expression[] HATKs = new Expression[]{HATK_1, HATK_2, HATK_3, HATK_4};
     public final Expression[] ALL = new Expression[]{RR, DELTA_1, DELTA_2, DELTA_3, DELTA_4, HATK_1, HATK_2, HATK_3, HATK_4};
     /*
-     * The indexes ^{\\alpha\\beta}_{\\gamma\\delta} are the matrix indexes
+     * The indices ^{\\alpha\\beta}_{\\gamma\\delta} are the matrix indices
      */
     public final Expression MATRIX_K =
             new Expression("K^{\\mu\\nu}^{\\alpha\\beta}_{\\gamma\\delta} = g^{\\mu\\nu}*P^{\\alpha\\beta}_{\\gamma\\delta}+"
@@ -184,7 +182,7 @@ public class OneLoop {
             + "(1/4)*(g_{\\gamma\\delta}*g^{\\mu \\alpha}*g^{\\nu \\beta}+g_{\\gamma\\delta}*g^{\\mu \\beta}*g^{\\nu \\alpha})-"
             + "(1/4)*(g^{\\alpha\\beta}*d^{\\mu}_{\\gamma}*d^{\\nu}_{\\delta}+g^{\\alpha\\beta}*d^{\\mu}_{\\delta}*d^{\\nu}_{\\gamma})+(1/8)*g^{\\mu\\nu}*g_{\\gamma\\delta}*g^{\\alpha\\beta})");
     /*
-     * The indexes ^{\\alpha\\beta}_{\\mu\\nu} are the matrix indexes
+     * The indices ^{\\alpha\\beta}_{\\mu\\nu} are the matrix indices
      */
     public final Expression MATRIX_K_INV =
             new Expression("KINV^{\\alpha\\beta}_{\\mu\\nu} = P^{\\alpha\\beta}_{\\mu\\nu}+a*g_{\\mu\\nu}*g^{\\alpha\\beta}+"
@@ -214,29 +212,29 @@ public class OneLoop {
 
     public OneLoop() {
         for (Expression ex : ALL)
-            ex.eval(new Transformer(RenameConflictingIndexes.INSTANCE));
+            ex.eval(new Transformer(RenameConflictingIndices.INSTANCE));
     }
 
     public void substituteL() {
         for (Expression ex : ALL)
             ex.eval(L.asSubstitution(), CalculateNumbers.INSTANCE);
     }
-    private boolean indexesInserted = false;
+    private boolean indicesInserted = false;
 
-    public void insertIndexes() {
-        if (indexesInserted)
-            throw new IllegalAccessError("Indexes are already inserted");
-        Transformation indexesInsertion;
-        indexesInsertion = new IndexesInsertion(matricesIndicator, createIndexes(HATKs, "^{\\mu\\nu}_{\\alpha\\beta}"));
+    public void insertIndices() {
+        if (indicesInserted)
+            throw new IllegalAccessError("Indices are already inserted");
+        Transformation indicesInsertion;
+        indicesInsertion = new IndicesInsertion(matricesIndicator, createIndices(HATKs, "^{\\mu\\nu}_{\\alpha\\beta}"));
         for (Expression hatK : HATKs)
-            hatK.eval(indexesInsertion);
-        indexesInsertion = new IndexesInsertion(matricesIndicator, createIndexes(DELTAs, "^{\\mu\\nu}_{\\alpha\\beta}"));
+            hatK.eval(indicesInsertion);
+        indicesInsertion = new IndicesInsertion(matricesIndicator, createIndices(DELTAs, "^{\\mu\\nu}_{\\alpha\\beta}"));
         for (Expression delta : DELTAs)
-            delta.eval(indexesInsertion);
-        indexesInsertion = new IndexesInsertion(matricesIndicator, doubleAndDumpIndexes(createIndexes(TERMs, "^{\\mu\\nu}")));
+            delta.eval(indicesInsertion);
+        indicesInsertion = new IndicesInsertion(matricesIndicator, doubleAndDumpIndices(createIndices(TERMs, "^{\\mu\\nu}")));
         for (Expression term : TERMs)
-            term.eval(indexesInsertion);
-        indexesInserted = true;
+            term.eval(indicesInsertion);
+        indicesInserted = true;
     }
 
     public final void evalHatK() {
@@ -246,7 +244,7 @@ public class OneLoop {
                     MATRIX_K_INV.asSubstitution(),
                     P.asSubstitution(),
                     new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
-                    IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                    IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                     KRONECKER_DIMENSION.asSubstitution(),
                     CollectFactory.createCollectEqualTerms(),
                     CalculateNumbers.INSTANCE,
@@ -271,10 +269,10 @@ public class OneLoop {
                 for (Expression delta : DELTAs)
                     RR.eval(delta.asSubstitution());
                 RR.eval(
-                        IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                        IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                         KRONECKER_DIMENSION.asSubstitution(),
                         CalculateNumbers.INSTANCE,
-                        new Transformer(RenameConflictingIndexes.INSTANCE),
+                        new Transformer(RenameConflictingIndices.INSTANCE),
                         new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
                         CollectFactory.createCollectEqualTerms(),
                         CalculateNumbers.INSTANCE);
@@ -282,10 +280,10 @@ public class OneLoop {
                 for (Expression hatK : HATKs)
                     RR.eval(hatK.asSubstitution());
                 RR.eval(
-                        IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                        IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                         KRONECKER_DIMENSION.asSubstitution(),
                         CalculateNumbers.INSTANCE,
-                        new Transformer(RenameConflictingIndexes.INSTANCE),
+                        new Transformer(RenameConflictingIndices.INSTANCE),
                         new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
                         CollectFactory.createCollectEqualTerms(),
                         CalculateNumbers.INSTANCE);
@@ -293,11 +291,11 @@ public class OneLoop {
     }
 
     public final void evalHatKDelta() {
-        Transformation indexesInsertion;
-        indexesInsertion = new IndexesInsertion(matricesIndicator, createIndexes(DELTAs, "^{\\mu\\nu}_{\\alpha\\beta}"));
+        Transformation indicesInsertion;
+        indicesInsertion = new IndicesInsertion(matricesIndicator, createIndices(DELTAs, "^{\\mu\\nu}_{\\alpha\\beta}"));
         for (Expression delta : DELTAs)
             delta.eval(
-                    indexesInsertion,
+                    indicesInsertion,
                     L.asSubstitution(),
                     CalculateNumbers.INSTANCE,
                     HATK_1.asSubstitution(),
@@ -305,7 +303,7 @@ public class OneLoop {
                     HATK_3.asSubstitution(),
                     HATK_4.asSubstitution(),
                     new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
-                    IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                    IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                     KRONECKER_DIMENSION.asSubstitution(),
                     CollectFactory.createCollectEqualTerms(),
                     CalculateNumbers.INSTANCE,
@@ -314,16 +312,16 @@ public class OneLoop {
     }
 
     public final void evalDeltas() {
-        Transformation indexesInsertion;
-        indexesInsertion = new IndexesInsertion(matricesIndicator, createIndexes(DELTAs, "^{\\mu\\nu}_{\\alpha\\beta}"));
+        Transformation indicesInsertion;
+        indicesInsertion = new IndicesInsertion(matricesIndicator, createIndices(DELTAs, "^{\\mu\\nu}_{\\alpha\\beta}"));
         for (Expression delta : DELTAs)
             delta.eval(
-                    indexesInsertion,
+                    indicesInsertion,
                     L.asSubstitution(),
                     CalculateNumbers.INSTANCE,
-                    new Transformer(RenameConflictingIndexes.INSTANCE),
+                    new Transformer(RenameConflictingIndices.INSTANCE),
                     new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
-                    //                    IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                    //                    IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                     KRONECKER_DIMENSION.asSubstitution(),
                     //                    CollectFactory.createCollectEqualTerms1(),
                     CalculateNumbers.INSTANCE //                    ,
@@ -333,17 +331,17 @@ public class OneLoop {
     }
 
     public final void evalRR() {
-        Transformation indexesInsertion;
-        indexesInsertion = new IndexesInsertion(matricesIndicator, doubleAndDumpIndexes(createIndexes(TERMs, "^{\\mu\\nu}")));
+        Transformation indicesInsertion;
+        indicesInsertion = new IndicesInsertion(matricesIndicator, doubleAndDumpIndices(createIndices(TERMs, "^{\\mu\\nu}")));
         RR.eval(
-                indexesInsertion,
+                indicesInsertion,
                 L.asSubstitution(),
                 CalculateNumbers.INSTANCE,
                 RICCI.asSubstitution(),
                 RIMAN.asSubstitution(),
-                new Transformer(RenameConflictingIndexes.INSTANCE),
+                new Transformer(RenameConflictingIndices.INSTANCE),
                 new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
-                IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                 KRONECKER_DIMENSION.asSubstitution(),
                 CalculateNumbers.INSTANCE,
                 new Transformer(CollectPowers.INSTANCE),

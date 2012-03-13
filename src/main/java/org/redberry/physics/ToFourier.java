@@ -19,27 +19,19 @@
  */
 package org.redberry.physics;
 
+import cc.redberry.core.context.CC;
+import cc.redberry.core.indexgenerator.IntGenerator;
+import cc.redberry.core.indexmapping.IndexMappingDirect;
+import cc.redberry.core.indices.IndicesFactory;
+import cc.redberry.core.indices.SimpleIndices;
+import cc.redberry.core.tensor.*;
+import cc.redberry.core.tensor.iterators.TensorFirstTreeIterator;
+import cc.redberry.core.tensor.iterators.TensorTreeIterator;
+import cc.redberry.core.transformations.ApplyIndexMappingDirectTransformation;
+import cc.redberry.core.utils.TensorUtils;
+import cc.redberry.transformation.Transformation;
 import java.util.ArrayList;
 import java.util.List;
-import redberry.core.context.CC;
-import redberry.core.indexes.IndexesFactory;
-import redberry.core.indexes.SimpleIndexes;
-import redberry.core.indexgenerator.IntGenerator;
-import redberry.core.tensor.Derivative;
-import redberry.core.tensor.Integral;
-import redberry.core.tensor.Product;
-import redberry.core.tensor.SimpleTensor;
-import redberry.core.tensor.Sum;
-import redberry.core.tensor.Tensor;
-import redberry.core.tensor.TensorField;
-import redberry.core.tensor.TensorIterator;
-import redberry.core.tensor.TensorNumber;
-import redberry.core.tensor.indexmapping.IndexMappingDirect;
-import redberry.core.tensor.iterators.TensorFirstTreeIterator;
-import redberry.core.tensor.iterators.TensorTreeIterator;
-import redberry.core.transformation.ApplyIndexMappingDirectTransformation;
-import redberry.core.transformation.Transformation;
-import redberry.core.utils.TensorUtils;
 
 /**
  *
@@ -131,7 +123,7 @@ public class ToFourier implements Transformation {
             final SimpleTensor st = (SimpleTensor) target;
             switch (mode(st)) {
                 case TRANSFORM:
-                    return CC.createTensorField(st.getName(), st.getIndexes(), TensorNumber.createZERO());
+                    return CC.createTensorField(st.getName(), st.getIndices(), TensorNumber.createZERO());
                 case SKIP:
                 case ERROR:
                     throw new UnsupportedOperationException("Not supported for Dirac delta.");
@@ -171,7 +163,7 @@ public class ToFourier implements Transformation {
                 if (tf instanceof Derivative)
                     return TensorNumber.createZERO();
                 if (tf instanceof TensorField)
-                    product.add(CC.createTensorField(((TensorField) tf).getName(), ((TensorField) tf).getIndexes().clone(), TensorNumber.createZERO()));
+                    product.add(CC.createTensorField(((TensorField) tf).getName(), ((TensorField) tf).getIndices().clone(), TensorNumber.createZERO()));
                 return product;
             }
 
@@ -184,21 +176,21 @@ public class ToFourier implements Transformation {
                     final Sum sum = new Sum();
                     for (Tensor generated : generatedArgs)
                         sum.add(new Product(TensorNumber.createMINUSONE(), generated.clone()));
-                    product.add(processTensor(toFourier.get(i), sum.equivalent(), generatedArgs.get(0).getIndexes()));
+                    product.add(processTensor(toFourier.get(i), sum.equivalent(), generatedArgs.get(0).getIndices()));
                     return new Integral(product, generatedArgs.toArray(new SimpleTensor[generatedArgs.size()]));
                 }
                 currentArg = generator.getNext();
                 generatedArgs.add(currentArg);
-                product.add(processTensor(toFourier.get(i), currentArg, currentArg.getIndexes()));
+                product.add(processTensor(toFourier.get(i), currentArg, currentArg.getIndices()));
             }
         }
         throw new UnsupportedOperationException("Not supported.");
     }
 
-    private Tensor processTensor(final Tensor t, final Tensor newArg, final SimpleIndexes newArgSimpleIndexes) {
+    private Tensor processTensor(final Tensor t, final Tensor newArg, final SimpleIndices newArgSimpleIndices) {
         if (t instanceof TensorField) {
             final TensorField field = (TensorField) t;
-            return CC.createTensorField(field.getName(), IndexesFactory.createSimple(field.getIndexes()), newArg.clone());
+            return CC.createTensorField(field.getName(), IndicesFactory.createSimple(field.getIndices()), newArg.clone());
         }
         if (t instanceof Derivative) {
             final Derivative d = (Derivative) t;
@@ -214,11 +206,11 @@ public class ToFourier implements Transformation {
             Tensor newArg_;
             for (int i = 0; i < vC; ++i) {
                 newArg_ = newArg.clone();
-                im = new IndexMappingDirect(newArgSimpleIndexes, vars[i].getIndexes());
+                im = new IndexMappingDirect(newArgSimpleIndices, vars[i].getIndices());
                 newArg_ = ApplyIndexMappingDirectTransformation.INSTANCE.perform(newArg_, im);
                 result.add(newArg_);
             }
-            result.add(processTensor(d.getTarget(), newArg.clone(), newArgSimpleIndexes));
+            result.add(processTensor(d.getTarget(), newArg.clone(), newArgSimpleIndices));
             return result;
         }
         throw new RuntimeException();
@@ -227,10 +219,10 @@ public class ToFourier implements Transformation {
     private class Generator {
         private final String sampleName;
         private final IntGenerator generator;
-        private final SimpleIndexes sampleIndexes;
+        private final SimpleIndices sampleIndices;
 
         Generator(final Tensor tensor, final SimpleTensor sample) {
-            sampleIndexes = sample.getIndexes();
+            sampleIndices = sample.getIndices();
             sampleName = CC.getNameDescriptor((sample).getName()).getName();
             final List<Integer> integers = new ArrayList<>();
             final TensorTreeIterator iterator = new TensorFirstTreeIterator(tensor);
@@ -265,9 +257,9 @@ public class ToFourier implements Transformation {
         SimpleTensor getNext() {
             if (first) {
                 first = false;
-                return CC.createSimpleTensor(sampleName, IndexesFactory.createSimple(sampleIndexes));
+                return CC.createSimpleTensor(sampleName, IndicesFactory.createSimple(sampleIndices));
             } else
-                return CC.createSimpleTensor(sampleName + generator.getNext(), IndexesFactory.createSimple(sampleIndexes));
+                return CC.createSimpleTensor(sampleName + generator.getNext(), IndicesFactory.createSimple(sampleIndices));
         }
     }
 }

@@ -1,10 +1,11 @@
 package org.redberry.physics;
 
-import redberry.core.indexes.Indexes;
-import redberry.core.context.CC;
-import redberry.core.tensor.Tensor;
-import redberry.core.tensor.test.TTest;
-import redberry.core.utils.TensorUtils;
+
+import cc.redberry.core.context.CC;
+import cc.redberry.core.indices.Indices;
+import cc.redberry.core.tensor.Tensor;
+import cc.redberry.core.tensor.testing.TTest;
+import cc.redberry.core.utils.TensorUtils;
 import static org.junit.Assert.*;
 
 /**
@@ -41,23 +42,23 @@ public class TAssert {
         assertTrue(TensorUtils.testParentConsistent(tensor));
     }
 
-    public static void assertIndexes(Tensor tensor) {
-        assertTrue(TensorUtils.testIndexesConsistent(tensor));
+    public static void assertIndices(Tensor tensor) {
+        assertTrue(TensorUtils.testIndicesConsistent(tensor));
     }
 
-    public static void assertIndexes(Tensor[] tensors) {
+    public static void assertIndices(Tensor[] tensors) {
         for (Tensor tensor : tensors)
-            assertTrue(TensorUtils.testIndexesConsistent(tensor));
+            assertTrue(TensorUtils.testIndicesConsistent(tensor));
     }
 
-    public static void assertIndexesParity(Tensor... tensors) {
+    public static void assertIndicesParity(Tensor... tensors) {
         for (int i = 1; i < tensors.length; ++i)
-            assertTrue(tensors[0].getIndexes().equalsIgnoreOrder(tensors[i].getIndexes()));
+            assertTrue(tensors[0].getIndices().equalsIgnoreOrder(tensors[i].getIndices()));
     }
 
-    public static void assertIndexesParity(Indexes... indexeses) {
-        for (int i = 1; i < indexeses.length; ++i)
-            assertTrue(indexeses[0].equalsIgnoreOrder(indexeses[i]));
+    public static void assertIndicesParity(Indices... indiceses) {
+        for (int i = 1; i < indiceses.length; ++i)
+            assertTrue(indiceses[0].equalsIgnoreOrder(indiceses[i]));
     }
 
     public static boolean isEquals(Tensor tensor, String what) {

@@ -19,21 +19,23 @@
  */
 package org.redberry.physics.qgr2;
 
+import cc.redberry.core.context.CC;
+import cc.redberry.core.tensor.Expression;
+import cc.redberry.core.tensor.SimpleTensor;
+import cc.redberry.core.tensor.Tensor;
+import cc.redberry.core.tensor.TensorIterator;
+import cc.redberry.core.transformations.RenameConflictingIndices;
+import cc.redberry.transformation.ExpandBrackets;
+import cc.redberry.transformation.Transformer;
+import cc.redberry.transformation.collect.CollectTerms;
+import cc.redberry.transformation.collect.PatternSplitCriteria;
+import cc.redberry.transformation.collect.SplitPattern;
+import cc.redberry.transformation.contractions.IndicesContractionsTransformation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import redberry.core.context.CC;
-import redberry.core.tensor.Expression;
-import redberry.core.tensor.SimpleTensor;
-import redberry.core.tensor.Tensor;
-import redberry.core.tensor.TensorIterator;
-import redberry.core.transformation.ExpandBrackets;
-import redberry.core.transformation.RenameConflictingIndexes;
-import redberry.core.transformation.Transformer;
-import redberry.core.transformation.collect.CollectTerms;
-import redberry.core.transformation.collect.PatternSplitCriteria;
-import redberry.core.transformation.collect.SplitPattern;
-import redberry.core.transformation.contractions.IndexesContractionsTransformation;
+
+
 
 /**
  *
@@ -70,10 +72,10 @@ public class Qgr {
         Lagrange = Lagrangian.clone();
         Lagrange.eval(substitutionsQueue);
         Lagrange.eval(
-                new Transformer(RenameConflictingIndexes.INSTANCE),
-                IndexesContractionsTransformation.CONTRACTIONS_WITH_KRONECKER,
+                new Transformer(RenameConflictingIndices.INSTANCE),
+                IndicesContractionsTransformation.CONTRACTIONS_WITH_KRONECKER,
                 new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
-                IndexesContractionsTransformation.CONTRACTIONS_WITH_KRONECKER);
+                IndicesContractionsTransformation.CONTRACTIONS_WITH_KRONECKER);
         int matches;
         TensorIterator it = Lagrange.right().iterator();
         Tensor summand;

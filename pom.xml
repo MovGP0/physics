@@ -1,15 +1,100 @@
+<!--
+  ~ Redberry: symbolic tensor computations.
+  ~
+  ~ Copyright (c) 2010-2012:
+  ~   Stanislav Poslavsky   <stvlpos@mail.ru>
+  ~   Bolotin Dmitriy       <bolotin.dmitriy@gmail.com>
+  ~
+  ~ This file is part of Redberry.
+  ~
+  ~ Redberry is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ Redberry is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with Redberry. If not, see <http://www.gnu.org/licenses/>.
+  -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>redberryphysics</groupId>
-    <artifactId>redberry-physics</artifactId>
+    <groupId>cc.redberry</groupId>
+    <artifactId>physics</artifactId>
     <version>0.1</version>
     <packaging>jar</packaging>
 
-    <name>redberry-physics</name>
-    <url>http://maven.apache.org</url>
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>7</version>
+    </parent>
+
+    <name>redberry</name>
+    <url>http://redberry.bitbucket.org/</url>
+
+    <description>Redberry is an open source Java framework providing capabilities
+        for manipulation with tensors. The framework contains wide spectrum of
+        algorithms required by tensor algebra. It is designed to find analytical
+        solutions of complicated mathematical and physical problems.
+    </description>
+
+    <licenses>
+        <license>
+            <name>GNU General Public License, version 3</name>
+            <url>http://www.gnu.org/licenses/gpl-3.0.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>PoslavskySV</id>
+            <email>stvlpos@mail.ru</email>
+            <name>Poslavsky Stanislav</name>
+            <organization>IHEP</organization>
+            <organizationUrl>http://ihep.su</organizationUrl>
+            <roles>
+                <role>architect</role>
+                <role>developer</role>
+                <role>tester</role>
+            </roles>
+            <timezone>UTC+04:00</timezone>
+            <url>https://bitbucket.org/PoslavskySV</url>
+        </developer>
+        <developer>
+            <id>dbolotin</id>
+            <email>bolotin.dmitriy@gmail.com</email>
+            <name>Bolotin Dmitriy</name>
+            <organization>IBCH RAS</organization>
+            <organizationUrl>http://www.ibch.ru/</organizationUrl>
+            <roles>
+                <role>architect</role>
+                <role>developer</role>
+                <role>tester</role>
+            </roles>
+            <timezone>UTC+04:00</timezone>
+            <url>https://bitbucket.org/dbolotin</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:hg:http://bitbucket.org/redberry/redberry-physics</connection>
+        <developerConnection>scm:hg:https://bitbucket.org/redberry/redberry-physics</developerConnection>
+        <url>https://bitbucket.org/redberry/redberry-physics/src</url>
+    </scm>
+
+    <issueManagement>
+        <system>Bitbucket</system>
+        <url>https://bitbucket.org/redberry/redberry-physics/issues</url>
+    </issueManagement>
+
     <build>
         <plugins>
             <plugin>
@@ -21,6 +106,19 @@
                     <target>1.7</target>
                 </configuration>
             </plugin>
+<!--            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -28,22 +126,17 @@
                 <configuration>
                     <properties>
                         <property>
-                            <name>listener</name>
-                            <value>redberry.core.GlobalRunListener</value>
+                            <name>forkedProcessTimeoutInSeconds</name>
+                            <value>5</value>
                         </property>
                     </properties>
-                    
-                    <skipTests>true</skipTests>
+
+                    <skipTests>false</skipTests>
                 </configuration>
             </plugin>
-             <plugin>
+            <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
-                    <archive>
-                        <manifest>
-                            <mainClass>fully.qualified.MainClass</mainClass>
-                        </manifest>
-                    </archive>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
@@ -51,6 +144,7 @@
             </plugin>
         </plugins>
     </build>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -62,28 +156,11 @@
             <version>4.8.2</version>
             <scope>test</scope>
         </dependency>
-        
         <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>0.9.29</version>
-        </dependency>
-        
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-core</artifactId>
-            <version>0.9.29</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.6.1</version>
-        </dependency>
-        <dependency>
-            <groupId>redberry</groupId>
-            <artifactId>redberry</artifactId>
-            <version>0.9.3-SNAPSHOT</version>
+            <groupId>cc.redberry</groupId>
+            <artifactId>core</artifactId>
+            <version>0.9.3</version>
         </dependency>
     </dependencies>
+
 </project>

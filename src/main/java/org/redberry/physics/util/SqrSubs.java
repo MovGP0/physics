@@ -19,18 +19,13 @@
  */
 package org.redberry.physics.util;
 
+import cc.redberry.core.indices.IndicesUtils;
+import cc.redberry.core.tensor.*;
+import cc.redberry.core.utils.IntArrayList;
+import cc.redberry.transformation.Transformation;
 import java.util.Arrays;
-import redberry.core.indexes.IndexesUtils;
-import redberry.core.tensor.ContractionStructure;
-import redberry.core.tensor.Product;
-import redberry.core.tensor.ProductContent;
-import redberry.core.tensor.SimpleTensor;
-import redberry.core.tensor.Tensor;
-import redberry.core.tensor.TensorContraction;
-import redberry.core.tensor.TensorIterator;
-import redberry.core.tensor.TensorNumber;
-import redberry.core.transformation.Transformation;
-import redberry.core.utils.IntArrayList;
+
+
 
 /**
  *
@@ -41,7 +36,7 @@ public class SqrSubs implements Transformation {
     private int name, hashCode;
 
     public SqrSubs(SimpleTensor st) {
-        if (st.getIndexes().size() != 1)
+        if (st.getIndices().size() != 1)
             throw new IllegalArgumentException();
         name = st.getName();
         hashCode = st.hashCode();
@@ -59,9 +54,9 @@ public class SqrSubs implements Transformation {
             return tensor;
 
         TensorContraction contraction = new TensorContraction(si, new long[]{((long) si) << 16});
-        short[] sIndexes = content.getStretchIndex(); //For preformance.
-        int index = Arrays.binarySearch(sIndexes, si);
-        while (index >= 0 && sIndexes[index--] == si);
+        short[] sIndices = content.getStretchIndex(); //For preformance.
+        int index = Arrays.binarySearch(sIndices, si);
+        while (index >= 0 && sIndices[index--] == si);
         index++;
         IntArrayList list = new IntArrayList();
         do {
@@ -73,11 +68,11 @@ public class SqrSubs implements Transformation {
                 continue;
             int indexName;
             if (cs.get(index).equals(contraction)
-                    && ((indexName = st.getIndexes().get(0)) & 0x80000000) == 0)
+                    && ((indexName = st.getIndices().get(0)) & 0x80000000) == 0)
                 list.add(indexName);
-        } while (index < sIndexes.length - 1 && sIndexes[++index] == si);
-        int[] indexes = list.asArray();
-        Arrays.sort(indexes);
+        } while (index < sIndices.length - 1 && sIndices[++index] == si);
+        int[] indices = list.toArray();
+        Arrays.sort(indices);
         TensorIterator iterator = tensor.iterator();
         Tensor current;
         while (iterator.hasNext()) {
@@ -87,7 +82,7 @@ public class SqrSubs implements Transformation {
             SimpleTensor st = (SimpleTensor) current;
             if (st.getName() != name)
                 continue;
-            if (Arrays.binarySearch(indexes, IndexesUtils.getNameWithType(st.getIndexes().get(0))) >= 0)
+            if (Arrays.binarySearch(indices, IndicesUtils.getNameWithType(st.getIndices().get(0))) >= 0)
                 iterator.remove();
         }
         if (product.getElements().isEmpty())

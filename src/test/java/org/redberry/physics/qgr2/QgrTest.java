@@ -19,8 +19,9 @@
  */
 package org.redberry.physics.qgr2;
 
+import cc.redberry.core.tensor.Expression;
 import org.junit.Test;
-import redberry.core.tensor.Expression;
+
 
 /**
  *

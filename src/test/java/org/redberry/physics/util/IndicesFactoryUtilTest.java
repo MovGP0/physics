@@ -19,11 +19,11 @@
  */
 package org.redberry.physics.util;
 
-import org.redberry.physics.util.IndexesFactoryUtil;
+import cc.redberry.core.parser.ParserIndices;
+import cc.redberry.core.tensor.Tensor;
 import org.junit.Ignore;
 import org.junit.Test;
-import redberry.core.parser.ParserIndexes;
-import redberry.core.tensor.Tensor;
+
 
 /**
  *
@@ -31,19 +31,19 @@ import redberry.core.tensor.Tensor;
  * @author Stanislav Poslavsky
  */
 @Ignore
-public class IndexesFactoryUtilTest {
-    public IndexesFactoryUtilTest() {
+public class IndicesFactoryUtilTest {
+    public IndicesFactoryUtilTest() {
     }
 
     @Test
     public void testCreate() {
-        System.out.println(IndexesFactoryUtil.createIndexes(new Tensor[0], ParserIndexes.parse("^{\\mu\\nu}_{\\alpha\\beta}")));
+        System.out.println(IndicesFactoryUtil.createIndices(new Tensor[0], ParserIndices.parse("^{\\mu\\nu}_{\\alpha\\beta}")));
 
     }
     
     @Test
     public void testDump() {
-        System.out.println(IndexesFactoryUtil.doubleAndDumpIndexes(ParserIndexes.parse("^ab_mn")));
+        System.out.println(IndicesFactoryUtil.doubleAndDumpIndices(ParserIndices.parse("^ab_mn")));
 
     }
 }

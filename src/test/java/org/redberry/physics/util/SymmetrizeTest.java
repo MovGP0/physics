@@ -19,12 +19,13 @@
  */
 package org.redberry.physics.util;
 
+import cc.redberry.core.context.CC;
+import cc.redberry.core.tensor.Sum;
+import cc.redberry.core.tensor.Tensor;
+import cc.redberry.transformation.Transformations;
 import org.junit.Test;
-import redberry.core.context.CC;
-import redberry.core.tensor.Tensor;
-import redberry.core.transformation.Transformations;
 import static org.redberry.physics.TAssert.*;
-import redberry.core.tensor.Sum;
+
 
 /**
  *

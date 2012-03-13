@@ -19,19 +19,19 @@
  */
 package org.redberry.physics.kv;
 
-import org.redberry.physics.kv.MainScenario;
-import org.redberry.physics.kv.OneLoop;
+import cc.redberry.core.context.CC;
+import cc.redberry.core.tensor.SimpleTensor;
+import cc.redberry.core.tensor.Tensor;
+import cc.redberry.core.utils.Indicator;
+import cc.redberry.transformation.CalculateNumbers;
+import cc.redberry.transformation.Transformation;
+import cc.redberry.transformation.collect.CollecctEqualsInputPort;
+import cc.redberry.transformation.concurrent.ExpandAndCollectTransformation;
+import cc.redberry.transformation.contractions.IndicesContractionsTransformation;
 import org.junit.Test;
-import redberry.core.context.CC;
-import redberry.core.tensor.SimpleTensor;
-import redberry.core.tensor.Tensor;
-import redberry.core.transformation.CalculateNumbers;
-import redberry.core.transformation.Transformation;
-import redberry.core.transformation.collect.CollecctEqualsInputPort;
-import redberry.core.transformation.concurrent.ExpandAndCollectTransformation;
-import redberry.core.transformation.contractions.IndexesContractionsTransformation;
-import redberry.core.utils.Indicator;
 import org.redberry.physics.util.SqrSubs;
+
+
 
 /**
  *
@@ -49,7 +49,7 @@ public class MainScenarioTest {
                 new CollecctEqualsInputPort(),
                 Indicator.SYMBOL_INDICATOR,
                 new Transformation[]{
-                    IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                    IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                     OneLoop.KRONECKER_DIMENSION.asSubstitution(),
                     new SqrSubs((SimpleTensor) CC.parse("n_{\\alpha}")),
                     CalculateNumbers.INSTANCE});
@@ -65,7 +65,7 @@ public class MainScenarioTest {
                 new CollecctEqualsInputPort(),
                 Indicator.SYMBOL_INDICATOR,
                 new Transformation[]{
-                    IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                    IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                     OneLoop.KRONECKER_DIMENSION.asSubstitution(),
                     new SqrSubs((SimpleTensor) CC.parse("n_{\\alpha}")),
                     CalculateNumbers.INSTANCE});

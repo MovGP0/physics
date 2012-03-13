@@ -19,33 +19,30 @@
  */
 package org.redberry.physics.kv;
 
-import java.util.List;
-import redberry.core.tensor.iterators.TensorFirstTreeIterator;
+import cc.redberry.core.context.CC;
+import cc.redberry.core.context.ToStringMode;
+import cc.redberry.core.tensor.*;
+import cc.redberry.core.tensor.iterators.TensorFirstTreeIterator;
+import cc.redberry.core.tensor.testing.TTest;
+import cc.redberry.core.utils.Indicator;
+import cc.redberry.transformation.CalculateNumbers;
+import cc.redberry.transformation.Transformation;
+import cc.redberry.transformation.Transformations;
+import cc.redberry.transformation.Transformer;
+import cc.redberry.transformation.collect.CollecctEqualsInputPort;
+import cc.redberry.transformation.collect.CollectFactory;
+import cc.redberry.transformation.collect.CollectPowers;
+import cc.redberry.transformation.collect.ScalarsSplitCriteria;
+import cc.redberry.transformation.concurrent.ExpandAndCollectTransformation;
+import cc.redberry.transformation.contractions.IndicesContractionsTransformation;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import redberry.core.tensor.SimpleTensor;
-import redberry.core.transformation.contractions.IndexesContractionsTransformation;
-import redberry.core.utils.Indicator;
+import java.util.List;
 import org.redberry.physics.util.SqrSubs;
-import redberry.core.context.CC;
-import redberry.core.context.ToStringMode;
-import redberry.core.tensor.Expression;
-import redberry.core.tensor.Product;
-import redberry.core.tensor.Sum;
-import redberry.core.tensor.Tensor;
-import redberry.core.tensor.TensorIterator;
-import redberry.core.tensor.test.TTest;
-import redberry.core.transformation.CalculateNumbers;
-import redberry.core.transformation.Transformation;
-import redberry.core.transformation.Transformations;
-import redberry.core.transformation.Transformer;
-import redberry.core.transformation.collect.CollecctEqualsInputPort;
-import redberry.core.transformation.collect.CollectFactory;
-import redberry.core.transformation.collect.CollectPowers;
-import redberry.core.transformation.collect.ScalarsSplitCriteria;
-import redberry.core.transformation.concurrent.ExpandAndCollectTransformation;
+
+
 
 /**
  *
@@ -57,7 +54,7 @@ public class MainScenario {
             new CollecctEqualsInputPort(),
             Indicator.SYMBOL_INDICATOR,
             new Transformation[]{
-                IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                 OneLoop.KRONECKER_DIMENSION.asSubstitution(),
                 new SqrSubs((SimpleTensor) CC.parse("n_{\\alpha}")),
                 CalculateNumbers.INSTANCE});
@@ -66,7 +63,7 @@ public class MainScenario {
 
     public static void main(String[] args) {
         OneLoop loop = new OneLoop();
-        loop.insertIndexes();
+        loop.insertIndices();
         loop.substituteL();
         loop.evalHatK();
         Delta_Prep.go(loop);
@@ -82,7 +79,7 @@ public class MainScenario {
      */
 //    public static void main(String[] args) {
 //        OneLoop loop = new OneLoop();
-//        loop.insertIndexes();
+//        loop.insertIndices();
 //        loop.substituteL();
 //        loop.evalHatK();
 //        System.out.println("Evaluating deltas's");
@@ -137,7 +134,7 @@ public class MainScenario {
     private static Tensor evalAll() {
 
         OneLoop loop = new OneLoop();
-        loop.insertIndexes();
+        loop.insertIndices();
         loop.substituteL();
         loop.evalHatK();
         System.out.println("Evaluating deltas's");

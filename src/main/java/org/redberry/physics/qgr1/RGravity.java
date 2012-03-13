@@ -19,13 +19,15 @@
  */
 package org.redberry.physics.qgr1;
 
-import redberry.core.tensor.Expression;
-import redberry.core.transformation.CalculateNumbers;
-import redberry.core.transformation.ExpandBrackets;
-import redberry.core.transformation.Transformer;
-import redberry.core.transformation.collect.CollectFactory;
-import redberry.core.transformation.collect.CollectPowers;
-import redberry.core.transformation.contractions.IndexesContractionsTransformation;
+import cc.redberry.core.tensor.Expression;
+import cc.redberry.transformation.CalculateNumbers;
+import cc.redberry.transformation.ExpandBrackets;
+import cc.redberry.transformation.Transformer;
+import cc.redberry.transformation.collect.CollectFactory;
+import cc.redberry.transformation.collect.CollectPowers;
+import cc.redberry.transformation.contractions.IndicesContractionsTransformation;
+
+
 
 /**
  *
@@ -70,7 +72,7 @@ public class RGravity {
         SCALAR2_GRAVITON2_VERTEX.eval(
                 I.asSubstitution(),
                 new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
-                IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                 KRONECKER_DIMENSION.asSubstitution(),
                 CollectFactory.createCollectAllEqualTerms(),
                 CalculateNumbers.INSTANCE,

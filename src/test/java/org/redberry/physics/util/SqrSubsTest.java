@@ -19,12 +19,13 @@
  */
 package org.redberry.physics.util;
 
-import org.redberry.physics.util.SqrSubs;
+import cc.redberry.core.context.CC;
+import cc.redberry.core.tensor.SimpleTensor;
+import cc.redberry.core.tensor.Tensor;
+import cc.redberry.transformation.Transformation;
 import org.junit.Test;
-import redberry.core.context.CC;
-import redberry.core.tensor.SimpleTensor;
-import redberry.core.tensor.Tensor;
-import redberry.core.transformation.Transformation;
+
+
 
 /**
  *

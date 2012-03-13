@@ -19,22 +19,23 @@
  */
 package org.redberry.physics.kv;
 
-import redberry.core.context.CC;
-import redberry.core.tensor.Expression;
-import redberry.core.tensor.SimpleTensor;
-import redberry.core.tensor.Tensor;
-import redberry.core.transformation.CalculateNumbers;
-import redberry.core.transformation.IndexesInsertion;
-import redberry.core.transformation.Transformation;
-import redberry.core.transformation.Transformations;
-import redberry.core.transformation.collect.CollecctEqualsInputPort;
-import redberry.core.transformation.concurrent.EACScalars;
-import redberry.core.transformation.concurrent.ExpandAndCollectTransformation;
-import redberry.core.transformation.contractions.IndexesContractionsTransformation;
-import redberry.core.transformation.substitutions.NaiveSubstitution;
-import redberry.core.utils.Indicator;
+
+import cc.redberry.core.context.CC;
+import cc.redberry.core.tensor.Expression;
+import cc.redberry.core.tensor.SimpleTensor;
+import cc.redberry.core.tensor.Tensor;
+import cc.redberry.core.utils.Indicator;
+import cc.redberry.transformation.CalculateNumbers;
+import cc.redberry.transformation.IndicesInsertion;
+import cc.redberry.transformation.Transformation;
+import cc.redberry.transformation.Transformations;
+import cc.redberry.transformation.collect.CollecctEqualsInputPort;
+import cc.redberry.transformation.concurrent.EACScalars;
+import cc.redberry.transformation.concurrent.ExpandAndCollectTransformation;
+import cc.redberry.transformation.contractions.IndicesContractionsTransformation;
+import cc.redberry.transformation.substitutions.NaiveSubstitution;
 import org.redberry.physics.util.SqrSubs;
-import static org.redberry.physics.util.IndexesFactoryUtil.*;
+import static org.redberry.physics.util.IndicesFactoryUtil.*;
 
 /**
  *
@@ -52,7 +53,7 @@ public class Delta_Prep {
             new CollecctEqualsInputPort(),
             Indicator.SYMBOL_INDICATOR,
             new Transformation[]{
-                IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                 OneLoop.KRONECKER_DIMENSION.asSubstitution(),
                 new SqrSubs((SimpleTensor) CC.parse("n_{\\alpha}")),
                 CalculateNumbers.INSTANCE});
@@ -74,10 +75,10 @@ public class Delta_Prep {
                 "HATK^{\\mu\\nu}*HATK^{\\alpha}",
                 "HATK^{\\alpha}*HATK^{\\mu\\nu}",
                 "HATK^{\\mu}*HATK^{\\nu}*HATK^{\\alpha}");
-        IndexesInsertion indexesInsertion = new IndexesInsertion(loop.matricesIndicator, createIndexes(hatkCombinations, "^{\\mu\\nu}_{\\alpha\\beta}"));
+        IndicesInsertion indicesInsertion = new IndicesInsertion(loop.matricesIndicator, createIndices(hatkCombinations, "^{\\mu\\nu}_{\\alpha\\beta}"));
 
         for (int i = 0; i < hatkCombinations.length; ++i)
-            hatkCombinations[i] = indexesInsertion.transform(hatkCombinations[i]);
+            hatkCombinations[i] = indicesInsertion.transform(hatkCombinations[i]);
 
 
         Expression[] hatkCombDone = new Expression[hatkCombinations.length];
@@ -111,10 +112,10 @@ public class Delta_Prep {
                 "HATK^{\\mu}*HATK^{\\nu}*HATK^{\\alpha\\beta}",
                 "HATK^{\\mu}*HATK^{\\alpha\\beta}*HATK^{\\nu}",
                 "HATK^{\\alpha\\beta}*HATK^{\\mu}*HATK^{\\nu}");
-        IndexesInsertion indexesInsertion = new IndexesInsertion(loop.matricesIndicator, createIndexes(hatkCombinations, "^{\\mu\\nu}_{\\alpha\\beta}"));
+        IndicesInsertion indicesInsertion = new IndicesInsertion(loop.matricesIndicator, createIndices(hatkCombinations, "^{\\mu\\nu}_{\\alpha\\beta}"));
 
         for (int i = 0; i < hatkCombinations.length; ++i)
-            hatkCombinations[i] = indexesInsertion.transform(hatkCombinations[i]);
+            hatkCombinations[i] = indicesInsertion.transform(hatkCombinations[i]);
 
         Expression[] hatkCombDone = new Expression[hatkCombinations.length];
         for (int i = 0; i < hatkCombinations.length; ++i) {

@@ -19,13 +19,15 @@
  */
 package org.redberry.physics.util;
 
+import cc.redberry.core.combinatorics.Symmetries;
+import cc.redberry.core.context.CC;
+import cc.redberry.core.tensor.Expression;
+import cc.redberry.core.tensor.Tensor;
+import cc.redberry.transformation.Transformation;
+import cc.redberry.transformation.Transformations;
 import org.junit.Test;
-import redberry.core.context.CC;
-import redberry.core.tensor.Expression;
-import redberry.core.tensor.Tensor;
-import redberry.core.tensor.permutations.Symmetries;
-import redberry.core.transformation.Transformation;
-import redberry.core.transformation.Transformations;
+
+
 
 /**
  *
@@ -77,7 +79,7 @@ public class InverseTensorTest {
         Expression equation = new Expression(CC.parse("K^abc_pqr*KINV^pqr_ijk"),
                 Transformations.expandBracketsExceptSymbols(Symmetrize.INSTANCE.transform(eqRhs)));
 
-        Symmetries symmetries = Symmetries.getFullSymmetriesForSortedIndexes(3, 3);
+        Symmetries symmetries = Symmetries.getFullSymmetriesForSortedIndices(3, 3);
         Tensor[] samples = {CC.parse("g_mn"), CC.parse("g^mn"), CC.parse("d_m^n"), CC.parse("n_m"), CC.parse("n^b")};
         InverseTensor it = new InverseTensor(toInverse, equation, symmetries, samples, transformations);
         System.out.println(it.inverse);
@@ -101,10 +103,22 @@ public class InverseTensorTest {
         Expression equation = new Expression(CC.parse("K^abc_pqr*KINV^pqr_ijk"),
                 Transformations.expandBracketsExceptSymbols(Symmetrize.INSTANCE.transform(eqRhs)));
 
-        Symmetries symmetries = Symmetries.getFullSymmetriesForSortedIndexes(3, 3);
+        Symmetries symmetries = Symmetries.getFullSymmetriesForSortedIndices(3, 3);
         Tensor[] samples = {CC.parse("g_mn"), CC.parse("g^mn"), CC.parse("d_m^n"), CC.parse("n_m"), CC.parse("n^b")};
         InverseTensor it = new InverseTensor(toInverse, equation, symmetries, samples, transformations);
-        System.out.println(it.inverse);
+    }
 
+    @Test
+    public void test5() {
+        Transformation[] transformations = new Transformation[]{new Expression("d_a^a=4").asSubstitution()};
+
+        Expression toInverse =
+                new Expression("F_p^mn_q^rs = "
+                + "d^s_q*d^r_p*g^mn+d^m_q*d^n_p*g^rs+(-1)*d^r_p*d^n_q*g^ms+(-1)*d^s_p*d^m_q*g^rn");
+        Expression equation = new Expression("F_p^mn_q^rs*iF^p_mn^a_bc=d^a_q*d_b^r*d_c^s-(1/4)*d^r_q*d_b^a*d_c^s");
+
+        Tensor[] samples = {CC.parse("g_mn"), CC.parse("g^mn"), CC.parse("d_m^n")};
+        InverseTensor it = new InverseTensor(toInverse, equation, samples, transformations);
+        System.out.println(it.inverse);
     }
 }

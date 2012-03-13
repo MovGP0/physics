@@ -19,22 +19,23 @@
  */
 package org.redberry.physics.util;
 
+import cc.redberry.core.combinatorics.Symmetries;
+import cc.redberry.core.indexmapping.IndexMappings;
+import cc.redberry.core.tensor.*;
+import cc.redberry.core.tensor.testing.TTest;
+import cc.redberry.core.utils.Indicator;
+import cc.redberry.tensorgenerator.GeneratedTensor;
+import cc.redberry.tensorgenerator.TensorGenerator;
+import cc.redberry.transformation.CalculateNumbers;
+import cc.redberry.transformation.Transformation;
+import cc.redberry.transformation.collect.FullScalarsSplitCriteria;
+import cc.redberry.transformation.concurrent.ExpandAndCollectTransformation;
+import cc.redberry.transformation.contractions.IndicesContractionsTransformation;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
-import redberry.core.tensor.*;
-import redberry.core.utils.tensorgenerator.GeneratedTensor;
-import redberry.core.utils.tensorgenerator.TensorGenerator;
-import redberry.core.tensor.indexmapping.IndexMappings;
-import redberry.core.tensor.permutations.Symmetries;
-import redberry.core.tensor.test.TTest;
-import redberry.core.transformation.CalculateNumbers;
-import redberry.core.transformation.Transformation;
-import redberry.core.transformation.collect.FullScalarsSplitCriteria;
-import redberry.core.transformation.concurrent.ExpandAndCollectTransformation;
-import redberry.core.transformation.contractions.IndexesContractionsTransformation;
-import redberry.core.utils.Indicator;
+
 
 /**
  *
@@ -62,13 +63,13 @@ public class InverseTensor {
                 inverseLhs = t.clone();
                 break;
             }
-        GeneratedTensor generatedTensor = TensorGenerator.generateStructure(inverseLhs.getIndexes(), symmeties, samples);
+        GeneratedTensor generatedTensor = TensorGenerator.generateStructure(inverseLhs.getIndices(), symmeties, samples);
         variables = generatedTensor.coefficients;
         inverse = new Expression(inverseLhs, generatedTensor.generatedTensor);
 
         Transformation[] transformations1 = new Transformation[transformations.length + 2];
         transformations1[0] =
-                IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC;
+                IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC;
         System.arraycopy(transformations, 0, transformations1, 1, transformations.length);
         transformations1[transformations.length + 1] = CalculateNumbers.INSTANCE;
         final Transformation expandCollect =
@@ -103,7 +104,6 @@ public class InverseTensor {
                 linearEquations.add(new Expression(current.scalar, TensorNumber.createZERO()));
         }
         generateMapleFile();
-
     }
 
     public Expression inverse() {

@@ -19,16 +19,18 @@
  */
 package org.redberry.physics.util;
 
+import cc.redberry.core.number.ComplexElement;
+import cc.redberry.core.number.NumberFraction;
+import cc.redberry.core.number.RationalElement;
+import cc.redberry.core.tensor.Product;
+import cc.redberry.core.tensor.Sum;
+import cc.redberry.core.tensor.Tensor;
+import cc.redberry.core.tensor.TensorNumber;
+import cc.redberry.tensorgenerator.IndexMappingPermutationsGenerator;
+import cc.redberry.transformation.Transformation;
 import java.util.List;
-import redberry.core.number.ComplexElement;
-import redberry.core.number.NumberFraction;
-import redberry.core.number.RationalElement;
-import redberry.core.tensor.Product;
-import redberry.core.tensor.Sum;
-import redberry.core.tensor.Tensor;
-import redberry.core.tensor.TensorNumber;
-import redberry.core.utils.tensorgenerator.IndexMappingPermutationsGenerator;
-import redberry.core.transformation.Transformation;
+
+
 
 /**
  *
@@ -61,54 +63,54 @@ public class Symmetrize implements Transformation {
                 new ComplexElement(
                 new NumberFraction((long) 1, (long) list.size()), RationalElement.ZERO)), new Sum(list));
     }
-//    private final Indexes indexes;
+//    private final Indices indices;
 //    private final int lowerCount;
 //    private final int upperCount;
-//    private final int[] indexesNames;
+//    private final int[] indicesNames;
 //
-//    public Symmetrize(Indexes indexes) {
-//        this.indexes = indexes.getFreeIndexes();
-//        lowerCount = indexes.getLower().size();
-//        upperCount = indexes.getUpper().size();
-//        indexesNames = new int[this.indexes.size()];
-//        for (int i = 0; i < indexesNames.length; ++i)
-//            indexesNames[i] = IndexesUtils.getNameWithType(this.indexes.get(i));
+//    public Symmetrize(Indices indices) {
+//        this.indices = indices.getFreeIndices();
+//        lowerCount = indices.getLower().size();
+//        upperCount = indices.getUpper().size();
+//        indicesNames = new int[this.indices.size()];
+//        for (int i = 0; i < indicesNames.length; ++i)
+//            indicesNames[i] = IndicesUtils.getNameWithType(this.indices.get(i));
 //    }
 //
-//    public Symmetrize(String indexes) {
-//        this(ParserIndexes.parse(indexes));
+//    public Symmetrize(String indices) {
+//        this(ParserIndices.parse(indices));
 //    }
 //
 //    @Override
 //    public Tensor transform(Tensor tensor) {
-//        if (!tensor.getIndexes().getFreeIndexes().equalsIgnoreOrder(indexes))
+//        if (!tensor.getIndices().getFreeIndices().equalsIgnoreOrder(indices))
 //            throw new IllegalArgumentException();
 //
-//        IntPermutationsGenerator lowIndexesPermutator, upperIndexesPermutator;
+//        IntPermutationsGenerator lowIndicesPermutator, upperIndicesPermutator;
 //        Sum sum = new Sum();
 //        if (upperCount != 0 && lowerCount != 0) {
-//            lowIndexesPermutator = new IntPermutationsGenerator(lowerCount);
-//            while (lowIndexesPermutator.hasNext()) {
-//                int[] lowerPermutation = lowIndexesPermutator.next().clone();
+//            lowIndicesPermutator = new IntPermutationsGenerator(lowerCount);
+//            while (lowIndicesPermutator.hasNext()) {
+//                int[] lowerPermutation = lowIndicesPermutator.next().clone();
 //                for (int i = 0; i < lowerCount; ++i)
 //                    lowerPermutation[i] = lowerPermutation[i] + upperCount;
-//                upperIndexesPermutator = new IntPermutationsGenerator(upperCount);
+//                upperIndicesPermutator = new IntPermutationsGenerator(upperCount);
 //                UPPER:
-//                while (upperIndexesPermutator.hasNext()) {
-//                    int[] upperPermutation = upperIndexesPermutator.next();
+//                while (upperIndicesPermutator.hasNext()) {
+//                    int[] upperPermutation = upperIndicesPermutator.next();
 //                    sum.add(permute(tensor, upperPermutation, lowerPermutation));
 //                }
 //            }
 //        } else if (upperCount == 0) {
-//            lowIndexesPermutator = new IntPermutationsGenerator(lowerCount);
-//            while (lowIndexesPermutator.hasNext()) {
-//                int[] lowerPermutation = lowIndexesPermutator.next();
+//            lowIndicesPermutator = new IntPermutationsGenerator(lowerCount);
+//            while (lowIndicesPermutator.hasNext()) {
+//                int[] lowerPermutation = lowIndicesPermutator.next();
 //                sum.add(permute(tensor, new int[0], lowerPermutation));
 //            }
 //        } else if (lowerCount == 0) {
-//            upperIndexesPermutator = new IntPermutationsGenerator(upperCount);
-//            while (upperIndexesPermutator.hasNext()) {
-//                int[] upperPermutation = upperIndexesPermutator.next();
+//            upperIndicesPermutator = new IntPermutationsGenerator(upperCount);
+//            while (upperIndicesPermutator.hasNext()) {
+//                int[] upperPermutation = upperIndicesPermutator.next();
 //                sum.add(permute(tensor, upperPermutation, new int[0]));
 //            }
 //        }
@@ -125,21 +127,21 @@ public class Symmetrize implements Transformation {
 //    }
 //
 //    private Tensor permute(Tensor tensor, int[] lowerPermutation, int[] upperPermutation) {
-//        //creating resulting permutation upper indexes are first,
-//        //because initial indexes are sorted
+//        //creating resulting permutation upper indices are first,
+//        //because initial indices are sorted
 //        int[] permutation = new int[lowerCount + upperCount];
 //        System.arraycopy(upperPermutation, 0, permutation, 0, upperCount);
 //        System.arraycopy(lowerPermutation, 0, permutation, upperCount, lowerCount);
 //
 //
 //
-//        //processing new indexes from permutation
-//        final int[] newIndexesNames = new int[indexesNames.length];
-//        for (int i = 0; i < indexesNames.length; ++i)
-//            newIndexesNames[i] = indexesNames[permutation[i]];
+//        //processing new indices from permutation
+//        final int[] newIndicesNames = new int[indicesNames.length];
+//        for (int i = 0; i < indicesNames.length; ++i)
+//            newIndicesNames[i] = indicesNames[permutation[i]];
 //
 //        //processing new tensor
-//        IndexMappingImpl im = new IndexMappingImpl(new int[0], indexesNames, newIndexesNames);
+//        IndexMappingImpl im = new IndexMappingImpl(new int[0], indicesNames, newIndicesNames);
 //        Tensor current = tensor.clone();
 //        ApplyIndexMappingTransformation.INSTANCE.perform(current, im);
 //        return current;

@@ -19,40 +19,28 @@
  */
 package org.redberry.physics.kv;
 
-import redberry.core.tensor.SimpleTensor;
-import org.redberry.physics.util.SqrSubs;
+import cc.redberry.core.context.CC;
+import cc.redberry.core.context.ToStringMode;
+import cc.redberry.core.tensor.*;
+import cc.redberry.core.tensor.iterators.TensorFirstTreeIterator;
+import cc.redberry.core.tensor.iterators.TensorTreeIterator;
+import cc.redberry.core.tensor.testing.TTest;
+import cc.redberry.core.utils.Indicator;
+import cc.redberry.transformation.*;
+import cc.redberry.transformation.collect.CollectFactory;
+import cc.redberry.transformation.collect.CollectInputPortImpl;
+import cc.redberry.transformation.collect.EqualsSplitCriteria;
+import cc.redberry.transformation.collect.ScalarsSplitCriteria;
+import cc.redberry.transformation.concurrent.ExpandAndCollectTransformation;
+import cc.redberry.transformation.contractions.IndicesContractionsTransformation;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Ignore;
-import redberry.core.tensor.Sum;
-import redberry.core.tensor.Expression;
-import redberry.core.transformation.Transformation;
-import redberry.core.tensor.Tensor;
 import org.junit.Test;
-import redberry.core.context.CC;
-import redberry.core.context.ToStringMode;
-import redberry.core.tensor.MultiTensor;
-import redberry.core.tensor.Product;
-import redberry.core.tensor.TensorIterator;
-import redberry.core.tensor.TensorNumber;
-import redberry.core.tensor.iterators.TensorFirstTreeIterator;
-import redberry.core.tensor.iterators.TensorTreeIterator;
-import redberry.core.tensor.test.TTest;
-import redberry.core.transformation.CalculateNumbers;
-import redberry.core.transformation.ExpandBrackets;
-import redberry.core.transformation.IndexesInsertion;
-import redberry.core.transformation.Transformations;
-import redberry.core.transformation.Transformer;
-import redberry.core.transformation.collect.CollectFactory;
-import redberry.core.transformation.collect.CollectInputPortImpl;
-import redberry.core.transformation.collect.EqualsSplitCriteria;
-import redberry.core.transformation.collect.ScalarsSplitCriteria;
-import redberry.core.transformation.concurrent.ExpandAndCollectTransformation;
-import redberry.core.transformation.contractions.IndexesContractionsTransformation;
-import redberry.core.utils.Indicator;
-import org.redberry.physics.util.IndexesFactoryUtil;
+import org.redberry.physics.util.IndicesFactoryUtil;
 import static org.redberry.physics.TAssert.*;
-import static org.redberry.physics.util.IndexesFactoryUtil.*;
+import static org.redberry.physics.util.IndicesFactoryUtil.*;
+import org.redberry.physics.util.SqrSubs;
 
 /**
  *
@@ -117,13 +105,13 @@ public class OneLoop1Test {
     public void test() {
         OneLoop loop1 = new OneLoop(OneLoop.EVAL.INITIALIZE);
         loop1.evalRR();
-        assertIndexes(loop1.RR);
+        assertIndices(loop1.RR);
         loop1.evalDeltas();
         System.out.println(loop1.DELTA_3.toString(ToStringMode.UTF8));
         System.out.println(loop1.DELTA_2.toString(ToStringMode.UTF8));
         System.out.println(loop1.DELTA_1.toString(ToStringMode.UTF8));
         System.out.println(loop1.DELTA_4.toString(ToStringMode.UTF8));
-        assertIndexes(loop1.DELTAs);
+        assertIndices(loop1.DELTAs);
 //        loop1.DELTA_3.asSubstitution();
         loop1.DELTA_4.asSubstitution();
     }
@@ -144,17 +132,17 @@ public class OneLoop1Test {
         OneLoop loop1 = new OneLoop(OneLoop.EVAL.EVAL_ALL);
         System.out.println(loop1.RR.toString(ToStringMode.UTF8));
         System.out.println(((MultiTensor) loop1.RR.right()).size());
-        assertIndexes(loop1.RR);
+        assertIndices(loop1.RR);
     }
 
     @Ignore
     @Test
     public void testDelta2() {
         OneLoop loop1 = new OneLoop(OneLoop.EVAL.EVAL_HATK);
-        IndexesInsertion indexesInsertion = new IndexesInsertion(loop1.matricesIndicator, IndexesFactoryUtil.createIndexes(loop1.DELTAs, "^{\\mu\\nu}_{\\alpha\\beta}"));
+        IndicesInsertion indicesInsertion = new IndicesInsertion(loop1.matricesIndicator, IndicesFactoryUtil.createIndices(loop1.DELTAs, "^{\\mu\\nu}_{\\alpha\\beta}"));
 
         loop1.DELTA_2.eval(
-                indexesInsertion,
+                indicesInsertion,
                 loop1.L.asSubstitution(),
                 CalculateNumbers.INSTANCE);
 
@@ -171,13 +159,13 @@ public class OneLoop1Test {
                 new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS));
         System.out.println("Expand brackets ... done");
 
-        System.out.println("Indexes contractions ...");
+        System.out.println("Indices contractions ...");
         loop1.DELTA_2.eval(
-                IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                 loop1.KRONECKER_DIMENSION.asSubstitution(),
                 CalculateNumbers.INSTANCE);
-        System.out.println("Indexes contractions ... done");
-        assertIndexes(loop1.DELTA_2.right());
+        System.out.println("Indices contractions ... done");
+        assertIndices(loop1.DELTA_2.right());
         System.out.println("Collecting " + ((MultiTensor) loop1.DELTA_2.right()).size() + " elements ...");
 
         loop1.DELTA_2.eval(
@@ -209,19 +197,19 @@ public class OneLoop1Test {
         for (Expression delta : loop1.DELTAs)
             loop1.RR.eval(delta.asSubstitution());
         loop1.RR.eval(
-                IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                 loop1.KRONECKER_DIMENSION.asSubstitution(),
                 CalculateNumbers.INSTANCE,
                 new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
-                IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                 CollectFactory.createCollectEqualTerms(),
                 CollectFactory.createCollectScalars(),
                 CalculateNumbers.INSTANCE);
 
-        Transformation indexesInsertion;
-        indexesInsertion = new IndexesInsertion(loop1.matricesIndicator, createIndexes(loop1.HATKs, "^{\\mu\\nu}_{\\alpha\\beta}"));
+        Transformation indicesInsertion;
+        indicesInsertion = new IndicesInsertion(loop1.matricesIndicator, createIndices(loop1.HATKs, "^{\\mu\\nu}_{\\alpha\\beta}"));
         for (Expression hatK : loop1.HATKs) {
-            hatK.eval(indexesInsertion);
+            hatK.eval(indicesInsertion);
             loop1.RR.eval(hatK.asSubstitution());
         }
 
@@ -242,7 +230,7 @@ public class OneLoop1Test {
                 CollectFactory.createCollectEqualTerms(),
                 CalculateNumbers.INSTANCE);
         System.out.println("done");
-        loop1.RR.eval(IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC);
+        loop1.RR.eval(IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC);
         System.out.println(((MultiTensor) loop1.RR.right()).getElements().get(0).toString(ToStringMode.UTF8));
         loop1.RR.eval(loop1.MATRIX_K_INV.asSubstitution());//, CollectFactory.createCollectEqualTerms(), CalculateNumbers.INSTANCE, CollectFactory.createCollectAllScalars());
         loop1.RR.eval(loop1.MATRIX_K.asSubstitution());
@@ -251,7 +239,7 @@ public class OneLoop1Test {
         Tensor rhs = ((MultiTensor) loop1.RR.right()).getElements().get(0).clone();
         System.out.println(" Evaluating RR ");
         loop1.RR.eval(
-                IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                 loop1.KRONECKER_DIMENSION.asSubstitution());
 
         TensorTreeIterator treeIterator = new TensorFirstTreeIterator(rhs);
@@ -279,7 +267,7 @@ public class OneLoop1Test {
         long start = System.currentTimeMillis();
         Transformation ec = new ExpandAndCollectTransformation(
                 Indicator.SYMBOL_INDICATOR,
-                new Transformation[]{IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                new Transformation[]{IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                     loop1.KRONECKER_DIMENSION.asSubstitution(),
                     CalculateNumbers.INSTANCE});
         for (Sum sum : sums) {
@@ -297,7 +285,7 @@ public class OneLoop1Test {
 //        Tensor rhs_1 = ((MultiTensor) rhs).getElements().get(0);
 //
 //        System.out.println("contracting  ");
-//        rhs_1 = IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC.transform(rhs_1);
+//        rhs_1 = IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC.transform(rhs_1);
 //        rhs_1 = loop1.KRONECKER_DIMENSION.asSubstitution().transform(rhs_1);
 //        rhs_1 = CalculateNumbers.INSTANCE.transform(rhs_1);
 //        System.out.println("done");
@@ -305,7 +293,7 @@ public class OneLoop1Test {
 //        rhs_1 = new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS).transform(rhs_1);
 //        System.out.println("done");
 //        System.out.println("contracting  ");
-//        rhs_1 = IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC.transform(rhs_1);
+//        rhs_1 = IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC.transform(rhs_1);
 //        rhs_1 = loop1.KRONECKER_DIMENSION.asSubstitution().transform(rhs_1);
 //        rhs_1 = CalculateNumbers.INSTANCE.transform(rhs_1);
 //        System.out.println("done");
@@ -358,7 +346,7 @@ public class OneLoop1Test {
         for (Expression hatK : loop1.HATKs)
             loop1.RR.eval(hatK.asSubstitution());
         loop1.RR.eval(
-                IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                 loop1.KRONECKER_DIMENSION.asSubstitution());
 
         Tensor rhs = ((MultiTensor) loop1.RR.right()).getElements().get(0).clone();
@@ -393,7 +381,7 @@ public class OneLoop1Test {
                 EqualsSplitCriteria.INSTANCE,
                 Indicator.SYMBOL_INDICATOR,
                 new Transformation[]{
-                    IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                    IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                     loop1.KRONECKER_DIMENSION.asSubstitution(),
                     tr,
                     CalculateNumbers.INSTANCE});
@@ -429,7 +417,7 @@ public class OneLoop1Test {
                 ScalarsSplitCriteria.INSTANCE,
                 Indicator.SYMBOL_INDICATOR,
                 new Transformation[]{
-                    IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                    IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                     loop1.KRONECKER_DIMENSION.asSubstitution(),
                     CalculateNumbers.INSTANCE,
                     sP});
@@ -469,7 +457,7 @@ public class OneLoop1Test {
         for (Expression hatK : loop1.HATKs)
             loop1.RR.eval(hatK.asSubstitution());
         loop1.RR.eval(
-                IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                 loop1.KRONECKER_DIMENSION.asSubstitution());
 
         int sC = 0, tC = 0;;

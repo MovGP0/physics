@@ -19,29 +19,28 @@
  */
 package org.redberry.physics.kv;
 
-import org.redberry.physics.kv.MainScenario;
-import org.redberry.physics.kv.Delta_Prep;
-import org.redberry.physics.kv.OneLoop;
-import redberry.core.transformation.concurrent.EACScalars;
-import redberry.core.context.CC;
-import redberry.core.tensor.Tensor;
+import cc.redberry.core.context.CC;
+import cc.redberry.core.context.ToStringMode;
+import cc.redberry.core.tensor.Expression;
+import cc.redberry.core.tensor.SimpleTensor;
+import cc.redberry.core.tensor.Sum;
+import cc.redberry.core.tensor.Tensor;
+import cc.redberry.core.utils.Indicator;
+import cc.redberry.transformation.CalculateNumbers;
+import cc.redberry.transformation.Transformation;
+import cc.redberry.transformation.Transformations;
+import cc.redberry.transformation.Transformer;
+import cc.redberry.transformation.collect.CollecctEqualsInputPort;
+import cc.redberry.transformation.collect.CollectFactory;
+import cc.redberry.transformation.collect.CollectPowers;
+import cc.redberry.transformation.collect.ScalarsSplitCriteria;
+import cc.redberry.transformation.concurrent.EACScalars;
+import cc.redberry.transformation.concurrent.ExpandAndCollectTransformation;
+import cc.redberry.transformation.contractions.IndicesContractionsTransformation;
 import org.junit.Test;
-import redberry.core.context.ToStringMode;
-import redberry.core.tensor.Expression;
-import redberry.core.tensor.SimpleTensor;
-import redberry.core.tensor.Sum;
-import redberry.core.transformation.CalculateNumbers;
-import redberry.core.transformation.Transformation;
-import redberry.core.transformation.Transformations;
-import redberry.core.transformation.Transformer;
-import redberry.core.transformation.collect.CollecctEqualsInputPort;
-import redberry.core.transformation.collect.CollectFactory;
-import redberry.core.transformation.collect.CollectPowers;
-import redberry.core.transformation.collect.ScalarsSplitCriteria;
-import redberry.core.transformation.concurrent.ExpandAndCollectTransformation;
-import redberry.core.transformation.contractions.IndexesContractionsTransformation;
-import redberry.core.utils.Indicator;
 import org.redberry.physics.util.SqrSubs;
+
+
 
 /**
  *
@@ -64,7 +63,7 @@ public class Delta_PrepTest {
     @Test
     public void testEvalD1() {
         OneLoop loop = new OneLoop();
-        loop.insertIndexes();
+        loop.insertIndices();
         loop.substituteL();
         loop.evalHatK();
         Delta_Prep.evalD1(loop);
@@ -75,7 +74,7 @@ public class Delta_PrepTest {
     @Test
     public void testEvalD2() {
         OneLoop loop = new OneLoop();
-        loop.insertIndexes();
+        loop.insertIndices();
         loop.substituteL();
         loop.evalHatK();
         Delta_Prep.evalD2(loop);
@@ -86,7 +85,7 @@ public class Delta_PrepTest {
     @Test
     public void testEvalD3() {
         OneLoop loop = new OneLoop();
-        loop.insertIndexes();
+        loop.insertIndices();
         loop.substituteL();
         loop.evalHatK();
         Delta_Prep.evalD3(loop);
@@ -98,7 +97,7 @@ public class Delta_PrepTest {
     @Test
     public void testEvalD4() {
         OneLoop loop = new OneLoop();
-        loop.insertIndexes();
+        loop.insertIndices();
         loop.substituteL();
         loop.evalHatK();
         Delta_Prep.evalD4(loop);
@@ -109,7 +108,7 @@ public class Delta_PrepTest {
      @Test
     public void testEvalD2RR() {
         OneLoop loop = new OneLoop();
-        loop.insertIndexes();
+        loop.insertIndices();
         loop.substituteL();
         loop.evalHatK();
         Delta_Prep.evalD2(loop);
@@ -119,7 +118,7 @@ public class Delta_PrepTest {
                 new CollecctEqualsInputPort(),
                 Indicator.SYMBOL_INDICATOR,
                 new Transformation[]{
-                    IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                    IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                     loop.KRONECKER_DIMENSION.asSubstitution(),
                     new SqrSubs((SimpleTensor) CC.parse("n_{\\alpha}")),
                     CalculateNumbers.INSTANCE});
@@ -181,7 +180,7 @@ public class Delta_PrepTest {
     @Test
     public void testEvalD3RR() {
         OneLoop loop = new OneLoop();
-        loop.insertIndexes();
+        loop.insertIndices();
         loop.substituteL();
         loop.evalHatK();
         Delta_Prep.evalD3(loop);
@@ -191,7 +190,7 @@ public class Delta_PrepTest {
                 new CollecctEqualsInputPort(),
                 Indicator.SYMBOL_INDICATOR,
                 new Transformation[]{
-                    IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                    IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                     loop.KRONECKER_DIMENSION.asSubstitution(),
                     new SqrSubs((SimpleTensor) CC.parse("n_{\\alpha}")),
                     CalculateNumbers.INSTANCE});

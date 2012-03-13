@@ -19,15 +19,17 @@
  */
 package org.redberry.physics.qed;
 
+import cc.redberry.core.context.CC;
+import cc.redberry.core.tensor.Expression;
+import cc.redberry.transformation.CalculateNumbers;
+import cc.redberry.transformation.ExpandBrackets;
+import cc.redberry.transformation.Transformer;
+import cc.redberry.transformation.contractions.IndicesContractionsTransformation;
+import cc.redberry.transformation.integral.CollectIntegralFromSum;
+import cc.redberry.transformation.integral.ExpandIntegral;
 import org.redberry.physics.ToFourier;
-import redberry.core.context.CC;
-import redberry.core.tensor.Expression;
-import redberry.core.transformation.CalculateNumbers;
-import redberry.core.transformation.ExpandBrackets;
-import redberry.core.transformation.Transformer;
-import redberry.core.transformation.contractions.IndexesContractionsTransformation;
-import redberry.core.transformation.integral.CollectIntegralFromSum;
-import redberry.core.transformation.integral.ExpandIntegral;
+
+
 
 /**
  *
@@ -49,7 +51,7 @@ public class QED {
                 new Transformer(ExpandBrackets.EXPAND_ALL),
                 new Transformer(ExpandIntegral.INSTANCE),
                 new Transformer(new ToFourier(CC.parseSimple("x_a"), CC.parseSimple("p_a"))),
-                IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                 CalculateNumbers.INSTANCE,
                 CollectIntegralFromSum.INSTANCE);
     }

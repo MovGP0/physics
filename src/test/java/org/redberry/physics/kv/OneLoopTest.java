@@ -19,19 +19,17 @@
  */
 package org.redberry.physics.kv;
 
-import org.redberry.physics.kv.OneLoop;
+import cc.redberry.core.context.ToStringMode;
+import cc.redberry.core.tensor.Expression;
+import cc.redberry.transformation.CalculateNumbers;
+import cc.redberry.transformation.ExpandBrackets;
+import cc.redberry.transformation.Transformer;
+import cc.redberry.transformation.collect.CollectFactory;
+import cc.redberry.transformation.contractions.IndicesContractionsTransformation;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import redberry.core.context.CC;
-import redberry.core.context.ToStringMode;
-import redberry.core.tensor.Expression;
-import redberry.core.tensor.Tensor;
-import redberry.core.transformation.CalculateNumbers;
-import redberry.core.transformation.ExpandBrackets;
-import redberry.core.transformation.Transformer;
-import redberry.core.transformation.collect.CollectFactory;
-import redberry.core.transformation.contractions.IndexesContractionsTransformation;
+
 
 /**
  *
@@ -49,7 +47,7 @@ public class OneLoopTest {
                 loop.RICCI.asSubstitution(),
                 loop.RIMAN.asSubstitution(),
                 new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
-                IndexesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                 CollectFactory.createCollectEqualTerms(),
                 CalculateNumbers.INSTANCE);
         System.out.println(t.toString(ToStringMode.UTF8));
