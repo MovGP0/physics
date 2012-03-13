@@ -20,6 +20,7 @@
 package cc.redberry.physics.util;
 
 import cc.redberry.core.combinatorics.Symmetries;
+import cc.redberry.core.context.CC;
 import cc.redberry.core.indexmapping.IndexMappings;
 import cc.redberry.core.tensor.*;
 import cc.redberry.core.tensor.testing.TTest;
@@ -31,6 +32,7 @@ import cc.redberry.transformation.Transformation;
 import cc.redberry.transformation.collect.FullScalarsSplitCriteria;
 import cc.redberry.transformation.concurrent.ExpandAndCollectTransformation;
 import cc.redberry.transformation.contractions.IndicesContractionsTransformation;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
