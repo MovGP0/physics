@@ -103,7 +103,8 @@ public class InverseTensor {
             if (!one)
                 linearEquations.add(new Expression(current.scalar, TensorNumber.createZERO()));
         }
-        generateMapleFile();
+        if (CC.getMapleDirectory() != null)
+            generateMapleFile();
     }
 
     public Expression inverse() {
@@ -144,8 +145,16 @@ public class InverseTensor {
     }
 
     private void generateMapleFile() {
+        String workingFolder = CC.getWorkingFolder() + "/" + InverseTensor.class.getSimpleName();
         try {
-            FileOutputStream output = new FileOutputStream("equations.maple");
+            (new File(workingFolder)).mkdir();
+        } catch (Exception e) {
+            System.err.println("Error: cannot create working folder" + e.getMessage());
+        }
+
+        String mapleDirectory = CC.getMapleDirectory();
+        try {
+            FileOutputStream output = new FileOutputStream(workingFolder + "/equations.maple");
             PrintStream file = new PrintStream(output);
 
             file.append("ans:=array([");
@@ -160,11 +169,7 @@ public class InverseTensor {
             for (int i = 0; i < linearEquations.size(); i++)
                 file.println("eq[" + (i + 1) + "]:=" + linearEquations.get(i) + ";");
 
-            //for (int i = 0; i < systemEquations.size() - 1; i++)
-            //   file.append("eq" + (i + 1) + ",");
             file.print("Result := solve({seq(eq[i],i=1.." + linearEquations.size() + ")},[");
-            //file.append("eq" + systemEquations.size() + "},[");
-            //file.append(",[");
             for (int i = 0; i < variables.length; ++i)
                 if (i == variables.length - 1)
                     file.append(variables[i].toString());
@@ -172,14 +177,10 @@ public class InverseTensor {
                     file.append(variables[i] + ",");
             file.append("]);\n");
 
-            file.println("file:=fopen(\"/home/stas/NetBeansProjects/redberry-physics/" + "equations.mapleOut\",WRITE);");
-            //    file.append("try\n");
-//            file.append("fprintf(file,\"ans" + variables.length + ":=array(1.." + variables.length + ");\\n\");\n");
+            file.println("file:=fopen(\"" + workingFolder + "/equations.mapleOut\",WRITE);");
             file.append("for k from 1 to " + variables.length + " do\n");
-//            file.append("fprintf(file,\"ans" + variables.length + "[%a]:=%a=%a;\\n\",k,ans" + variables.length + "[k],rhs(Result[1][k]))\n");
             file.append("fprintf(file,\"%a=%a;\\n\",lhs(Result[1][k]),rhs(Result[1][k]))\n");
             file.append("od;\n");
-            // file.append("finally fclose(file) end try;");
             file.append("fclose(file);");
         } catch (Exception e) {
         }

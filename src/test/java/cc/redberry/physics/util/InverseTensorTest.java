@@ -121,4 +121,5 @@ public class InverseTensorTest {
         InverseTensor it = new InverseTensor(toInverse, equation, samples, transformations);
         System.out.println(it.inverse);
     }
+
 }
