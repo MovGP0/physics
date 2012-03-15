@@ -22,7 +22,6 @@
  */
 package cc.redberry.physics.kv;
 
-
 import cc.redberry.core.context.CC;
 import cc.redberry.core.tensor.Expression;
 import cc.redberry.core.tensor.SimpleTensor;
@@ -48,9 +47,13 @@ import static cc.redberry.physics.util.IndicesFactoryUtil.*;
 public class Delta_Prep {
     public static void go(OneLoop loop) {
         evalD1(loop);
+        System.out.println("D1 done");
         evalD2(loop);
+        System.out.println("D2 done");
         evalD3(loop);
+        System.out.println("D3 done");
         evalD4(loop);
+        System.out.println("D4 done");
     }
     static final Transformation ec = new ExpandAndCollectTransformation(
             new CollecctEqualsInputPort(),

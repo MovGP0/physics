@@ -131,7 +131,7 @@
                         </property>
                     </properties>
 
-                    <skipTests>false</skipTests>
+                    <skipTests>true</skipTests>
                 </configuration>
             </plugin>
             <plugin>
@@ -157,7 +157,7 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>cc.redberry</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>core</artifactId>
             <version>0.9.3</version>
         </dependency>

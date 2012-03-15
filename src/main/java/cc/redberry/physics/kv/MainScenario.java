@@ -45,8 +45,6 @@ import java.util.Arrays;
 import java.util.List;
 import cc.redberry.physics.util.SqrSubs;
 
-
-
 /**
  *
  * @author Dmitry Bolotin
@@ -70,15 +68,19 @@ public class MainScenario {
         loop.substituteL();
         loop.evalHatK();
         Delta_Prep.go(loop);
+        System.out.println("Deltas done");
         long start = System.currentTimeMillis();
-        evalRRTerm(5, loop);
+//        for (int i = 0; i < ((Sum) loop.RR.right()).size(); ++i) {
+            System.out.println("--------Evaluating " + 1 + " term---------");
+            evalRRTerm(1, loop);
+//        }
         long stop = System.currentTimeMillis();
         System.out.println(" TOTAL ---- " + (stop - start));
     }
 
     /*
-     * Calculating fifth element - there is a mistake 
-     *  
+     * Calculating fifth element - there is a mistake
+     *
      */
 //    public static void main(String[] args) {
 //        OneLoop loop = new OneLoop();
@@ -238,8 +240,8 @@ public class MainScenario {
         dSummand = CalculateNumbers.INSTANCE.transform(dSummand);
         dSummand = SEAC.transform(dSummand);
         System.out.println("Done: ");
-        System.out.println(dSummand);
-        System.out.println(new Transformer(CollectPowers.INSTANCE).transform(dSummand.clone()));
+//        System.out.println(dSummand);
+        System.out.println("term = " + new Transformer(CollectPowers.INSTANCE).transform(dSummand.clone()));
         return dSummand;
     }
 
@@ -248,11 +250,9 @@ public class MainScenario {
             Sum sum = (Sum) tensor;
             List<Tensor> result = new ArrayList<>();
             int i = 0;
-            for (Tensor summand : sum) {
-                System.out.println(summand.toString(ToStringMode.UTF8));
-                result.add(smartEC(summand, ec));
-                System.out.println(result.get(i++));
-            }
+            for (Tensor summand : sum)
+//                System.out.println(summand.toString(ToStringMode.UTF8));
+                result.add(smartEC(summand, ec)); //                System.out.println(result.get(i++));
             return new Sum(result);
         }
         if (!(tensor instanceof Product))

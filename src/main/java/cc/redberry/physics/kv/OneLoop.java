@@ -352,6 +352,7 @@ public class OneLoop {
 
     }
     public final Indicator<Tensor> matricesIndicator = new TensorTreeIndicatorImpl(new Indicator<Tensor>() {
+        @Override
         public boolean is(Tensor tensor) {
             for (Tensor m : MATRICES)
                 if (TTest.testEqualstensorStructure(tensor, m))
