@@ -63,8 +63,6 @@ public class MainScenario {
             Indicator.FALSE_INDICATOR, new Transformation[]{CalculateNumbers.INSTANCE});
 
     public static void main(String[] args) {
-        CC.getNameManager().reset();
-        CC.getNameManager().reset(27182818284590L);
         System.out.println("--------Evaluating " + Integer.parseInt(args[0]) + " term---------");
         OneLoop loop = new OneLoop();
         loop.insertIndices();
