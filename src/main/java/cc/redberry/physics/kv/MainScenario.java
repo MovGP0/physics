@@ -63,16 +63,18 @@ public class MainScenario {
             Indicator.FALSE_INDICATOR, new Transformation[]{CalculateNumbers.INSTANCE});
 
     public static void main(String[] args) {
+        System.out.println("--------Evaluating " + Integer.parseInt(args[0]) + " term---------");
         OneLoop loop = new OneLoop();
         loop.insertIndices();
         loop.substituteL();
         loop.evalHatK();
+        System.out.println(
+                ((Sum) loop.RR.right()).getElements().size());
         Delta_Prep.go(loop);
         System.out.println("Deltas done");
         long start = System.currentTimeMillis();
 //        for (int i = 0; i < ((Sum) loop.RR.right()).size(); ++i) {
-            System.out.println("--------Evaluating " + 1 + " term---------");
-            evalRRTerm(1, loop);
+        evalRRTerm(Integer.parseInt(args[0]), loop);
 //        }
         long stop = System.currentTimeMillis();
         System.out.println(" TOTAL ---- " + (stop - start));
