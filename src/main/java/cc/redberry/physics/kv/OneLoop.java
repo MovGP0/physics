@@ -60,7 +60,7 @@ public class OneLoop {
     public final Expression RICCI =
             new Expression("R_{\\mu\\nu} = -g_{\\mu\\nu}*LAMBDA");
     public final Expression RIMAN =
-            new Expression("R_{\\mu\\nu\\alpha\\beta} = (1/3)*(g_{\\mu\\beta}*g_{\\alpha\\nu}-g_{\\mu\\nu}*g_{\\alpha\\beta})*LAMBDA");
+            new Expression("R_{\\mu\\nu\\alpha\\beta} = (1/3)*(g_{\\mu\\beta}*g_{\\nu\\alpha}-g_{\\mu\\alpha}*g_{\\nu\\beta})*LAMBDA");
     /*
      * Effective action section
      */
