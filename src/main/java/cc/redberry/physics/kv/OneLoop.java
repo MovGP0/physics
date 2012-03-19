@@ -28,14 +28,14 @@ import cc.redberry.core.tensor.Tensor;
 import cc.redberry.core.tensor.testing.TTest;
 import cc.redberry.core.transformations.RenameConflictingIndices;
 import cc.redberry.core.utils.Indicator;
+import static cc.redberry.physics.util.IndicesFactoryUtil.createIndices;
+import static cc.redberry.physics.util.IndicesFactoryUtil.doubleAndDumpIndices;
 import cc.redberry.transformation.*;
 import cc.redberry.transformation.collect.CollectFactory;
 import cc.redberry.transformation.collect.CollectPowers;
 import cc.redberry.transformation.concurrent.EACScalars;
 import cc.redberry.transformation.contractions.IndicesContractionsTransformation;
 import cc.redberry.transformation.substitutions.TensorTreeIndicatorImpl;
-import static cc.redberry.physics.util.IndicesFactoryUtil.createIndices;
-import static cc.redberry.physics.util.IndicesFactoryUtil.doubleAndDumpIndices;
 
 
 /**
@@ -189,8 +189,8 @@ public class OneLoop {
      */
     public final Expression MATRIX_K_INV =
             new Expression("KINV^{\\alpha\\beta}_{\\mu\\nu} = P^{\\alpha\\beta}_{\\mu\\nu}+a*g_{\\mu\\nu}*g^{\\alpha\\beta}+"
-            + "(1/4)*b*(n_{\\mu}*n^{\\alpha}*d^{\\beta}_{\\nu}+n_{\\mu}*n^{\\beta}*d^{\\alpha}_{\\nu}+n_{\\nu}*n^{\\alpha}*d^{\\beta}_{\\mu})+n_{\\nu}*n^{\\beta}*d^{\\alpha}_{\\mu}+"
-            + "c*(n_{\\mu}*n_{\\nu}*g^{\\alpha\\beta}+n^{\\alpha}*n^{\\beta}*g_{\\mu\\nu})+d*n_{\\mu}*n_{\\nu}*n^{\\alpha}*n^{\\beta}");
+                + "(1/4)*b*(n_{\\mu}*n^{\\alpha}*d^{\\beta}_{\\nu}+n_{\\mu}*n^{\\beta}*d^{\\alpha}_{\\nu}+n_{\\nu}*n^{\\alpha}*d^{\\beta}_{\\mu}+n_{\\nu}*n^{\\beta}*d^{\\alpha}_{\\mu})+"
+                + "c*(n_{\\mu}*n_{\\nu}*g^{\\alpha\\beta}+n^{\\alpha}*n^{\\beta}*g_{\\mu\\nu})+d*n_{\\mu}*n_{\\nu}*n^{\\alpha}*n^{\\beta}");
     /*
      * Collecting all matrices in expressions together
      */
