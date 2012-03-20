@@ -23,12 +23,13 @@
 package cc.redberry.physics.util;
 
 import cc.redberry.core.context.CC;
+import cc.redberry.core.indices.IndexType;
 import cc.redberry.core.tensor.Sum;
 import cc.redberry.core.tensor.Tensor;
+import static cc.redberry.physics.TAssert.*;
+import static org.junit.Assert.assertEquals;
 import cc.redberry.transformation.Transformations;
 import org.junit.Test;
-import static cc.redberry.physics.TAssert.*;
-
 
 /**
  *
@@ -88,5 +89,37 @@ public class SymmetrizeTest {
                 + "6*(-(1/4)+l*b*b)*n_p*g_qr*n^a*g^bc");
         Tensor t = Transformations.expandBracketsExceptSymbols(Symmetrize.INSTANCE.transform(toInv));
         assertTrue(((Sum) t).size() == 60);
+    }
+
+    @Test
+    public void test9() {
+        Tensor u = CC.parse("A_ab*B_mn");
+        CC.addSymmetry("A_mn", IndexType.LatinLower, false, new int[]{1, 0});
+        CC.addSymmetry("B_mn", IndexType.LatinLower, false, new int[]{1, 0});
+        Tensor sym = Symmetrize.INSTANCE.transform(u);
+        Tensor expected = _("(1/6)*(A_{ab}*B_{mn}+A_{am}*B_{bn}+A_{an}*B_{bm}+A_{bm}*B_{an}+A_{bn}*B_{am}+A_{mn}*B_{ab})");
+        assertEquals(sym, expected);
+    }
+
+    @Test
+    public void test10() {
+        Tensor u = CC.parse("A_ab*B_m*C_n");
+        CC.addSymmetry("A_mn", IndexType.LatinLower, false, new int[]{1, 0});
+        Tensor sym = Symmetrize.INSTANCE.transform(u);
+        Tensor expected = _("(1/12)*(A_{ab}*B_{m}*C_{n}+A_{ab}*B_{n}*C_{m}+A_{am}*B_{b}*C_{n}+A_{am}*B_{n}*C_{b}+A_{an}*B_{b}*C_{m}+A_{an}*B_{m}*C_{b}+A_{bm}*B_{a}*C_{n}+A_{bm}*B_{n}*C_{a}+A_{bn}*B_{a}*C_{m}+A_{bn}*B_{m}*C_{a}+A_{mn}*B_{a}*C_{b}+A_{mn}*B_{b}*C_{a})");
+        assertEquals(sym, expected);
+    }
+
+    @Test
+    public void test11() {
+        Tensor u = CC.parse("A_a*B_b*C_c*D_d");
+        Tensor sym = Symmetrize.INSTANCE.transform(u);
+        int size = -1;
+        for (Tensor t : sym)
+            if (t instanceof Sum) {
+                size = ((Sum) t).size();
+                break;
+            }
+        assertEquals(size, 24);
     }
 }

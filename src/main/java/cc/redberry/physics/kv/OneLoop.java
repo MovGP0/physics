@@ -160,7 +160,7 @@ public class OneLoop {
             + "HATK^{\\beta}*HATK^{\\mu}*HATK^{\\nu}*HATK^{\\alpha}+"
             + "HATK^{\\beta}*HATK^{\\mu}*HATK^{\\alpha}*HATK^{\\nu}+"
             + "HATK^{\\beta}*HATK^{\\alpha}*HATK^{\\mu}*HATK^{\\nu}+"
-            + "HATK^{\\beta}*HATK^{\\alpha}*HATK^{\\mu}*HATK^{\\nu})");
+            + "HATK^{\\beta}*HATK^{\\alpha}*HATK^{\\nu}*HATK^{\\mu})");
     public final Expression[] DELTAs = new Expression[]{DELTA_1, DELTA_2, DELTA_3, DELTA_4};
     /*
      *Section for defining \hat K's 
