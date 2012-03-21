@@ -33,11 +33,10 @@ import cc.redberry.transformation.Transformer;
 import cc.redberry.transformation.collect.CollectFactory;
 import cc.redberry.transformation.concurrent.EACScalars;
 import cc.redberry.transformation.contractions.IndicesContractionsTransformation;
-import cc.redberry.transformation.fraction.MultiplyFractions;
-import cc.redberry.transformation.fraction.ReduceFraction;
-import cc.redberry.transformation.fraction.ToCommonDenominator;
 import java.util.Arrays;
 import org.junit.Test;
+import static cc.redberry.physics.TAssert.*;
+import cc.redberry.transformation.Transformations;
 
 /**
  *
@@ -72,7 +71,7 @@ public class OneLoopTest {
                 new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
                 IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                 new Transformer(tr),
-                loop.KRONECKER_DIMENSION.asSubstitution(),
+                OneLoop.KRONECKER_DIMENSION.asSubstitution(),
                 CollectFactory.createCollectEqualTerms(),
                 CalculateNumbers.INSTANCE,
                 EACScalars.getTransformer(),
@@ -84,7 +83,7 @@ public class OneLoopTest {
                 loop.P.asSubstitution(),
                 new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
                 IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
-                loop.KRONECKER_DIMENSION.asSubstitution(),
+                OneLoop.KRONECKER_DIMENSION.asSubstitution(),
                 new Transformer(tr),
                 CollectFactory.createCollectEqualTerms(),
                 CalculateNumbers.INSTANCE,
@@ -168,30 +167,119 @@ public class OneLoopTest {
                 CalculateNumbers.INSTANCE,
                 EACScalars.getTransformer(),
                 CalculateNumbers.INSTANCE);
-        for (Tensor t : One.right()) {
-            System.out.println("Factor"+ Arrays.toString(((ProductContent) t.getContent()).getScalarContents()));
-//            String s = Arrays.toString(((ProductContent) t.getContent()).getScalarContents());
-//            System.out.println(s.substring(1, s.length() - 1));
-        }
-        Expression a = new Expression("a=-(1+2*beta)/(4*(5+6*beta))");
-        Expression b = new Expression("b=-(1+2*beta)/(1+beta)");
-        Expression c = new Expression("c=(1+2*beta)/(5+6*beta)");
-        Expression d = new Expression("d=(1+2*beta)*(1+2*beta)/((1+beta)*(5+6*beta))");
+        for (Tensor t : One.right())
+            System.out.println("Factor" + Arrays.toString(((ProductContent) t.getContent()).getScalarContents())); //            String s = Arrays.toString(((ProductContent) t.getContent()).getScalarContents());
+        //            System.out.println(s.substring(1, s.length() - 1));
+//        Expression a = new Expression("a=-(1+2*beta)/(4*(5+6*beta))");
+//        Expression b = new Expression("b=-(1+2*beta)/(1+beta)");
+//        Expression c = new Expression("c=(1+2*beta)/(5+6*beta)");
+//        Expression d = new Expression("d=(1+2*beta)*(1+2*beta)/((1+beta)*(5+6*beta))");
         System.out.println(One);
-
     }
 
     @Test
-    public void fracs() {
-        Expression exp = new Expression("exp=(-1/8+1/4*beta+(-5/8)*c+(-3/4)*c*beta)");
-        Expression a = new Expression("a=-(1+2*beta)/(4*(5+6*beta))");
-        Expression b = new Expression("b=-(1+2*beta)/(1+beta)");
-        Expression c = new Expression("c=(1+2*beta)/(5+6*beta)");
-        Expression d = new Expression("d=(1+2*beta)*(1+2*beta)/((1+beta)*(5+6*beta))");
-        exp.eval(a.asSubstitution(), b.asSubstitution(), c.asSubstitution(), d.asSubstitution());
-        exp.eval(new MultiplyFractions());
-        exp.eval(new ReduceFraction());
-        exp.eval(new Transformer(new ToCommonDenominator()));
-        System.out.println(exp);
+    public void testInverseZeroBeta() {
+        Expression P =
+                new Expression("P^{\\alpha\\beta}_{\\mu\\nu} = (1/2)*(d^{\\alpha}_{\\mu}*d^{\\beta}_{\\nu}+d^{\\alpha}_{\\nu}*d^{\\beta}_{\\mu})-"
+                + "(1/4)*g_{\\mu\\nu}*g^{\\alpha\\beta}");
+        Expression KRONECKER_DIMENSION =
+                new Expression("d^{\\alpha}_{\\alpha} = 4");
+        Expression MATRIX_K =
+                new Expression("K^{\\mu\\nu}^{\\alpha\\beta}_{\\gamma\\delta} = g^{\\mu\\nu}*P^{\\alpha\\beta}_{\\gamma\\delta}+"
+                + "(1/4)*(d^{\\mu}_{\\gamma}*g^{\\alpha \\nu}*d^{\\beta}_{\\delta} + d^{\\mu}_{\\delta}*g^{\\alpha \\nu}*d^{\\beta}_{\\gamma}+d^{\\mu}_{\\gamma}*g^{\\beta \\nu}*d^{\\alpha}_{\\delta}+ d^{\\mu}_{\\delta}*g^{\\beta \\nu}*d^{\\alpha}_{\\gamma})+"
+                + "(1/4)*(d^{\\nu}_{\\gamma}*g^{\\alpha \\mu}*d^{\\beta}_{\\delta} + d^{\\nu}_{\\delta}*g^{\\alpha \\mu}*d^{\\beta}_{\\gamma}+d^{\\nu}_{\\gamma}*g^{\\beta \\mu}*d^{\\alpha}_{\\delta}+ d^{\\nu}_{\\delta}*g^{\\beta \\mu}*d^{\\alpha}_{\\gamma}) -"
+                + "(1/4)*(g_{\\gamma\\delta}*g^{\\mu \\alpha}*g^{\\nu \\beta}+g_{\\gamma\\delta}*g^{\\mu \\beta}*g^{\\nu \\alpha})-"
+                + "(1/4)*(g^{\\alpha\\beta}*d^{\\mu}_{\\gamma}*d^{\\nu}_{\\delta}+g^{\\alpha\\beta}*d^{\\mu}_{\\delta}*d^{\\nu}_{\\gamma})+(1/8)*g^{\\mu\\nu}*g_{\\gamma\\delta}*g^{\\alpha\\beta}");
+
+        Transformation tr = new SqrSubs((SimpleTensor) CC.parse("n_{\\alpha}"));
+        //Kn
+        Expression Kn = new Expression("Kn^{\\alpha\\beta}_{\\gamma\\delta}=K^{\\mu\\nu}^{\\alpha\\beta}_{\\gamma\\delta}*n_{\\mu}*n_{\\nu}");
+        Kn.eval(
+                MATRIX_K.asSubstitution(),
+                P.asSubstitution(),
+                new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
+                IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                new Transformer(tr),
+                KRONECKER_DIMENSION.asSubstitution(),
+                CollectFactory.createCollectEqualTerms(),
+                CalculateNumbers.INSTANCE,
+                EACScalars.getTransformer(),
+                CalculateNumbers.INSTANCE);
+
+        Expression MATRIX_K_INV =
+                new Expression("KINV^{\\alpha\\beta}_{\\mu\\nu} = P^{\\alpha\\beta}_{\\mu\\nu}-(1/20)*g_{\\mu\\nu}*g^{\\alpha\\beta}-"
+                + "(1/4)*(n_{\\mu}*n^{\\alpha}*d^{\\beta}_{\\nu}+n_{\\mu}*n^{\\beta}*d^{\\alpha}_{\\nu}+n_{\\nu}*n^{\\alpha}*d^{\\beta}_{\\mu}+n_{\\nu}*n^{\\beta}*d^{\\alpha}_{\\mu})+"
+                + "(1/5)*(n_{\\mu}*n_{\\nu}*g^{\\alpha\\beta}+n^{\\alpha}*n^{\\beta}*g_{\\mu\\nu})+(1/5)*n_{\\mu}*n_{\\nu}*n^{\\alpha}*n^{\\beta}");
+
+        Expression One = new Expression("One^{\\alpha\\beta}_{\\rho\\tau}=Kn^{\\alpha\\beta}_{\\gamma\\delta}*KINV^{\\gamma\\delta}_{\\rho\\tau}");
+        One.eval(
+                Kn.asSubstitution(),
+                MATRIX_K_INV.asSubstitution(),
+                P.asSubstitution(),
+                new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
+                IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                KRONECKER_DIMENSION.asSubstitution(),
+                new Transformer(tr),
+                CollectFactory.createCollectEqualTerms(),
+                CalculateNumbers.INSTANCE,
+                EACScalars.getTransformer(),
+                CalculateNumbers.INSTANCE);
+        Tensor expected = CC.parse("P^{\\alpha\\beta}_{\\rho\\tau}");
+        expected = P.asSubstitution().transform(expected);
+        expected = Transformations.expandBrackets(expected);
+        expected = Transformations.calculateNumbers(expected);
+        assertParity(expected, One.right());
+    }
+
+    @Test
+    public void testInverseZeroBeta1() {
+        Expression P =
+                new Expression("P^{\\alpha\\beta}_{\\mu\\nu} = (1/2)*(d^{\\alpha}_{\\mu}*d^{\\beta}_{\\nu}+d^{\\alpha}_{\\nu}*d^{\\beta}_{\\mu})-"
+                + "(1/4)*g_{\\mu\\nu}*g^{\\alpha\\beta}");
+        Expression KRONECKER_DIMENSION =
+                new Expression("d^{\\alpha}_{\\alpha} = 4");
+        Expression MATRIX_K =
+                new Expression("K^{\\mu\\nu}^{\\alpha\\beta}_{\\gamma\\delta} = g^{\\mu\\nu}*P^{\\alpha\\beta}_{\\gamma\\delta}+"
+                + "(1/4)*(d^{\\mu}_{\\gamma}*g^{\\alpha \\nu}*d^{\\beta}_{\\delta} + d^{\\mu}_{\\delta}*g^{\\alpha \\nu}*d^{\\beta}_{\\gamma}+d^{\\mu}_{\\gamma}*g^{\\beta \\nu}*d^{\\alpha}_{\\delta}+ d^{\\mu}_{\\delta}*g^{\\beta \\nu}*d^{\\alpha}_{\\gamma})+"
+                + "(1/4)*(d^{\\nu}_{\\gamma}*g^{\\alpha \\mu}*d^{\\beta}_{\\delta} + d^{\\nu}_{\\delta}*g^{\\alpha \\mu}*d^{\\beta}_{\\gamma}+d^{\\nu}_{\\gamma}*g^{\\beta \\mu}*d^{\\alpha}_{\\delta}+ d^{\\nu}_{\\delta}*g^{\\beta \\mu}*d^{\\alpha}_{\\gamma}) -"
+                + "(1/4)*(g_{\\gamma\\delta}*g^{\\mu \\alpha}*g^{\\nu \\beta}+g_{\\gamma\\delta}*g^{\\mu \\beta}*g^{\\nu \\alpha})-"
+                + "(1/4)*(g^{\\alpha\\beta}*d^{\\mu}_{\\gamma}*d^{\\nu}_{\\delta}+g^{\\alpha\\beta}*d^{\\mu}_{\\delta}*d^{\\nu}_{\\gamma})+(1/8)*g^{\\mu\\nu}*g_{\\gamma\\delta}*g^{\\alpha\\beta}");
+
+        Transformation tr = new SqrSubs((SimpleTensor) CC.parse("n_{\\alpha}"));
+        Expression MATRIX_K_INV =
+                new Expression("KINV^{\\alpha\\beta}_{\\mu\\nu} = P^{\\alpha\\beta}_{\\mu\\nu}-(1/20)*g_{\\mu\\nu}*g^{\\alpha\\beta}-"
+                + "(1/4)*(n_{\\mu}*n^{\\alpha}*d^{\\beta}_{\\nu}+n_{\\mu}*n^{\\beta}*d^{\\alpha}_{\\nu}+n_{\\nu}*n^{\\alpha}*d^{\\beta}_{\\mu}+n_{\\nu}*n^{\\beta}*d^{\\alpha}_{\\mu})+"
+                + "(1/5)*(n_{\\mu}*n_{\\nu}*g^{\\alpha\\beta}+n^{\\alpha}*n^{\\beta}*g_{\\mu\\nu})+(1/5)*n_{\\mu}*n_{\\nu}*n^{\\alpha}*n^{\\beta}");
+
+        Expression One = new Expression("One^{\\mu\\nu}^{\\alpha\\beta}_{\\rho\\tau}=K^{\\mu\\nu}^{\\alpha\\beta}_{\\gamma\\delta}*KINV^{\\gamma\\delta}_{\\rho\\tau}");
+        One.eval(
+                MATRIX_K.asSubstitution(),
+                MATRIX_K_INV.asSubstitution(),
+                P.asSubstitution(),
+                new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
+                IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                KRONECKER_DIMENSION.asSubstitution(),
+                new Transformer(tr),
+                CollectFactory.createCollectEqualTerms(),
+                CalculateNumbers.INSTANCE,
+                EACScalars.getTransformer(),
+                CalculateNumbers.INSTANCE);
+        Expression OneN = new Expression("One^{\\alpha\\beta}_{\\rho\\tau} = One^{\\mu\\nu}^{\\alpha\\beta}_{\\rho\\tau}*n_{\\mu}*n_{\\nu}");
+        OneN.eval(
+                One.asSubstitution(),
+                new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
+                IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                KRONECKER_DIMENSION.asSubstitution(),
+                new Transformer(tr),
+                CollectFactory.createCollectEqualTerms(),
+                CalculateNumbers.INSTANCE,
+                EACScalars.getTransformer(),
+                CalculateNumbers.INSTANCE);
+
+        Tensor expected = CC.parse("P^{\\alpha\\beta}_{\\rho\\tau}");
+        expected = P.asSubstitution().transform(expected);
+        expected = Transformations.expandBrackets(expected);
+        expected = Transformations.calculateNumbers(expected);
+        assertParity(expected, OneN.right());
     }
 }

@@ -29,6 +29,10 @@ import cc.redberry.core.tensor.iterators.TensorFirstTreeIterator;
 import cc.redberry.core.tensor.iterators.TensorTreeIterator;
 import cc.redberry.core.tensor.testing.TTest;
 import cc.redberry.core.utils.Indicator;
+import static cc.redberry.physics.TAssert.assertIndices;
+import cc.redberry.physics.util.IndicesFactoryUtil;
+import static cc.redberry.physics.util.IndicesFactoryUtil.createIndices;
+import cc.redberry.physics.util.SqrSubs;
 import cc.redberry.transformation.*;
 import cc.redberry.transformation.collect.CollectFactory;
 import cc.redberry.transformation.collect.CollectInputPortImpl;
@@ -40,10 +44,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.Ignore;
 import org.junit.Test;
-import cc.redberry.physics.util.IndicesFactoryUtil;
-import static cc.redberry.physics.TAssert.*;
-import static cc.redberry.physics.util.IndicesFactoryUtil.*;
-import cc.redberry.physics.util.SqrSubs;
 
 /**
  *

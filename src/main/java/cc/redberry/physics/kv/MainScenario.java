@@ -63,7 +63,9 @@ public class MainScenario {
             Indicator.FALSE_INDICATOR, new Transformation[]{CalculateNumbers.INSTANCE});
 
     public static void main(String[] args) {
-        System.out.println("--------Evaluating " + Integer.parseInt(args[0]) + " term---------");
+//        CC.getNameManager().reset();
+//        CC.getNameManager().reset(27182818284590L);
+//        System.out.println("--------Evaluating " + Integer.parseInt(args[0]) + " term---------");
         OneLoop loop = new OneLoop();
         loop.insertIndices();
         loop.substituteL();
@@ -73,9 +75,10 @@ public class MainScenario {
         Delta_Prep.go(loop);
         System.out.println("Deltas done");
         long start = System.currentTimeMillis();
-//        for (int i = 0; i < ((Sum) loop.RR.right()).size(); ++i) {
-        evalRRTerm(Integer.parseInt(args[0]), loop);
-//        }
+        Sum result = new Sum();
+        for (int i = 0; i < ((Sum) loop.RR.right()).size(); ++i)
+            result.add(evalRRTerm(i, loop));
+        System.out.println(result);
         long stop = System.currentTimeMillis();
         System.out.println(" TOTAL ---- " + (stop - start));
     }
@@ -262,7 +265,7 @@ public class MainScenario {
         ArrayList<Tensor> sums = new ArrayList<>();
         TensorIterator iterator = tensor.iterator();
         while (iterator.hasNext()) {
-            Tensor t = iterator.next();
+            Tensor t = iterator.next().equivalent();
             if (t instanceof Sum && !TTest.testIsSymbol(t)) {
                 sums.add(t);
                 iterator.remove();
@@ -273,9 +276,15 @@ public class MainScenario {
             for (int i = 0; i < sums.size() / 2; ++i)
                 if (i * 2 + 1 < sums.size()) {
                     System.out.print("Iter: " + ((Sum) sums.get(i * 2)).size() + ", " + ((Sum) sums.get(i * 2 + 1)).size() + "; ");
-                    sumsNext.add(
-                            Transformations.expandAndCollectAllScalars(
-                            ec.transform(new Product(sums.get(i * 2), sums.get(i * 2 + 1)))));
+                    Tensor t = Transformations.expandAndCollectAllScalars(
+                            ec.transform(new Product(sums.get(i * 2), sums.get(i * 2 + 1))));
+                    //TODO review
+                    if (t instanceof Sum)
+                        sumsNext.add(
+                                Transformations.expandAndCollectAllScalars(
+                                ec.transform(new Product(sums.get(i * 2), sums.get(i * 2 + 1)))));
+                    else
+                        ((Product) tensor).add(t);
                 }
             if (sums.size() % 2 == 1)
                 sumsNext.add(sums.get(sums.size() - 1));
@@ -285,6 +294,9 @@ public class MainScenario {
             sumsNext.clear();
             System.out.println("Done.");
         }
+        //TODO review
+        if (sums.isEmpty())
+            return ec.transform(tensor);
         if (((Product) tensor).isEmpty())
             return sums.get(0);
         ((Product) tensor).add(sums.get(0));

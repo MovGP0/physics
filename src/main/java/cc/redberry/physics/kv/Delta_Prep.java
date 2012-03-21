@@ -114,10 +114,10 @@ public class Delta_Prep {
     static void evalD4(OneLoop loop) {
         Tensor[] hatkCombinations = CC.parse(
                 "HATK^{\\alpha\\beta}*HATK^{\\mu\\nu}",
-                "HATK^{\\beta}*HATK^{\\alpha}*HATK^{\\mu}*HATK^{\\nu}",
                 "HATK^{\\mu}*HATK^{\\nu}*HATK^{\\alpha\\beta}",
                 "HATK^{\\mu}*HATK^{\\alpha\\beta}*HATK^{\\nu}",
-                "HATK^{\\alpha\\beta}*HATK^{\\mu}*HATK^{\\nu}");
+                "HATK^{\\alpha\\beta}*HATK^{\\mu}*HATK^{\\nu}",
+                "HATK^{\\beta}*HATK^{\\alpha}*HATK^{\\mu}*HATK^{\\nu}");
         IndicesInsertion indicesInsertion = new IndicesInsertion(loop.matricesIndicator, createIndices(hatkCombinations, "^{\\mu\\nu}_{\\alpha\\beta}"));
 
         for (int i = 0; i < hatkCombinations.length; ++i)
@@ -144,6 +144,6 @@ public class Delta_Prep {
             h.asSubstitution().transform(loop.DELTA_4);
         int c2 = MainScenario.getElementsCount(loop.DELTA_4);
 
-//        assert c1 == c2;
+        assert c1 == c2;
     }
 }

@@ -23,6 +23,7 @@
 package cc.redberry.physics.util;
 
 import cc.redberry.core.context.CC;
+import cc.redberry.core.context.ToStringMode;
 import cc.redberry.core.indices.IndexType;
 import cc.redberry.core.tensor.Sum;
 import cc.redberry.core.tensor.Tensor;
@@ -112,8 +113,9 @@ public class SymmetrizeTest {
 
     @Test
     public void test11() {
-        Tensor u = CC.parse("A_a*B_b*C_c*D_d");
+        Tensor u = CC.parse("A^{\\mu}*B^{\\nu}*C^{\\alpha}*D^{\\beta}");
         Tensor sym = Symmetrize.INSTANCE.transform(u);
+        System.out.println(sym.toString(ToStringMode.REDBERRY_SOUT));
         int size = -1;
         for (Tensor t : sym)
             if (t instanceof Sum) {
@@ -122,4 +124,5 @@ public class SymmetrizeTest {
             }
         assertEquals(size, 24);
     }
+    
 }

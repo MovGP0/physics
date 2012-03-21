@@ -20,11 +20,12 @@
  * You should have received a copy of the GNU General Public License
  * along with Redberry. If not, see <http://www.gnu.org/licenses/>.
  */
-
 package cc.redberry.physics;
 
-
+import cc.redberry.concurrent.OutputPortUnsafe;
 import cc.redberry.core.context.CC;
+import cc.redberry.core.indexmapping.IndexMappingBuffer;
+import cc.redberry.core.indexmapping.IndexMappings;
 import cc.redberry.core.indices.Indices;
 import cc.redberry.core.tensor.Tensor;
 import cc.redberry.core.tensor.testing.TTest;
@@ -37,7 +38,7 @@ import cc.redberry.core.utils.TensorUtils;
  */
 public class TAssert {
     public static void assertEquals(Tensor target, Tensor expected) {
-        assertTrue(TTest.testEquals(target, expected));
+        org.junit.Assert.assertTrue(TTest.testEquals(target, expected));
     }
 
     public static void assertEquals(Tensor target, String expected) {
@@ -45,27 +46,27 @@ public class TAssert {
     }
 
     public static void assertParity(Tensor target, Tensor expected) {
-        assertTrue(TTest.testParity(target, expected));
+        org.junit.Assert.assertTrue(target.toString(), TTest.testParity(target, expected));
     }
 
     public static void assertParity(Tensor target, String expected) {
         assertParity(target, CC.parse(expected));
     }
 
-    public static void assertOpposite(Tensor target, Tensor expected) {
-        assertTrue(TTest.testOpposite(target, expected));
+    public static void assertParityFalse(Tensor target, Tensor expected) {
+        assertFalse(TTest.testParity(target, expected));
     }
 
-    public static void assertOpposite(Tensor target, String expected) {
-        assertOpposite(target, CC.parse(expected));
+    public static void assertParityFalse(Tensor target, String expected) {
+        assertParityFalse(target, CC.parse(expected));
     }
 
     public static void assertParent(Tensor tensor) {
-        assertTrue(TensorUtils.testParentConsistent(tensor));
+        org.junit.Assert.assertTrue(TensorUtils.testParentConsistent(tensor));
     }
 
     public static void assertIndices(Tensor tensor) {
-        assertTrue(TensorUtils.testIndicesConsistent(tensor));
+        org.junit.Assert.assertTrue(TensorUtils.testIndicesConsistent(tensor));
     }
 
     public static void assertIndices(Tensor[] tensors) {
@@ -73,14 +74,18 @@ public class TAssert {
             assertTrue(TensorUtils.testIndicesConsistent(tensor));
     }
 
+    public static void assertIndicesFalse(Tensor tensor) {
+        assertFalse(TensorUtils.testIndicesConsistent(tensor));
+    }
+
     public static void assertIndicesParity(Tensor... tensors) {
         for (int i = 1; i < tensors.length; ++i)
-            assertTrue(tensors[0].getIndices().equalsIgnoreOrder(tensors[i].getIndices()));
+            org.junit.Assert.assertTrue(tensors[0].getIndices().equalsIgnoreOrder(tensors[i].getIndices()));
     }
 
     public static void assertIndicesParity(Indices... indiceses) {
         for (int i = 1; i < indiceses.length; ++i)
-            assertTrue(indiceses[0].equalsIgnoreOrder(indiceses[i]));
+            org.junit.Assert.assertTrue(indiceses[0].equalsIgnoreOrder(indiceses[i]));
     }
 
     public static boolean isEquals(Tensor tensor, String what) {
@@ -91,15 +96,51 @@ public class TAssert {
         return TTest.testParity(tensor, CC.parse(what));
     }
 
+    public static void assertTrue(boolean condition) {
+        org.junit.Assert.assertTrue(condition);
+    }
+
+    public static void assertFalse(boolean condition) {
+        org.junit.Assert.assertFalse(condition);
+    }
+
+    public static void assertEquals(long expected, long actual) {
+        org.junit.Assert.assertEquals(expected, actual);
+    }
+
+    public static void assertEquals(int expected, int actual) {
+        org.junit.Assert.assertEquals(expected, actual);
+    }
+
+    public static void assertEquals(String expected, String actual) {
+        org.junit.Assert.assertEquals(expected, actual);
+    }
+
     public static Tensor _(String tensor) {
         return CC.parse(tensor);
     }
 
-    public static void assertTrue(boolean assertion) {
-        org.junit.Assert.assertTrue(assertion);
+    public static void soutMappingsOP(Tensor from, Tensor to) {
+        final OutputPortUnsafe<IndexMappingBuffer> opu =
+                IndexMappings.createPort(from, to, true);
+        IndexMappingBuffer buffer;
+        int count = 0;
+        while ((buffer = opu.take()) != null) {
+            System.out.println(buffer);
+            count++;
+        }
+        System.out.println("Total mappings count " + count);
     }
 
-    public static void assertFalse(boolean assertion) {
-        org.junit.Assert.assertFalse(assertion);
+    public static void soutMappingsOP(String from, String to) {
+        soutMappingsOP(_(from), _(to));
+    }
+
+    public static void assertOpposite(Tensor target, Tensor expected) {
+        assertTrue(TTest.testOpposite(target, expected));
+    }
+
+    public static void assertOpposite(Tensor target, String expected) {
+        assertOpposite(target, CC.parse(expected));
     }
 }
