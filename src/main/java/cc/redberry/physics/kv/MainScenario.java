@@ -65,7 +65,7 @@ public class MainScenario {
     public static void main(String[] args) {
 //        CC.getNameManager().reset();
 //        CC.getNameManager().reset(27182818284590L);
-//        System.out.println("--------Evaluating " + Integer.parseInt(args[0]) + " term---------");
+        System.out.println("--------Evaluating " + Integer.parseInt(args[0]) + " term---------");
         OneLoop loop = new OneLoop();
         loop.insertIndices();
         loop.substituteL();
@@ -75,10 +75,7 @@ public class MainScenario {
         Delta_Prep.go(loop);
         System.out.println("Deltas done");
         long start = System.currentTimeMillis();
-        Sum result = new Sum();
-        for (int i = 0; i < ((Sum) loop.RR.right()).size(); ++i)
-            result.add(evalRRTerm(i, loop));
-        System.out.println(result);
+        evalRRTerm(Integer.parseInt(args[0]), loop);
         long stop = System.currentTimeMillis();
         System.out.println(" TOTAL ---- " + (stop - start));
     }
