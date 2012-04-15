@@ -1,20 +1,25 @@
 package cc.redberry.physics.STEP;
 
 import cc.redberry.core.context.CC;
-import cc.redberry.core.tensor.Expression;
-import cc.redberry.core.tensor.Tensor;
+import cc.redberry.core.number.ComplexElement;
+import cc.redberry.core.number.NumberSimple;
+import cc.redberry.core.number.RationalElement;
+import cc.redberry.core.tensor.*;
 import cc.redberry.core.tensor.testing.TTest;
 import cc.redberry.core.transformations.RenameConflictingIndices;
 import cc.redberry.core.utils.Indicator;
+import cc.redberry.physics.util.SqrSubs;
 import cc.redberry.transformation.*;
 import cc.redberry.transformation.collect.CollectFactory;
 import cc.redberry.transformation.collect.CollectPowers;
 import cc.redberry.transformation.concurrent.EACScalars;
 import cc.redberry.transformation.contractions.IndicesContractionsTransformation;
 import cc.redberry.transformation.substitutions.TensorTreeIndicatorImpl;
+import org.apache.commons.math.util.MathUtils;
 
 import static cc.redberry.core.indices.IndexType.GreekLower;
 import static cc.redberry.physics.util.IndicesFactoryUtil.createIndices;
+import static cc.redberry.physics.util.IndicesFactoryUtil.doubleAndDumpIndices;
 
 /**
  * Created by IntelliJ IDEA. User: Konstantin_2 Date: 08.04.12 Time: 12:36 To
@@ -26,11 +31,13 @@ public class VectorField extends MainTensors {
             new Expression("d^{\\alpha}_{\\alpha} = 4");
     public final Expression Kn =
             new Expression("Kn_\\alpha^\\beta=d_\\alpha^\\beta-\\lambda*n_\\alpha*n^\\beta");
+    public final Expression Kn_1 =
+            new Expression("Kn_\\alpha=Kn_\\alpha^\\beta*n_\\beta");
     public final Expression KINV =
             new Expression("KINV_\\alpha^\\beta=d_\\alpha^\\beta+\\gamma*n_\\alpha*n^\\beta");
     public static final Tensor[] MATRIX_Kn = {
-        CC.parse("Kn_\\alpha^\\beta"),
-        CC.parse("KINV_\\alpha^\\beta")
+            CC.parse("Kn_\\alpha^\\beta"),
+            CC.parse("KINV_\\alpha^\\beta")
     };
     //public final Expression Gamma = new Expression("\\gamma=\\frac*\\lambda*1-\\lambda");
     public final Expression Gamma = new Expression("\\gamma=0");
@@ -60,7 +67,7 @@ public class VectorField extends MainTensors {
     public static final Expression HATM_4 = new Expression("HATM_{\\alpha\\beta\\gamma\\nu}=0");
     public static final Expression[] ZEROs = {HATS_0, HATS_1, HATS_2, HATS_3, HATS_4, HATN_0, HATN_1, HATN_2, HATN_3, HATN_4, HATM_0, HATM_1, HATM_2, HATM_3, HATM_4, NABLAS_0, NABLAS_1, NABLAS_2, NABLAS_3, NABLAS_4};
     public static final Tensor[] MATRIX_K = {
-        CC.parse("K^{\\mu\\nu}")};
+            CC.parse("K^{\\mu\\nu}")};
 
     public static void main(String[] args) {
         VectorField vf = new VectorField();
@@ -71,6 +78,12 @@ public class VectorField extends MainTensors {
         for (Expression ex : ALL)
             ex.eval(new Transformer(RenameConflictingIndices.INSTANCE));
         insertIndices();
+        CC.addSymmetry("R_\\mu\\nu", GreekLower, false, new int[]{1, 0});
+        CC.addSymmetry("R_\\mu\\nu\\alpha\\beta", GreekLower, true, new int[]{0, 1, 3, 2});
+        CC.addSymmetry("R_\\mu\\nu\\alpha\\beta", GreekLower, false, new int[]{2, 3, 0, 1});
+
+        CC.addSymmetry("F_\\mu\\nu", GreekLower, true, new int[]{1, 0});
+
         for (Expression ex : ALL)
             ex.eval(L.asSubstitution(), CalculateNumbers.INSTANCE);
         CC.addSymmetry("P_{\\alpha\\beta}", GreekLower, true, 1, 0);
@@ -92,7 +105,7 @@ public class VectorField extends MainTensors {
         System.out.println(Flat);
         System.out.println();
         System.out.println("----------ACTION----------");
-        System.out.println();
+        System.out.println(ACTION);
         evalAction();
         System.out.println(ACTION);
         //latex.push(ACTION.toString());
@@ -101,6 +114,7 @@ public class VectorField extends MainTensors {
         //for(Expression e : HATKs)
         //System.out.println(e);
     }
+
     public boolean indicesInserted = false;
 
     public void insertIndices() {
@@ -113,7 +127,7 @@ public class VectorField extends MainTensors {
         indicesInsertion = new IndicesInsertion(matricesIndicator, createIndices(DELTAs, "^{\\mu}_{\\nu}"));
         for (Expression delta : DELTAs)
             delta.eval(indicesInsertion);
-        indicesInsertion = new IndicesInsertion(matricesIndicator, createIndices(TERMs, "^{\\mu}_{\\nu}"));
+        indicesInsertion = new IndicesInsertion(matricesIndicator, doubleAndDumpIndices(createIndices(TERMs, "^{\\nu}")));
         for (Expression term : TERMs)
             term.eval(indicesInsertion);
         indicesInserted = true;
@@ -162,6 +176,7 @@ public class VectorField extends MainTensors {
                     HATK_2.asSubstitution(),
                     HATK_3.asSubstitution(),
                     HATK_4.asSubstitution(),
+
                     new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
                     IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                     KRONECKER_DIMENSION.asSubstitution(),
@@ -187,12 +202,10 @@ public class VectorField extends MainTensors {
                     CalculateNumbers.INSTANCE //                    ,
                     //                    CollectFactory.createCollectAllScalars(),
                     //                    CalculateNumbers.INSTANCE
-                    );
+            );
     }
 
     public final void evalTerms() {
-        //Transformation indicesInsertion;
-        //indicesInsertion = new IndicesInsertion(matricesIndicator, doubleAndDumpIndices(createIndices(TERMs, "^{\\mu\\nu}")));
         for (Expression e : TERMs) {
             for (Expression d : DELTAs)
                 e.eval(
@@ -206,8 +219,13 @@ public class VectorField extends MainTensors {
                         d.asSubstitution(),
                         CalculateNumbers.INSTANCE);
             e.eval(
-                    //indicesInsertion,
+
+                    Lambda.asSubstitution(), // lambda = 0
+                    Gamma.asSubstitution(), // gamma = 0
                     L.asSubstitution(),
+                    Kn_1.asSubstitution(),
+                    Kn.asSubstitution(),
+
                     HATW.asSubstitution(),
                     CalculateNumbers.INSTANCE,
                     //RICCI.asSubstitution(),
@@ -224,11 +242,11 @@ public class VectorField extends MainTensors {
     }
 
     public final void evalAction() {
-        //Transformation indicesInsertion;
-        //indicesInsertion = new IndicesInsertion(matricesIndicator, doubleAndDumpIndices(createIndices(TERMs, "^{\\mu\\nu}")));
+
         ACTION.eval(
                 //indicesInsertion,
                 L.asSubstitution(),
+
                 Flat.asSubstitution(), WR.asSubstitution(), SR.asSubstitution(), SSR.asSubstitution(), FF.asSubstitution(), FR.asSubstitution(), RR.asSubstitution(),
                 CalculateNumbers.INSTANCE,
                 //RICCI.asSubstitution(),
@@ -236,11 +254,49 @@ public class VectorField extends MainTensors {
                 new Transformer(RenameConflictingIndices.INSTANCE),
                 new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
                 IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                KRONECKER_DIMENSION.asSubstitution());
+        ACTION.eval(
+                // Averaging
+                new SqrSubs((SimpleTensor) CC.parse("n_{\\alpha}")),
+
+                CalculateNumbers.INSTANCE,
+                Averaging.INSTANCE,
+                new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
+                IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                 KRONECKER_DIMENSION.asSubstitution(),
                 CalculateNumbers.INSTANCE,
-                new Transformer(CollectPowers.INSTANCE),
-                CollectFactory.createCollectEqualTerms());
+                new Expression("R_{\\mu \\nu}^{\\mu}_{\\alpha} = R_{\\nu\\alpha}"),
+                IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                new Expression("R_{\\mu}^{\\mu} = R"),
+                IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                CollectFactory.createCollectAllEqualTerms(),
+                new Transformer(new POO()),
+                CalculateNumbers.INSTANCE,
+                new Expression("R_{\\mu\\nu}^{\\alpha}_{\\alpha}=0"),
+                new Expression("F^{\\alpha}_{\\alpha}=0"),
+                CalculateNumbers.INSTANCE
+        );
     }
+
+    private static class POO implements Transformation {
+        @Override
+        public Tensor transform(Tensor tensor) {
+            if (!(tensor instanceof Pow))
+                return tensor;
+            Pow power = (Pow) tensor;
+            if (power.getPower() instanceof TensorNumber && power.getTarget() instanceof TensorNumber) {
+                ComplexElement p = ((TensorNumber) power.getPower()).getValue();
+                ComplexElement t = ((TensorNumber) power.getTarget()).getValue();
+                long _p = p.getReal().getNumerator();
+                long _t = t.getReal().getNumerator();
+                long red = MathUtils.pow(_t, _p);
+                return new TensorNumber(new ComplexElement(new NumberSimple(red), RationalElement.ZERO));
+            }
+            return tensor;
+        }
+
+    }
+
     public final Indicator<Tensor> matricesIndicator = new TensorTreeIndicatorImpl(new Indicator<Tensor>() {
         @Override
         public boolean is(Tensor tensor) {
