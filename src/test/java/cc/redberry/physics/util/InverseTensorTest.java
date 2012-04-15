@@ -30,8 +30,6 @@ import cc.redberry.transformation.Transformation;
 import cc.redberry.transformation.Transformations;
 import org.junit.Test;
 
-
-
 /**
  *
  * @author Dmitry Bolotin
@@ -91,6 +89,9 @@ public class InverseTensorTest {
 
     @Test
     public void test4() {
+        CC.getNameManager().reset();
+        CC.getNameManager().reset(4234234234234L);
+        
         SqrSubs sqrSubs = new SqrSubs(CC.parseSimple("n_a"));
         Transformation[] transformations = new Transformation[]{sqrSubs, new Expression("d_a^a=4").asSubstitution()};
 
@@ -101,14 +102,14 @@ public class InverseTensorTest {
                 + "6*(-(1/4)+l*b*b)*n_p*g_qr*n^a*g^bc");
         Expression toInverse = new Expression(CC.parseSimple("K^abc_pqr"),
                 Symmetrize.INSTANCE.transform(toInv));
-
+        
         Tensor eqRhs = CC.parse("d_i^a*d_j^b*d_k^c");
         Expression equation = new Expression(CC.parse("K^abc_pqr*KINV^pqr_ijk"),
                 Transformations.expandBracketsExceptSymbols(Symmetrize.INSTANCE.transform(eqRhs)));
-
         Symmetries symmetries = Symmetries.getFullSymmetriesForSortedIndices(3, 3);
         Tensor[] samples = {CC.parse("g_mn"), CC.parse("g^mn"), CC.parse("d_m^n"), CC.parse("n_m"), CC.parse("n^b")};
         InverseTensor it = new InverseTensor(toInverse, equation, symmetries, samples, transformations);
+        System.out.println(it.inverse);
     }
 
     @Test

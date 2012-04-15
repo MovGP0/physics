@@ -51,6 +51,7 @@ public class InverseTensor {
     final List<Expression> linearEquations;
     final Tensor[] variables;
     final Expression inverse;
+    final String workingFolder;
 
     public InverseTensor(Expression toInverse, Expression equation, Tensor[] samples) {
         this(toInverse, equation, null, samples, new Transformation[0]);
@@ -61,6 +62,7 @@ public class InverseTensor {
     }
 
     public InverseTensor(Expression toInverse, Expression equation, Symmetries symmeties, Tensor[] samples, Transformation[] transformations) {
+        workingFolder = System.getProperty("user.dir");
         Product leftEq = (Product) equation.left();
         Tensor inverseLhs = null;
         for (Tensor t : leftEq)
@@ -150,14 +152,6 @@ public class InverseTensor {
     }
 
     private void generateMapleFile() {
-        String workingFolder = CC.getWorkingFolder() + "/" + InverseTensor.class.getSimpleName();
-        try {
-            (new File(workingFolder)).mkdir();
-        } catch (Exception e) {
-            System.err.println("Error: cannot create working folder" + e.getMessage());
-        }
-
-        String mapleDirectory = CC.getMapleDirectory();
         try {
             FileOutputStream output = new FileOutputStream(workingFolder + "/equations.maple");
             PrintStream file = new PrintStream(output);
