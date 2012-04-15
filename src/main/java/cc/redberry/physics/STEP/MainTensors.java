@@ -57,17 +57,17 @@ public class MainTensors {
 
     public static final String RR_ = "RR=1/10*Pow[L,2]*HATK^\\delta*\\Delta^{\\mu\\nu\\alpha\\beta}*HATK^\\gamma*n_\\sigma*n_\\rho*R^\\sigma_{\\alpha\\beta\\gamma}*R^\\rho_{\\mu\\nu\\delta}+Pow[L,2]*Pow[(L-1),2]*(L-2)*HATK^{\\beta\\gamma\\delta}*\\Delta^\\alpha*HATK^{\\mu\\nu}*n_\\sigma*n_\\rho*(2/45*R^\\rho_{\\alpha\\delta\\nu}*R^\\sigma_{\\beta\\mu\\gamma}-1/120*R^\\rho_{\\delta\\alpha\\nu}*R^\\sigma_{\\beta\\mu\\gamma})+Pow[L,2]*(L-1)*HATK^\\delta*\\Delta^{\\alpha\\beta\\gamma}*HATK^{\\mu\\nu}*n_\\sigma*n_\\rho*(-1/10*R^\\rho_{\\mu\\gamma\\nu}*R^\\sigma_{\\alpha\\delta\\beta}+1/15*R^\\rho_{\\delta\\alpha\\nu}*R^\\sigma_{\\beta\\mu\\gamma}+1/60*R^\\rho_{\\beta\\delta\\nu}*R^\\sigma_{\\gamma\\mu\\alpha})+Pow[L,2]*Pow[(L-1),2]*HATK^{\\gamma\\delta}*\\Delta^{\\alpha\\beta}*HATK^{\\mu\\nu}*n_\\sigma*n_\\rho*(-1/20*R^\\rho_{\\mu\\beta\\nu}*R^\\sigma_{\\delta\\alpha\\gamma}+1/180*R^\\rho_{\\alpha\\nu\\beta}*R^\\sigma_{\\gamma\\delta\\mu}-7/360*R^\\rho_{\\mu\\gamma\\nu}*R^\\sigma_{\\alpha\\delta\\beta}-1/240*R^\\rho_{\\delta\\beta\\nu}*R^\\sigma_{\\gamma\\alpha\\mu}-1/120*R^\\rho_{\\beta\\gamma\\nu}*R^\\sigma_{\\alpha\\delta\\mu}-1/30*R^\\rho_{\\delta\\beta\\nu}*R^\\sigma_{\\alpha\\gamma\\mu})+Pow[L,2]*(L-1)*(L-2)*HATK^\\delta*\\Delta^{\\mu\\nu}*HATK^{\\alpha\\beta\\gamma}*n_\\sigma*n_\\rho*(-1/30*R^\\rho_{\\gamma\\nu\\beta}*R^\\sigma_{\\alpha\\delta\\mu}-1/180*R^\\rho_{\\mu\\gamma\\nu}*R^\\sigma_{\\alpha\\beta\\delta}+1/180*R^\\rho_{\\mu\\gamma\\delta}*R^\\sigma_{\\alpha\\beta\\nu})+Pow[L,2]*Pow[(L-1),2]*(L-2)*HATK^{\\mu\\nu}*\\Delta^{\\delta}*HATK^{\\alpha\\beta\\gamma}*n_\\sigma*n_\\rho*(1/45*R^\\rho_{\\mu\\gamma\\nu}*R^\\sigma_{\\alpha\\beta\\delta}-1/80*R^\\rho_{\\beta\\nu\\gamma}*R^\\sigma_{\\mu\\alpha\\delta}+1/90*R^\\rho_{\\beta\\nu\\gamma}*R^\\sigma_{\\delta\\alpha\\mu})+Pow[L,2]*(L-1)*HATK^{\\mu\\nu}*\\Delta^{\\alpha\\beta\\gamma}*HATK^\\delta*n_\\sigma*n_\\rho*(7/120*R^\\rho_{\\beta\\gamma\\nu}*R^\\sigma_{\\mu\\alpha\\delta}-3/40*R^\\rho_{\\beta\\gamma\\delta}*R^\\sigma_{\\mu\\alpha\\nu}+1/120*R^\\rho_{\\delta\\gamma\\nu}*R^\\sigma_{\\alpha\\beta\\mu})+Pow[L,2]*(L-1)*(L-2)*HATK^{\\alpha\\beta\\gamma}*\\Delta^{\\mu\\nu}*HATK^\\delta*n_\\sigma*n_\\rho*(-1/24*R^\\rho_{\\mu\\gamma\\nu}*R^\\sigma_{\\alpha\\beta\\delta}-1/180*R^\\rho_{\\nu\\gamma\\delta}*R^\\sigma_{\\alpha\\beta\\mu}-1/360*R^\\rho_{\\delta\\gamma\\nu}*R^\\sigma_{\\alpha\\beta\\mu})-1/120*Pow[L,2]*(L-1)*(L-2)*(L-3)*HATK^{\\mu\\nu\\alpha\\beta}*\\Delta^{\\delta}*HATK^\\gamma*n_\\sigma*n_\\rho*R^\\rho_{\\alpha\\beta\\gamma}*R^\\sigma_{\\mu\\nu\\delta}-1/80*Pow[L,2]*Pow[(L-1),2]*(L-2)*(L-3)*HATK^{\\alpha\\beta\\gamma\\delta}*HATK^{\\mu\\nu}*n_\\sigma*n_\\rho*R^\\rho_{\\beta\\gamma\\mu}*R^\\sigma_{\\alpha\\delta\\nu}+Pow[L,2]*HATK^\\mu*\\Delta^{\\alpha\\beta\\gamma}*HATK^\\nu*n_\\rho*(-1/8*R_{\\beta\\gamma}*R^\\rho_{\\nu\\alpha\\mu}+3/20*R_{\\beta\\gamma}*R^\\rho_{\\mu\\alpha\\nu}+3/40*R_{\\alpha\\mu}*R^\\rho_{\\beta\\gamma\\nu}+1/40*R^\\sigma_{\\beta\\gamma\\mu}*R^\\rho_{\\nu\\alpha\\sigma}-3/20*R^\\sigma_{\\alpha\\beta\\mu}*R^\\rho_{\\gamma\\nu\\sigma}+1/10*R^\\sigma_{\\alpha\\beta\\nu}*R^\\rho_{\\gamma\\mu\\sigma})+Pow[L,2]*(L-1)*HATK^\\gamma*\\Delta^{\\alpha\\beta}*HATK^{\\mu\\nu}*n_\\rho*(1/20*R_{\\alpha\\nu}*R^\\rho_{\\gamma\\beta\\mu}+1/20*R_{\\alpha\\gamma}*R^\\rho_{\\mu\\beta\\nu}+1/10*R_{\\alpha\\beta}*R^\\rho_{\\mu\\gamma\\nu}+1/20*R^\\sigma_{\\alpha\\nu\\gamma}*R^\\rho_{\\sigma\\beta\\mu}-1/60*R^\\sigma_{\\mu\\alpha\\nu}*R^\\rho_{\\beta\\sigma\\gamma}+1/10*R^\\sigma_{\\alpha\\beta\\gamma}*R^\\rho_{\\mu\\sigma\\nu}-1/12*R^\\sigma_{\\alpha\\beta\\nu}*R^\\rho_{\\mu\\sigma\\gamma})+Pow[L,2]*Pow[(L-1),2]*HATK^{\\alpha\\beta}*\\Delta^{\\gamma}*HATK^{\\mu\\nu}*n_\\rho*(1/60*R_{\\alpha\\mu}*R^\\rho_{\\beta\\nu\\gamma}-1/20*R_{\\alpha\\mu}*R^\\rho_{\\gamma\\nu\\beta}+1/120*R_{\\alpha\\beta}*R^\\rho_{\\mu\\nu\\gamma}+3/40*R_{\\alpha\\gamma}*R^\\rho_{\\nu\\beta\\mu}+1/20*R^\\sigma_{\\gamma\\mu\\alpha}*R^\\rho_{\\nu\\sigma\\beta}+1/120*R^\\sigma_{\\alpha\\mu\\gamma}*R^\\rho_{\\beta\\nu\\sigma}-1/40*R^\\sigma_{\\alpha\\mu\\gamma}*R^\\rho_{\\sigma\\nu\\beta}+1/40*R^\\sigma_{\\alpha\\mu\\beta}*R^\\rho_{\\sigma\\nu\\gamma}-1/20*R^\\sigma_{\\alpha\\mu\\beta}*R^\\rho_{\\gamma\\nu\\sigma}-1/40*R^\\sigma_{\\mu\\beta\\nu}*R^\\rho_{\\gamma\\sigma\\alpha})+Pow[L,2]*(L-1)*HATK^{\\alpha\\beta}*\\Delta^{\\mu\\nu}*HATK^{\\gamma}*n_\\rho*(1/20*R^\\sigma_{\\mu\\nu\\beta}*R^\\rho_{\\gamma\\sigma\\alpha}-7/60*R^\\sigma_{\\beta\\mu\\alpha}*R^\\rho_{\\gamma\\nu\\sigma}+1/20*R^\\sigma_{\\beta\\mu\\alpha}*R^\\rho_{\\sigma\\nu\\gamma}+1/10*R^\\sigma_{\\mu\\beta\\gamma}*R^\\rho_{\\nu\\alpha\\sigma}+1/60*R^\\sigma_{\\beta\\mu\\gamma}*R^\\rho_{\\alpha\\nu\\sigma}+7/120*R_{\\alpha\\beta}*R^\\rho_{\\nu\\gamma\\mu}+11/60*R_{\\beta\\mu}*R^\\rho_{\\nu\\alpha\\gamma})+Pow[L,2]*(L-1)*(L-2)*HATK^{\\alpha\\beta\\gamma}*\\Delta^{\\mu}*HATK^{\\nu}*n_\\rho*(7/240*R_{\\alpha\\beta}*R^\\rho_{\\gamma\\mu\\nu}+7/240*R_{\\alpha\\nu}*R^\\rho_{\\beta\\gamma\\mu}-1/60*R_{\\alpha\\mu}*R^\\rho_{\\beta\\gamma\\nu}-1/24*R^\\sigma_{\\alpha\\beta\\nu}*R^\\rho_{\\sigma\\gamma\\mu}+1/15*R^\\sigma_{\\alpha\\beta\\nu}*R^\\rho_{\\mu\\gamma\\sigma}+1/40*R^\\sigma_{\\alpha\\beta\\mu}*R^\\rho_{\\sigma\\gamma\\nu}+1/40*R_{\\beta\\gamma}*R^\\rho_{\\nu\\mu\\alpha}+1/48*R^\\sigma_{\\beta\\gamma\\mu}*R^\\rho_{\\nu\\alpha\\sigma})+Pow[L,2]*Pow[(L-1),2]*(L-2)*HATK^{\\alpha\\beta\\gamma}*HATK^{\\mu\\nu}*n_\\rho*(-7/240*R_{\\alpha\\mu}*R^\\rho_{\\beta\\gamma\\nu}+1/240*R_{\\beta\\gamma}*R^\\rho_{\\mu\\alpha\\nu}-1/40*R^\\sigma_{\\alpha\\mu\\beta}*R^\\rho_{\\nu\\gamma\\sigma})+L*(L-1)*(L-2)*(L-3)*HATK^{\\mu\\nu\\alpha\\beta}*(1/180*R_{\\mu\\nu}*R_{\\alpha\\beta}+7/720*R^\\sigma_{\\alpha\\beta\\rho}*R^\\rho_{\\mu\\nu\\sigma})";
 
-    public static final String DELTA_1_ = "DELTA^\\mu=-L*HATK^\\mu";
+    public static final String DELTA_1_ = "\\Delta^\\mu=-L*HATK^\\mu";
 
-    public static final String DELTA_2_ = "DELTA^{\\mu\\nu}=-1/2*L*(L-1)*HATK^{\\mu\\nu}+Pow[L,2]*1/2*(HATK^{\\mu }*HATK^{\\nu }+HATK^{\\nu }*HATK^{\\mu })";
+    public static final String DELTA_2_ = "\\Delta^{\\mu\\nu}=-1/2*L*(L-1)*HATK^{\\mu\\nu}+Pow[L,2]*1/2*(HATK^{\\mu }*HATK^{\\nu }+HATK^{\\nu }*HATK^{\\mu })";
 
-    public static final String DELTA_3_ = "DELTA^{\\mu\\nu\\alpha}=-1/6*L*(L-1)*(L-2)*HATK^{\\mu\\nu\\alpha}" +
+    public static final String DELTA_3_ = "\\Delta^{\\mu\\nu\\alpha}=-1/6*L*(L-1)*(L-2)*HATK^{\\mu\\nu\\alpha}" +
             "+1/2*Pow[L,2]*(L-1)*1/3*(HATK^{\\mu \\nu }*HATK^{\\alpha }+HATK^{\\alpha \\nu }*HATK^{\\mu }+HATK^{\\mu \\alpha }*HATK^{\\nu })" +
             "+1/2*Pow[L,2]*(L-1)*1/3*(HATK^{\\alpha }*HATK^{\\mu \\nu }+HATK^{\\mu }*HATK^{\\alpha \\nu }+HATK^{\\nu }*HATK^{\\alpha \\mu })" +
             "-Pow[L,3]*1/6*(HATK^{\\mu }*HATK^{\\nu }*HATK^{\\alpha }+HATK^{\\nu }*HATK^{\\alpha }*HATK^{\\mu }+HATK^{\\nu }*HATK^{\\mu }*HATK^{\\alpha }" +
             "+HATK^{\\nu }*HATK^{\\alpha }*HATK^{\\mu }+HATK^{\\alpha }*HATK^{\\mu }*HATK^{\\nu }+HATK^{\\alpha }*HATK^{\\nu }*HATK^{\\mu })";
 
-    public static final String DELTA_4_ = "DELTA^{\\mu\\nu\\alpha\\beta}=-1/24*L*(L-1)*(L-2)*(L-3)*HATK^{\\mu\\nu\\alpha\\beta}+1/6*Pow[L,2]*(L-1)*(L-2)" +
+    public static final String DELTA_4_ = "\\Delta^{\\mu\\nu\\alpha\\beta}=-1/24*L*(L-1)*(L-2)*(L-3)*HATK^{\\mu\\nu\\alpha\\beta}+1/6*Pow[L,2]*(L-1)*(L-2)" +
             "*1/4*(HATK^{\\mu \\nu \\alpha }*HATK^{\\beta }+HATK^{\\beta \\mu \\alpha }*HATK^{\\nu }+HATK^{\\nu \\beta \\alpha }*HATK^{\\mu }+HATK^{\\nu \\mu \\alpha }*HATK^{\\beta })" +
             "+1/6*Pow[L,2]*(L-1)*(L-2)" +
             "*1/4*(HATK^{\\beta }*HATK^{\\mu \\nu \\alpha }+HATK^{\\mu }*HATK^{\\beta \\nu \\alpha }+HATK^{\\nu }*HATK^{\\beta \\mu \\alpha })" +
@@ -101,7 +101,7 @@ public class MainTensors {
     public static final Expression WR = new Expression(WR_);
     public static final Expression SR = new Expression(SR_);
     public static final Expression SSR = new Expression(SSR_);
-    public static final Expression FF = new Expression(FR_);
+    public static final Expression FF = new Expression(FF_);
     public static final Expression FR = new Expression(FR_);
     public static final Expression RR = new Expression(RR_);
     public static final Expression DELTA_1 = new Expression(DELTA_1_);
@@ -160,11 +160,11 @@ public class MainTensors {
             CC.parse("NABLAF^{\\mu\\nu}"),
             CC.parse("NABLAF^{\\mu\\nu\\alpha}"),
             CC.parse("HATM"),
-            CC.parse("DELTA"),
-            CC.parse("DELTA^{\\mu}"),
-            CC.parse("DELTA^{\\mu\\nu}"),
-            CC.parse("DELTA^{\\mu\\nu\\alpha}"),
-            CC.parse("DELTA^{\\mu\\nu\\alpha\\beta}"),
+            CC.parse("\\Delta"),
+            CC.parse("\\Delta^{\\mu}"),
+            CC.parse("\\Delta^{\\mu\\nu}"),
+            CC.parse("\\Delta^{\\mu\\nu\\alpha}"),
+            CC.parse("Delta^{\\mu\\nu\\alpha\\beta}"),
             CC.parse("Flat"),
             CC.parse("FF"),
             CC.parse("WR"),

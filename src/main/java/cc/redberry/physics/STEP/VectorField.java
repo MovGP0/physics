@@ -44,6 +44,25 @@ public class VectorField extends MainTensors {
     public static final Expression K_2 =
             new Expression("K^{\\mu\\nu}_\\alpha^\\beta=g^{\\mu\\nu}*d_{\\alpha}^{\\beta}-\\lambda/2*(g^{\\mu\\beta}*d_\\alpha^\\nu+g^{\\nu\\beta}*d_\\alpha^\\mu)");
      public static final Expression HATW = new Expression("HATW^{\\alpha}_{\\beta}=P^{\\alpha}_{\\beta}+\\lambda/2*R^{\\alpha}_{\\beta}");
+    public static final Expression  HATS_0 = new Expression("HATS=0");
+    public static final Expression  HATS_1 = new Expression("HATS_\\alpha=0");
+    public static final Expression  HATS_2 = new Expression("HATS_{\\alpha\\beta}=0");
+    public static final Expression  HATS_3 = new Expression("HATS_{\\alpha\\beta\\gamma}=0");
+    public static final Expression  HATS_4 = new Expression("HATS_{\\alpha\\beta\\gamma\\nu}=0");
+
+    public static final Expression  HATN_0 = new Expression("HATN=0");
+    public static final Expression  HATN_1 = new Expression("HATN_\\alpha=0");
+    public static final Expression  HATN_2 = new Expression("HATN_{\\alpha\\beta}=0");
+    public static final Expression  HATN_3 = new Expression("HATN_{\\alpha\\beta\\gamma}=0");
+    public static final Expression  HATN_4 = new Expression("HATN_{\\alpha\\beta\\gamma\\nu}=0");
+
+    public static final Expression  HATM_0 = new Expression("HATM=0");
+    public static final Expression  HATM_1 = new Expression("HATM_\\alpha=0");
+    public static final Expression  HATM_2 = new Expression("HATM_{\\alpha\\beta}=0");
+    public static final Expression  HATM_3 = new Expression("HATM_{\\alpha\\beta\\gamma}=0");
+    public static final Expression  HATM_4 = new Expression("HATM_{\\alpha\\beta\\gamma\\nu}=0");
+
+    public static final Expression[] ZEROs = {HATS_0, HATS_1, HATS_2, HATS_3, HATS_4, HATN_0, HATN_1, HATN_2, HATN_3, HATN_4, HATM_0, HATM_1, HATM_2, HATM_3, HATM_4};
 
     public static final Tensor[] MATRIX_K = {
             CC.parse("K^{\\mu\\nu}")};
@@ -56,11 +75,11 @@ public class VectorField extends MainTensors {
     public void start() {
         for (Expression ex : ALL)
             ex.eval(new Transformer(RenameConflictingIndices.INSTANCE));
-        for (Expression ex : ALL)
-            ex.eval(L.asSubstitution(), CalculateNumbers.INSTANCE);
-        CC.addSymmetry("P_{\\alpha\\beta}", GreekLower, true, 1,0);
         insertIndices();
-        System.out.println(ACTION);
+        for (Expression ex : ALL)
+               ex.eval(L.asSubstitution(), CalculateNumbers.INSTANCE);
+           CC.addSymmetry("P_{\\alpha\\beta}", GreekLower, true, 1,0);
+           System.out.println(FF);
         evalHatK();
         evalHatW();
         System.out.println(HATK_1);
@@ -81,6 +100,8 @@ public class VectorField extends MainTensors {
         System.out.println();
         evalAction();
         System.out.println(ACTION);
+        //latex.push(ACTION.toString());
+        //latex.output();
         // evalRR();
         //for(Expression e : HATKs)
         //System.out.println(e);
@@ -178,7 +199,21 @@ public class VectorField extends MainTensors {
     public final void evalTerms() {
         //Transformation indicesInsertion;
         //indicesInsertion = new IndicesInsertion(matricesIndicator, doubleAndDumpIndices(createIndices(TERMs, "^{\\mu\\nu}")));
-        for(Expression e : TERMs)
+        for(Expression e : TERMs)  {
+            for (Expression d : DELTAs)
+                e.eval(
+                        d.asSubstitution()
+                );
+            for (Expression d : HATKs)
+                e.eval(
+                        d.asSubstitution()
+                );
+
+            for (Expression d : ZEROs)
+                e.eval(
+                        d.asSubstitution(),
+                        CalculateNumbers.INSTANCE
+                );
         e.eval(
                 //indicesInsertion,
                 L.asSubstitution(),
@@ -193,6 +228,8 @@ public class VectorField extends MainTensors {
                 CalculateNumbers.INSTANCE,
                 new Transformer(CollectPowers.INSTANCE),
                 CollectFactory.createCollectEqualTerms());
+        }
+
     }
 
     public final void evalAction() {
