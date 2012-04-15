@@ -31,8 +31,6 @@ import cc.redberry.transformation.collect.CollectPowers;
 import cc.redberry.transformation.contractions.IndicesContractionsTransformation;
 import org.junit.Test;
 
-
-
 /**
  *
  * @author Dmitry Bolotin
@@ -46,6 +44,22 @@ public class RGravityTest {
     public void test2G2Gr() {
         RGravity rGravity = new RGravity();
         System.out.println(rGravity.SCALAR2_GRAVITON2_VERTEX);
+    }
+
+    @Test
+    public void scalarLoopCorrection() {
+        RGravity rGravity = new RGravity();
+        Expression loop = new Expression("G1_abcd[k_a] = G[p_n-k_n]*T_{ab}[p_n-k_n,k_n]*G[p_n]*T_cd[p_n,p_n-k_n]");
+        
+        rGravity.substituteAllToExpression(loop);
+        loop.eval(
+                new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
+                IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                rGravity.KRONECKER_DIMENSION.asSubstitution(),
+                CollectFactory.createCollectAllEqualTerms(),
+                CalculateNumbers.INSTANCE,
+                new Transformer(CollectPowers.INSTANCE));
+        System.out.println(loop);
     }
 
     @Test
