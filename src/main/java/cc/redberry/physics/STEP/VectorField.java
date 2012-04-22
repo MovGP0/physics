@@ -26,11 +26,11 @@ public class VectorField extends MainTensors {
     public final Expression L = new Expression("L = 2");
 
     public final Expression Kn =
-            new Expression("Kn_\\alpha^\\beta=d_\\alpha^\\beta-\\lambda*n_\\alpha*n^\\beta");
+            new Expression("Kn_\\alpha^\\beta=d_\\alpha^\\beta");
     public final Expression Kn_1 =
             new Expression("Kn_\\alpha=Kn_\\alpha^\\beta*n_\\beta");
     public final Expression KINV =
-            new Expression("KINV_\\alpha^\\beta=d_\\alpha^\\beta+\\gamma*n_\\alpha*n^\\beta");
+            new Expression("KINV_\\alpha^\\beta=d_\\alpha^\\beta");
     public static final Tensor[] MATRIX_Kn = {
         CC.parse("Kn_\\alpha^\\beta"),
         CC.parse("KINV_\\alpha^\\beta")
@@ -39,8 +39,8 @@ public class VectorField extends MainTensors {
     public final Expression Gamma = new Expression("\\gamma=0");
     public final Expression Lambda = new Expression("\\lambda=0");
     public static final Expression K_2 =
-            new Expression("K^{\\mu\\nu}_\\alpha^\\beta=g^{\\mu\\nu}*d_{\\alpha}^{\\beta}-\\lambda/2*(g^{\\mu\\beta}*d_\\alpha^\\nu+g^{\\nu\\beta}*d_\\alpha^\\mu)");
-    public static final Expression HATW = new Expression("HATW_{\\alpha}^{\\beta}=P_{\\alpha}^{\\beta}+\\lambda/2*R_{\\alpha}^{\\beta}");
+            new Expression("K^{\\mu\\nu}_\\alpha^\\beta=g^{\\mu\\nu}*d_{\\alpha}^{\\beta}");
+    public static final Expression HATW = new Expression("HATW^{\\alpha}_{\\beta}=P^{\\alpha}_{\\beta}");
     public static final Expression HATS_0 = new Expression("HATS=0");
     public static final Expression HATS_1 = new Expression("HATS_\\alpha=0");
     public static final Expression HATS_2 = new Expression("HATS_{\\alpha\\beta}=0");
@@ -99,6 +99,12 @@ public class VectorField extends MainTensors {
         System.out.println();
         evalTerms();
         System.out.println(Flat);
+        System.out.println(WR);
+        System.out.println(SR);
+        System.out.println(SSR);
+        System.out.println(FF);
+        System.out.println(FR);
+        System.out.println(RR);
         System.out.println();
         System.out.println("----------ACTION----------");
         System.out.println(ACTION);
@@ -238,7 +244,8 @@ public class VectorField extends MainTensors {
         ACTION.eval(
                 //indicesInsertion,
                 L.asSubstitution(),
-                Flat.asSubstitution(), WR.asSubstitution(), SR.asSubstitution(), SSR.asSubstitution(), FF.asSubstitution(), FR.asSubstitution(), RR.asSubstitution(),
+                Flat.asSubstitution(),
+                WR.asSubstitution(), SR.asSubstitution(), SSR.asSubstitution(), FF.asSubstitution(), FR.asSubstitution(), RR.asSubstitution(),
                 CalculateNumbers.INSTANCE,
                 //RICCI.asSubstitution(),
                 //RIMAN.asSubstitution(),

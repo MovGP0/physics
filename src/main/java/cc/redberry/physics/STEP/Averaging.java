@@ -17,10 +17,9 @@ public class Averaging implements Transformation {
     private Averaging() {
     }
 
-    public final static Tensor average(final int[] indices) {
-        if (indices.length == 2) {
+    private static Tensor average(final int[] indices) {
+        if (indices.length == 2)
             return CC.createMetricOrKronecker(indices[0], indices[1]);
-        }
         Sum s = new Sum();
         for (int i = 1; i < indices.length; ++i) {
             int[] suffix = new int[indices.length - 2];
@@ -60,6 +59,8 @@ public class Averaging implements Transformation {
                     ++count;
                 }
             }
+            if(count == 0)
+                return tensor;
             if (count % 2 != 0)
                 return TensorNumber.createZERO();
             count = count / 2;
