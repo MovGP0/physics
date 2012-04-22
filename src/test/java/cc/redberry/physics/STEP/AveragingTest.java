@@ -15,19 +15,27 @@ import org.junit.Test;
  * To change this template use File | Settings | File Templates.
  */
 public class AveragingTest {
-    @Test
-    public void test1() {
-        Tensor t = Averaging.average(new int[]{0, 1, 2, 3, 4, 5, 6, 7});
-        t = Transformations.expandBrackets(t);
-        System.out.println(t);
-        System.out.println("Length: " + ((Sum) t).size());
-        t = CollectFactory.createCollectAllEqualTerms().transform(t);
-        System.out.println(t);
-        System.out.println("Length 2: " + ((Sum) t).size());
-    }
+//    @Test
+//    public void test1() {
+//        Tensor t = Averaging.average(new int[]{0, 1, 2, 3, 4, 5, 6, 7});
+//        t = Transformations.expandBrackets(t);
+//        System.out.println(t);
+//        System.out.println("Length: " + ((Sum) t).size());
+//        t = CollectFactory.createCollectAllEqualTerms().transform(t);
+//        System.out.println(t);
+//        System.out.println("Length 2: " + ((Sum) t).size());
+//    }
     @Test
     public void test2() {
         Tensor t = CC.parse("n_{\\nu}*n_{\\alpha}*n^{\\beta}*n^{\\gamma}");
+        t = Averaging.INSTANCE.transform(t);
+        System.out.println(t);
+    }
+    
+    
+    @Test
+    public void test3() {
+        Tensor t = CC.parse("a_a*a^a");
         t = Averaging.INSTANCE.transform(t);
         System.out.println(t);
     }
