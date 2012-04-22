@@ -22,14 +22,9 @@ import static cc.redberry.core.indices.IndexType.GreekLower;
 import static cc.redberry.physics.util.IndicesFactoryUtil.createIndices;
 import static cc.redberry.physics.util.IndicesFactoryUtil.doubleAndDumpIndices;
 
-/**
- * Created by IntelliJ IDEA. User: Konstantin_2 Date: 08.04.12 Time: 12:36 To
- * change this template use File | Settings | File Templates.
- */
 public class VectorField extends MainTensors {
     public final Expression L = new Expression("L = 2");
-    public final Expression KRONECKER_DIMENSION =
-            new Expression("d^{\\alpha}_{\\alpha} = 4");
+
     public final Expression Kn =
             new Expression("Kn_\\alpha^\\beta=d_\\alpha^\\beta-\\lambda*n_\\alpha*n^\\beta");
     public final Expression Kn_1 =
@@ -45,7 +40,7 @@ public class VectorField extends MainTensors {
     public final Expression Lambda = new Expression("\\lambda=0");
     public static final Expression K_2 =
             new Expression("K^{\\mu\\nu}_\\alpha^\\beta=g^{\\mu\\nu}*d_{\\alpha}^{\\beta}-\\lambda/2*(g^{\\mu\\beta}*d_\\alpha^\\nu+g^{\\nu\\beta}*d_\\alpha^\\mu)");
-    public static final Expression HATW = new Expression("HATW^{\\alpha}_{\\beta}=P^{\\alpha}_{\\beta}+\\lambda/2*R^{\\alpha}_{\\beta}");
+    public static final Expression HATW = new Expression("HATW_{\\alpha}^{\\beta}=P_{\\alpha}^{\\beta}+\\lambda/2*R_{\\alpha}^{\\beta}");
     public static final Expression HATS_0 = new Expression("HATS=0");
     public static final Expression HATS_1 = new Expression("HATS_\\alpha=0");
     public static final Expression HATS_2 = new Expression("HATS_{\\alpha\\beta}=0");
