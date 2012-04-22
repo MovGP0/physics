@@ -1,6 +1,7 @@
 package cc.redberry.physics.STEP;
 
 import cc.redberry.core.context.CC;
+import cc.redberry.core.context.ToStringMode;
 import cc.redberry.core.number.ComplexElement;
 import cc.redberry.core.number.NumberSimple;
 import cc.redberry.core.number.RationalElement;
@@ -36,8 +37,8 @@ public class VectorField extends MainTensors {
     public final Expression KINV =
             new Expression("KINV_\\alpha^\\beta=d_\\alpha^\\beta+\\gamma*n_\\alpha*n^\\beta");
     public static final Tensor[] MATRIX_Kn = {
-            CC.parse("Kn_\\alpha^\\beta"),
-            CC.parse("KINV_\\alpha^\\beta")
+        CC.parse("Kn_\\alpha^\\beta"),
+        CC.parse("KINV_\\alpha^\\beta")
     };
     //public final Expression Gamma = new Expression("\\gamma=\\frac*\\lambda*1-\\lambda");
     public final Expression Gamma = new Expression("\\gamma=0");
@@ -67,7 +68,7 @@ public class VectorField extends MainTensors {
     public static final Expression HATM_4 = new Expression("HATM_{\\alpha\\beta\\gamma\\nu}=0");
     public static final Expression[] ZEROs = {HATS_0, HATS_1, HATS_2, HATS_3, HATS_4, HATN_0, HATN_1, HATN_2, HATN_3, HATN_4, HATM_0, HATM_1, HATM_2, HATM_3, HATM_4, NABLAS_0, NABLAS_1, NABLAS_2, NABLAS_3, NABLAS_4};
     public static final Tensor[] MATRIX_K = {
-            CC.parse("K^{\\mu\\nu}")};
+        CC.parse("K^{\\mu\\nu}")};
 
     public static void main(String[] args) {
         VectorField vf = new VectorField();
@@ -78,10 +79,10 @@ public class VectorField extends MainTensors {
         for (Expression ex : ALL)
             ex.eval(new Transformer(RenameConflictingIndices.INSTANCE));
         insertIndices();
+
         CC.addSymmetry("R_\\mu\\nu", GreekLower, false, new int[]{1, 0});
         CC.addSymmetry("R_\\mu\\nu\\alpha\\beta", GreekLower, true, new int[]{0, 1, 3, 2});
         CC.addSymmetry("R_\\mu\\nu\\alpha\\beta", GreekLower, false, new int[]{2, 3, 0, 1});
-
         CC.addSymmetry("F_\\mu\\nu", GreekLower, true, new int[]{1, 0});
 
         for (Expression ex : ALL)
@@ -107,14 +108,13 @@ public class VectorField extends MainTensors {
         System.out.println("----------ACTION----------");
         System.out.println(ACTION);
         evalAction();
-        System.out.println(ACTION);
+        System.out.println(ACTION.toString(ToStringMode.REDBERRY_SOUT));
         //latex.push(ACTION.toString());
         //latex.output();
         // evalRR();
         //for(Expression e : HATKs)
         //System.out.println(e);
     }
-
     public boolean indicesInserted = false;
 
     public void insertIndices() {
@@ -176,7 +176,6 @@ public class VectorField extends MainTensors {
                     HATK_2.asSubstitution(),
                     HATK_3.asSubstitution(),
                     HATK_4.asSubstitution(),
-
                     new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
                     IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                     KRONECKER_DIMENSION.asSubstitution(),
@@ -202,7 +201,7 @@ public class VectorField extends MainTensors {
                     CalculateNumbers.INSTANCE //                    ,
                     //                    CollectFactory.createCollectAllScalars(),
                     //                    CalculateNumbers.INSTANCE
-            );
+                    );
     }
 
     public final void evalTerms() {
@@ -219,13 +218,11 @@ public class VectorField extends MainTensors {
                         d.asSubstitution(),
                         CalculateNumbers.INSTANCE);
             e.eval(
-
                     Lambda.asSubstitution(), // lambda = 0
                     Gamma.asSubstitution(), // gamma = 0
                     L.asSubstitution(),
                     Kn_1.asSubstitution(),
                     Kn.asSubstitution(),
-
                     HATW.asSubstitution(),
                     CalculateNumbers.INSTANCE,
                     //RICCI.asSubstitution(),
@@ -246,7 +243,6 @@ public class VectorField extends MainTensors {
         ACTION.eval(
                 //indicesInsertion,
                 L.asSubstitution(),
-
                 Flat.asSubstitution(), WR.asSubstitution(), SR.asSubstitution(), SSR.asSubstitution(), FF.asSubstitution(), FR.asSubstitution(), RR.asSubstitution(),
                 CalculateNumbers.INSTANCE,
                 //RICCI.asSubstitution(),
@@ -258,7 +254,6 @@ public class VectorField extends MainTensors {
         ACTION.eval(
                 // Averaging
                 new SqrSubs((SimpleTensor) CC.parse("n_{\\alpha}")),
-
                 CalculateNumbers.INSTANCE,
                 Averaging.INSTANCE,
                 new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
@@ -274,8 +269,9 @@ public class VectorField extends MainTensors {
                 CalculateNumbers.INSTANCE,
                 new Expression("R_{\\mu\\nu}^{\\alpha}_{\\alpha}=0"),
                 new Expression("F^{\\alpha}_{\\alpha}=0"),
-                CalculateNumbers.INSTANCE
-        );
+                CalculateNumbers.INSTANCE,
+                CollectFactory.createCollectAllEqualTerms(),
+                CalculateNumbers.INSTANCE);
     }
 
     private static class POO implements Transformation {
@@ -294,9 +290,7 @@ public class VectorField extends MainTensors {
             }
             return tensor;
         }
-
     }
-
     public final Indicator<Tensor> matricesIndicator = new TensorTreeIndicatorImpl(new Indicator<Tensor>() {
         @Override
         public boolean is(Tensor tensor) {
