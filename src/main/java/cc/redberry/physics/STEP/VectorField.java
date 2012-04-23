@@ -21,19 +21,20 @@ import cc.redberry.transformation.substitutions.TensorTreeIndicatorImpl;
 
 public class VectorField extends MainTensors {
     public final Expression L = new Expression("L=2");
-    public final Expression Kn =
-            new Expression("Kn_\\alpha=n_\\alpha");
+//    public final Expression Kn =
+//            new Expression("Kn_\\alpha=n_\\alpha");
 //    public final Expression Kn_1 =
 //            new Expression("Kn_\\alpha=Kn_\\alpha^\\beta*n_\\beta");
-    public final Expression KINV =
-            new Expression("KINV_\\alpha^\\beta=d_\\alpha^\\beta");
+    
 //    public static final Tensor[] MATRIX_Kn = {
 //        CC.parse("Kn_\\alpha^\\beta"),
 //        CC.parse("KINV_\\alpha^\\beta")
 //    };
     //public final Expression Gamma = new Expression("\\gamma=\\frac*\\lambda*1-\\lambda");
     public static final Expression K_2 =
-            new Expression("K^{\\mu\\nu}_\\alpha^\\beta=g^{\\mu\\nu}*d_{\\alpha}^{\\beta}");
+            new Expression("K^{\\mu\\nu}_\\alpha^\\beta=g^{\\mu\\nu}*d_{\\alpha}^{\\beta}");//-g^\\mu\\beta*d_\\alpha^\\nu-g^\\nu\\beta*d_\\alpha^\\mu");
+    public final Expression KINV =
+            new Expression("KINV_\\alpha^\\beta=d_\\alpha^\\beta");//-2*n_\\alpha*n^\\beta");
     public static final Expression W = new Expression("W^{\\alpha}_{\\beta}=P^{\\alpha}_{\\beta}");
     public static final Expression HATS_0 = new Expression("HATS=0");
     public static final Expression HATS_1 = new Expression("HATS_\\alpha=0");
@@ -73,7 +74,7 @@ public class VectorField extends MainTensors {
         CC.addSymmetry("R_\\mu\\nu", GreekLower, false, new int[]{1, 0});
         CC.addSymmetry("R_\\mu\\nu\\alpha\\beta", GreekLower, true, new int[]{0, 1, 3, 2});
         CC.addSymmetry("R_\\mu\\nu\\alpha\\beta", GreekLower, false, new int[]{2, 3, 0, 1});
-        CC.addSymmetry("F_\\mu\\nu\\alpha\\beta", GreekLower, true, new int[]{1,0, 2, 3});
+        CC.addSymmetry("F_\\mu\\nu\\alpha\\beta", GreekLower, true, new int[]{1, 0, 2, 3});
         CC.addSymmetry("P_\\alpha\\beta", GreekLower, false, new int[]{1, 0});
 //        CC.addSymmetry("F_\\mu\\nu", GreekLower, true, new int[]{1, 0});
 
@@ -165,7 +166,7 @@ public class VectorField extends MainTensors {
         for (Expression delta : DELTAs)
             delta.eval(
                     //indicesInsertion,
-                    L.asSubstitution(),
+                    L.asSubstitution(),new Transformer(new POO()),
                     CalculateNumbers.INSTANCE,
                     HATK_1.asSubstitution(),
                     HATK_2.asSubstitution(),
@@ -186,7 +187,7 @@ public class VectorField extends MainTensors {
         for (Expression delta : DELTAs)
             delta.eval(
                     //indicesInsertion,
-                    L.asSubstitution(),
+                    L.asSubstitution(),new Transformer(new POO()),
                     CalculateNumbers.INSTANCE,
                     new Transformer(RenameConflictingIndices.INSTANCE),
                     new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
@@ -213,7 +214,7 @@ public class VectorField extends MainTensors {
                         d.asSubstitution(),
                         CalculateNumbers.INSTANCE);
             e.eval(
-                    L.asSubstitution(),
+                    L.asSubstitution(),new Transformer(new POO()),
                     //                    Kn_1.asSubstitution(),
                     //                    Kn.asSubstitution(),
                     HATW.asSubstitution(),
@@ -221,22 +222,15 @@ public class VectorField extends MainTensors {
                     //RICCI.asSubstitution(),
                     //RIMAN.asSubstitution(),
                     new Transformer(RenameConflictingIndices.INSTANCE),
-                    new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
+                    new Transformer(ExpandBrackets.EXPAND_ALL),
                     IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
+                    new SqrSubs((SimpleTensor) CC.parse("n_{\\alpha}")),
                     KRONECKER_DIMENSION.asSubstitution(),
                     CalculateNumbers.INSTANCE,
                     new Transformer(CollectPowers.INSTANCE),
                     CollectFactory.createCollectEqualTerms(),
-                    CalculateNumbers.INSTANCE,
-                    //RICCI.asSubstitution(),
-                    //RIMAN.asSubstitution(),
-                    new Transformer(RenameConflictingIndices.INSTANCE),
-                    new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
-                    IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
-                    KRONECKER_DIMENSION.asSubstitution(),
-                    new SqrSubs((SimpleTensor) CC.parse("n_{\\alpha}")),
-                    CalculateNumbers.INSTANCE,
-                    new Transformer(ExpandBrackets.EXPAND_ALL),
+                    CalculateNumbers.INSTANCE
+                    ,
                     Averaging.INSTANCE,
                     new Transformer(ExpandBrackets.EXPAND_ALL),
                     IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
@@ -254,7 +248,8 @@ public class VectorField extends MainTensors {
                     CalculateNumbers.INSTANCE,
                     CollectFactory.createCollectAllEqualTerms(),
                     CalculateNumbers.INSTANCE,
-//                    new Expression("F_\\mu\\nu\\alpha\\beta=R_\\mu\\nu\\alpha\\beta"),
+                    new Expression("F_\\mu^\\mu_\\alpha\\beta=0"),
+                    new Expression("F_\\alpha\\beta_\\mu^\\mu=0"),
                     IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                     new Expression("R_{\\mu\\nu\\alpha\\beta}*R^{\\mu\\alpha\\nu\\beta}=(1/2)*R_{\\mu\\nu\\alpha\\beta}*R^{\\mu\\nu\\alpha\\beta}"),
                     IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
@@ -265,7 +260,8 @@ public class VectorField extends MainTensors {
                     IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                     new Expression("R_{\\mu\\nu}^{\\alpha}_{\\alpha}=0"),
                     CollectFactory.createCollectAllEqualTerms(),
-                    CalculateNumbers.INSTANCE);
+                    CalculateNumbers.INSTANCE
+                    );
         }
 
     }
@@ -273,20 +269,19 @@ public class VectorField extends MainTensors {
     public final void evalAction() {
 
         ACTION.eval(
-                Kn,
+//                Kn,
                 //indicesInsertion,
-                L.asSubstitution(),
-                Flat.asSubstitution(),
-                WR.asSubstitution(), SR.asSubstitution(), SSR.asSubstitution(), FF.asSubstitution(), FR.asSubstitution(), RR.asSubstitution(),
+                //                L.asSubstitution(),
+                Flat, WR, SR, SSR, FF, FR, RR,
                 CalculateNumbers.INSTANCE,
                 //RICCI.asSubstitution(),
                 //RIMAN.asSubstitution(),
-                new Transformer(RenameConflictingIndices.INSTANCE),
+//                new Transformer(RenameConflictingIndices.INSTANCE),
                 new Transformer(ExpandBrackets.EXPAND_EXCEPT_SYMBOLS),
                 IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                 KRONECKER_DIMENSION.asSubstitution());
         ACTION.eval(
-                // Averaging
+//                 Averaging
                 new SqrSubs((SimpleTensor) CC.parse("n_{\\alpha}")),
                 CalculateNumbers.INSTANCE,
                 new Transformer(ExpandBrackets.EXPAND_ALL),
@@ -307,6 +302,7 @@ public class VectorField extends MainTensors {
                 CalculateNumbers.INSTANCE,
                 CollectFactory.createCollectAllEqualTerms(),
                 CalculateNumbers.INSTANCE,
+//               
                 new Expression("F_\\mu\\nu\\alpha\\beta=R_\\mu\\nu\\alpha\\beta"),
                 IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                 new Expression("R_{\\mu\\nu\\alpha\\beta}*R^{\\mu\\alpha\\nu\\beta}=(1/2)*R_{\\mu\\nu\\alpha\\beta}*R^{\\mu\\nu\\alpha\\beta}"),
