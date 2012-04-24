@@ -108,7 +108,7 @@ public class VectorField extends MainTensors {
         System.out.println("----------ACTION----------");
         System.out.println(ACTION);
         evalAction();
-        System.out.println(ACTION.toString(ToStringMode.REDBERRY_SOUT));
+        System.out.println(ACTION.toString(ToStringMode.LaTeX));
         //latex.push(ACTION.toString());
         //latex.output();
         // evalRR();
