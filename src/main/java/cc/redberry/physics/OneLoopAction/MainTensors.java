@@ -1,14 +1,29 @@
-package cc.redberry.physics.STEP;
+package cc.redberry.physics.OneLoopAction;
 
 import cc.redberry.core.context.CC;
+import cc.redberry.core.context.ToStringMode;
+import cc.redberry.core.number.ComplexElement;
+import cc.redberry.core.number.RationalElement;
 import cc.redberry.core.tensor.Expression;
+import cc.redberry.core.tensor.Pow;
 import cc.redberry.core.tensor.Tensor;
+import cc.redberry.core.tensor.TensorNumber;
+import cc.redberry.core.tensor.testing.TTest;
+import cc.redberry.core.transformations.RenameConflictingIndices;
+import cc.redberry.core.utils.Indicator;
+import cc.redberry.transformation.IndicesInsertion;
+import cc.redberry.transformation.Transformation;
+import cc.redberry.transformation.Transformer;
+import cc.redberry.transformation.substitutions.TensorTreeIndicatorImpl;
 
-/**
- * Created by IntelliJ IDEA. User: Konstantin_2 Date: 07.04.12 Time: 20:36 To
- * change this template use File | Settings | File Templates.
- */
-public class MainTensors {
+import static cc.redberry.core.indices.IndexType.GreekLower;
+import static cc.redberry.physics.util.IndicesFactoryUtil.createIndices;
+import static cc.redberry.physics.util.IndicesFactoryUtil.doubleAndDumpIndices;
+
+public class MainTensors extends InputValues{
+    /*
+    * Main terms of Action. Definition as Strings
+    */
     public static final String _Flat = "Flat=(1/4)*HATS*HATS*HATS*HATS-HATW*HATS*HATS+(1/2)*HATW*HATW+HATS*HATN-HATM+(L-2)*NABLAS_\\mu*HATW^\\mu"
             + "-L*NABLAS_\\mu*HATW*HATK^\\mu+(1/3)*((L-1)*NABLAS_\\mu^\\mu*HATS*HATS-L*NABLAS_\\mu*HATK^\\mu*HATS*HATS"
             + "-(L-1)*NABLAS_\\mu*HATS*HATS^\\mu+L*NABLAS_\\mu*HATS*HATS*HATK^\\mu)-(1/2)*NABLAS_\\mu*NABLAS_\\nu*DELTA^{\\mu\\nu}"
@@ -178,6 +193,13 @@ public class MainTensors {
             + "HATK^{\\mu}*HATK^{\\alpha}*HATK^{\\nu}*HATK^{\\beta}+"
             + "HATK^{\\alpha}*HATK^{\\beta}*HATK^{\\nu}*HATK^{\\mu}+"
             + "HATK^{\\beta}*HATK^{\\alpha}*HATK^{\\nu}*HATK^{\\mu})";
+
+     /*
+    *
+    * Main terms of Action. Definition as Expressions
+    *
+    */
+
     public static final Expression Flat = new Expression(_Flat);
     public static final Expression WR = new Expression(WR_);
     public static final Expression SR = new Expression(SR_);
@@ -189,6 +211,12 @@ public class MainTensors {
     public static final Expression DELTA_2 = new Expression(DELTA_2_);
     public static final Expression DELTA_3 = new Expression(DELTA_3_);
     public static final Expression DELTA_4 = new Expression(DELTA_4_);
+
+    /*
+    *
+    * Definition of HATK, HATW TODO: simplify the definition
+    *
+    */
     public static final Expression HATK_0 =
             new Expression("HATK = KINV*K^{\\mu\\nu}*n_{\\nu}*n_\\mu");
     public static final Expression HATK_1 =
@@ -203,17 +231,36 @@ public class MainTensors {
             new Expression("HATF^{\\mu\\nu} = KINV*F^{\\mu\\nu}");
     public static final Expression HATW =
             new Expression("HATW = KINV*W");
+
+    /*
+    * Action
+    */
+
     public static final Expression ACTION =
             new Expression("ACTION = Flat + WR + SR + SSR + FF + FR + RR ");
+
+    /*
+    * Kronecker dimension
+    */
+
     public static final Expression KRONECKER_DIMENSION = new Expression("d_{\\mu}^{\\mu}=4");
-    public static final Expression[] HATKs = new Expression[]{HATK_0, HATK_1, HATK_2, HATK_3, HATK_4, HATF_2};
+
+    /*
+    * Arrays of terms by groups.
+    */
+
+    public static final Expression[] HATs = new Expression[]{HATK_0, HATK_1, HATK_2, HATK_3, HATK_4, HATF_2, HATW}; // TODO: add more HAT tensors!
     public static final Expression[] DELTAs = new Expression[]{DELTA_1, DELTA_2, DELTA_3, DELTA_4};
     public static final Expression[] TERMs = new Expression[]{ACTION, Flat, WR, SR, SSR, FF, FR, RR};
     public static final Expression[] ALL = new Expression[]{Flat, WR, SR, SSR, FF, FR, RR, DELTA_1, DELTA_2, DELTA_3, DELTA_4, HATK_0, HATK_1, HATK_2, HATK_3, HATK_4, HATF_2};
-    public static final Tensor[] MATRIX_ACTION = new Tensor[]{};
+    public static final Tensor[] MATRIX_INPUT = {CC.parse("K^{\\mu\\nu}"), CC.parse("W")}; //TODO: for other theory need to add terms
+
+    /*
+     * Tensors that should be added matrix indices.
+    */
+
     public static final Tensor[] MATRICES = new Tensor[]{
         CC.parse("F^{\\mu\\nu}"),
-//        CC.parse("Kn_{\\alpha}"),
         CC.parse("KINV"),
         CC.parse("HATK"),
         CC.parse("HATK^{\\mu}"),
@@ -258,4 +305,70 @@ public class MainTensors {
         CC.parse("FR"),
         CC.parse("RR")
     };
+
+  public static void insertIndices() {
+        Transformation indicesInsertion;
+        indicesInsertion = new IndicesInsertion(matricesIndicator, createIndices(HATs, "^{\\mu}_{\\nu}"));
+        for (Expression hatK : HATs)
+            hatK.eval(indicesInsertion);
+        indicesInsertion = new IndicesInsertion(matricesIndicator, createIndices(DELTAs, "^{\\mu}_{\\nu}"));
+        for (Expression delta : DELTAs)
+            delta.eval(indicesInsertion);
+        indicesInsertion = new IndicesInsertion(matricesIndicator, doubleAndDumpIndices(createIndices(TERMs, "^{\\nu}")));
+        for (Expression term : TERMs)
+            term.eval(indicesInsertion);
+  }
+
+  public static void addSymmetries() {
+      System.out.println("Add symmetries");
+        CC.addSymmetry("R_\\mu\\nu", GreekLower, false, new int[]{1, 0});
+        CC.addSymmetry("R_\\mu\\nu\\alpha\\beta", GreekLower, true, new int[]{0, 1, 3, 2});
+        CC.addSymmetry("R_\\mu\\nu\\alpha\\beta", GreekLower, false, new int[]{2, 3, 0, 1});
+        CC.addSymmetry("F_\\mu\\nu\\alpha\\beta", GreekLower, true, new int[]{1, 0, 2, 3});
+        CC.addSymmetry("P_\\alpha\\beta", GreekLower, false, new int[]{1, 0});
+  }
+
+  public static void init() {
+      System.out.println("Init");
+        CC.setDefaultPrintMode(ToStringMode.REDBERRY_SOUT);
+        for (Expression ex : ALL)
+            ex.eval(new Transformer(RenameConflictingIndices.INSTANCE));
+  }
+
+  public static final Indicator<Tensor> matricesIndicator = new TensorTreeIndicatorImpl(new Indicator<Tensor>() {
+        @Override
+        public boolean is(Tensor tensor) {
+            for (Tensor m : MATRICES)
+                if (TTest.testEqualstensorStructure(tensor, m))
+                    return true;
+            for (Tensor m : MATRIX_INPUT)
+                if (TTest.testEqualstensorStructure(tensor, m))
+                    return true;
+            return false;
+        }
+   });
+
+   static {
+       init();
+       insertIndices();
+       addSymmetries();
+   }
+
+     static class POO implements Transformation {
+        @Override
+        public Tensor transform(Tensor tensor) {
+            if (!(tensor instanceof Pow))
+                return tensor;
+            Pow power = (Pow) tensor;
+            if (power.getPower() instanceof TensorNumber && power.getTarget() instanceof TensorNumber) {
+                ComplexElement p = ((TensorNumber) power.getPower()).getValue();
+                ComplexElement t = ((TensorNumber) power.getTarget()).getValue();
+                RationalElement r = t.getReal().pow(p.getReal());
+                assert p.getImagine().isZero();
+                assert t.getImagine().isZero();
+                return new TensorNumber(new ComplexElement(r, RationalElement.ZERO));
+            }
+            return tensor;
+        }
+    }
 }
