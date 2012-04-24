@@ -314,6 +314,7 @@ public class VectorField extends MainTensors {
                 IndicesContractionsTransformation.CONTRACTIONS_WITH_METRIC,
                 new Expression("R_{\\mu\\nu}^{\\alpha}_{\\alpha}=0"),
                 CollectFactory.createCollectAllEqualTerms(),
+                new Transformer(CollectFactory.createCollectAllScalars()),
                 CalculateNumbers.INSTANCE);
     }
 
