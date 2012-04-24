@@ -1,4 +1,4 @@
-package cc.redberry.physics.STEP;
+package cc.redberry.physics.OneLoopAction;
 
 import cc.redberry.core.context.CC;
 import cc.redberry.core.indices.IndicesBuilder;
