@@ -78,12 +78,16 @@ public class OneLoop extends MainTensors {
         evalHats();
         //System.out.println("---------DALTAs-----------");
         evalDeltas();
-        System.out.println("---------TERMs-----------");
+//        System.out.println("---------TERMs-----------");
         evalTerms();
-        System.out.println("----------ACTION----------");
+//        System.out.println("----------ACTION----------");
         evalAction();
         //latex.push(ACTION.toString());
         //latex.output();
+    }
+
+    public Expression action() {
+        return ACTION;
     }
 
     public final void evalHats() {
