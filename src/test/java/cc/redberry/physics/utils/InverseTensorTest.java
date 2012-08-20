@@ -20,30 +20,26 @@
  * You should have received a copy of the GNU General Public License
  * along with Redberry. If not, see <http://www.gnu.org/licenses/>.
  */
-package cc.redberry.physics.oneloopdiv;
+package cc.redberry.physics.utils;
 
-import cc.redberry.core.tensor.*;
-import cc.redberry.core.utils.*;
 import org.junit.*;
-
 /**
  *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public class NaiveSubstitutionTest {
+public class InverseTensorTest {
+
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+    }
+
+    @AfterClass
+    public static void tearDownClass() throws Exception {
+    }
 
     @Test
     public void testSomeMethod() {
-        Tensor t = Tensors.parse("1/2*(x+y)+1/3*(x+z)");
-        Tensor from = Tensors.parse("x"),to = Tensors.parse("u+v");
-        t = new NaiveSubstitution(from, to).transform(t);
-        
-        Expression e = Tensors.parseExpression("x = u+v");
-        System.out.println(e.transform(t));
-        System.out.println(t);
-        Tensor expected = Tensors.parse("1/2*(u+v+y)+1/3*(u+v+z)");
-        Assert.assertTrue(TensorUtils.equalsExactly(t, expected));
     }
 
 }

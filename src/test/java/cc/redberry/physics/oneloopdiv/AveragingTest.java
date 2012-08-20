@@ -20,14 +20,14 @@ public class AveragingTest {
         t = Expand.expand(t, ContractIndices.INSTANCE);
         t = ContractIndices.INSTANCE.transform(t);
         Tensor expected = Tensors.parse("1/24*V^{\\gamma }_{\\nu }+1/24*V_{\\nu }^{\\gamma }+1/24*V_{\\alpha }^{\\alpha }*d^{\\gamma }_{\\nu }+1/24*d^{\\gamma }_{\\nu }*F_{\\beta }^{\\beta }+1/24*F_{\\nu }^{\\gamma }+1/24*F^{\\gamma }_{\\nu }");
-        Assert.assertTrue(TensorUtils.compare(t, expected));
+        Assert.assertTrue(TensorUtils.equals(t, expected));
     }
 
     @Test
     public void test3() {
         Tensor t = Tensors.parse("b_\\mu+a*n_\\mu");
         t = new Averaging(Tensors.parseSimple("n_\\mu")).transform(t);
-        Assert.assertTrue(TensorUtils.compare(t, Tensors.parse("b_\\mu")));
+        Assert.assertTrue(TensorUtils.equals(t, Tensors.parse("b_\\mu")));
     }
 
     @Test
@@ -75,7 +75,7 @@ public class AveragingTest {
         Tensor t = Tensors.parse("a*n_\\mu*n_\\nu");
         t = new Averaging(Tensors.parseSimple("n_\\mu")).transform(t);
         Tensor expected = Tensors.parse("1/4*a*g_\\mu\\nu");
-        Assert.assertTrue(TensorUtils.compare(t, expected));
+        Assert.assertTrue(TensorUtils.equals(t, expected));
     }
 
     @Test
@@ -87,7 +87,7 @@ public class AveragingTest {
         t = ContractIndices.contract(t);
         t = d.transform(t);
         Tensor expected = Tensors.parse("(1/4*a+1)*g_\\mu\\nu");
-        Assert.assertTrue(TensorUtils.compare(t, expected));
+        Assert.assertTrue(TensorUtils.equals(t, expected));
     }
 
     @Test
@@ -95,6 +95,6 @@ public class AveragingTest {
         Tensor t = Tensors.parse("1");
         t = new Averaging(Tensors.parseSimple("n_\\mu")).transform(t);
         Tensor expected = Tensors.parse("1");
-        Assert.assertTrue(TensorUtils.compare(t, expected));
+        Assert.assertTrue(TensorUtils.equals(t, expected));
     }
 }
