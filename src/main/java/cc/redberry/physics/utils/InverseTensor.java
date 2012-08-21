@@ -101,8 +101,8 @@ public final class InverseTensor {
             Split current = Split.split(summand);
             boolean one = false;
             for (Split split : rightSplit)
-                if (TensorUtils.equals(current.summand, split.factor)) {
-                    linearEquations.add(ExpressionFactory.FACTORY.create(current.summand, split.factor));
+                if (TensorUtils.equals(current.factor, split.factor)) {
+                    linearEquations.add(ExpressionFactory.FACTORY.create(current.summand, split.summand));
                     one = true;
                     break;
                 }
