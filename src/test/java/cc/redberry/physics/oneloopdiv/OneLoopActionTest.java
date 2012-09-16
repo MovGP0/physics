@@ -29,10 +29,10 @@ import cc.redberry.core.tensor.*;
 import cc.redberry.core.transformations.Expand;
 import cc.redberry.core.transformations.RemoveDueToSymmetry;
 import cc.redberry.core.utils.TensorUtils;
+import java.util.regex.*;
 import junit.framework.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
-
 
 /**
  *
@@ -301,6 +301,68 @@ public class OneLoopActionTest {
         //Tensor expected = Tensors.parse("(7/30+2/3*gamma+1/6*gamma^2)*R_\\mu\\nu*R^\\mu\\nu + (17/60+1/6*gamma+5/60*gamma**2)*R**2");
     }
 
+    @Ignore
+    @Test
+    public void testLambdaGaugeGravityMain() {
+        CC.setDefaultPrintMode(ToStringMode.REDBERRY_SOUT);
+        Tensors.addSymmetry("P_\\mu\\nu", IndexType.GreekLower, false, 1, 0);
+
+        Expression KINV = Tensors.parseExpression("KINV_\\alpha\\beta^\\gamma\\delta = "
+                + "(d_\\alpha^\\gamma*d_\\beta^\\delta+d_\\beta^\\gamma*d_\\alpha^\\delta)/2+"
+                + "la/2*("
+                + "d_\\alpha^\\gamma*n_\\beta*n^\\delta"
+                + "+d_\\alpha^\\delta*n_\\beta*n^\\gamma"
+                + "+d_\\beta^\\gamma*n_\\alpha*n^\\delta"
+                + "+d_\\beta^\\delta*n_\\alpha*n^\\gamma)"
+                + "-la*g^\\gamma\\delta*n_\\alpha*n_\\beta");
+        Expression K = Tensors.parseExpression("K^\\mu\\nu_\\alpha\\beta^\\gamma\\delta = "
+                + "g^\\mu\\nu*(d_\\alpha^\\gamma*d_\\beta^\\delta+d_\\beta^\\gamma*d_\\alpha^\\delta)/2"
+                + "-la/(4*(1+la))*("
+                + "d_\\alpha^\\gamma*d_\\beta^\\mu*g^\\delta\\nu"
+                + "+d_\\alpha^\\gamma*d_\\beta^\\nu*g^\\delta\\mu"
+                + "+d_\\alpha^\\delta*d_\\beta^\\mu*g^\\gamma\\nu"
+                + "+d_\\alpha^\\delta*d_\\beta^\\nu*g^\\gamma\\mu"
+                + "+d_\\beta^\\gamma*d_\\alpha^\\mu*g^\\delta\\nu"
+                + "+d_\\beta^\\gamma*d_\\alpha^\\nu*g^\\delta\\mu"
+                + "+d_\\beta^\\delta*d_\\alpha^\\mu*g^\\gamma\\nu"
+                + "+d_\\beta^\\delta*d_\\alpha^\\nu*g^\\gamma\\mu)"
+                + "+la/(2*(1+la))*g^\\gamma\\delta*(d_\\alpha^\\mu*d_\\beta^\\nu+d_\\alpha^\\nu*d_\\beta^\\mu)");
+        Expression S = Tensors.parseExpression("S^\\rho_{\\alpha\\beta}^{\\gamma\\delta}=0");
+        Expression W = Tensors.parseExpression("W_{\\alpha\\beta}^{\\gamma\\delta}=P_\\alpha\\beta^\\gamma\\delta"
+                + "-la/(2*(1+la))*(R_\\alpha^\\gamma_\\beta^\\delta+R_\\alpha^\\delta_\\beta^\\gamma)"
+                + "+la/(4*(1+la))*("
+                + "d_\\alpha^\\gamma*R_\\beta^\\delta"
+                + "+d_\\alpha^\\delta*R_\\beta^\\gamma"
+                + "+d_\\beta^\\gamma*R_\\alpha^\\delta"
+                + "+d_\\beta^\\delta*R_\\alpha^\\gamma)");
+        Expression P = Tensors.parseExpression("P_\\gamma\\delta^\\mu\\nu = "
+                + "R_\\gamma^\\mu_\\delta^\\nu+R_\\gamma^\\nu_\\delta^\\mu"
+                + "+1/2*("
+                + "d_\\gamma^\\mu*R_\\delta^\\nu"
+                + "+d_\\gamma^\\nu*R_\\delta^\\mu"
+                + "+d_\\delta^\\mu*R_\\gamma^\\nu"
+                + "+d_\\delta^\\nu*R_\\gamma^\\mu)"
+                + "-g^\\mu\\nu*R_\\gamma\\delta"
+                + "-R^\\mu\\nu*g_\\gamma\\delta"
+                + "+(-d_\\gamma^\\mu*d_\\delta^\\nu-d_\\gamma^\\nu*d_\\delta^\\mu+g^\\mu\\nu*g_\\gamma\\delta)*R/2");
+        W = (Expression) P.transform(W);
+        Expression F = Tensors.parseExpression("F_\\mu\\nu^\\lambda\\delta_\\rho\\tau = "
+                + "R^\\lambda_\\rho\\mu\\nu*d^\\delta_\\tau+R^\\delta_\\tau\\mu\\nu*d^\\lambda_\\rho");
+
+        OneLoopInput input = new OneLoopInput(2, KINV, K, S, W, null, null, F);
+
+        OneLoopAction action = OneLoopAction.calculateOneLoopAction(input);
+        Tensor A = action.ACTION().get(1);
+
+        //TODO simplify result
+        //non simplified result
+        Tensor expected = Expand.expand(Tensors.parse("-43/960*R**2*la**6*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+31751/2880*R**2*la**4*(1+la)**(-1)*(1+la)**(-1)-161/960*R**2*la**7*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+3311/1920*R**2*la**6*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+3833/5760*R**2*la**8*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-281/60*R**2*la**4*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-59/12*R**2*la**2*(1+la)**(-1)+34979/5760*R**2*la**5*(1+la)**(-1)*(1+la)**(-1)-7651/1440*R**2*la**4*(1+la)**(-1)+1627/2880*R**2*la**5*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+(7/45*la**10*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-107/30*la+1631/720*la**7*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-6841/160*la**4*(1+la)**(-1)*(1+la)**(-1)-4619/5760*la**7*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+101/96*la**8*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+3211/360*la**3*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+1729/80*la**4*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-18517/960*la**5*(1+la)**(-1)*(1+la)**(-1)-3697/2880*la**8*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-179/720*la**9*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-3109/5760*la**6*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+953/1440*la**9*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-2533/720*la**6*(1+la)**(-1)*(1+la)**(-1)+79/30*la**5*(1+la)**(-1)-2551/2880*la**5*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+127/30*la*(1+la)**(-1)+7/6+10387/1152*la**6*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-25/48*la**8*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-5477/2880*la**6*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-2825/72*la**3*(1+la)**(-1)*(1+la)**(-1)+881/36*la**2*(1+la)**(-1)-95/9*la**2*(1+la)**(-1)*(1+la)**(-1)+6197/180*la**3*(1+la)**(-1)-301/480*la**4*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-23/30*la**4-299/60*la**3-541/60*la**2+1067/1440*la**7*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+4003/240*la**4*(1+la)**(-1)-803/1440*la**5*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+281/1440*la**6*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+155/8*la**5*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-571/240*la**7*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1))*R^{\\mu \\nu }*R_{\\mu \\nu }-3223/360*R**2*la**3*(1+la)**(-1)-667/360*R**2*la**3*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-1109/288*R**2*la**5*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-91/60*R**2*la**5*(1+la)**(-1)-1/30*R**2*la**10*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+9/20*R**2*la**4-7349/11520*R**2*la**7*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+157/60*R**2*la**2+181/120*R**2*la**3+103/320*R**2*la**4*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-13/10*R**2*la*(1+la)**(-1)+859/480*R**2*la**7*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+7/12*R**2-20419/11520*R**2*la**6*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-3181/5760*R**2*la**5*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-533/480*R**2*la**7*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-15/64*R**2*la**8*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+601/72*R**2*la**3*(1+la)**(-1)*(1+la)**(-1)+13/10*R**2*la+25/96*R**2*la**8*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-4955/2304*R**2*la**6*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+919/480*R**2*la**6*(1+la)**(-1)*(1+la)**(-1)-139/960*R**2*la**9*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+17/480*R**2*la**9*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+4/3*R**2*la**2*(1+la)**(-1)*(1+la)**(-1)"));
+        Assert.assertTrue(TensorUtils.equals(Expand.expand(A), expected));
+
+        //simplified result
+        //Tensor expected = Tensors.parse("1/6*(4*la**2+4*la+7)*R_\\mu\\nu*R^\\mu\\nu+1/12*(4*la**2+7)*R**2");
+    }
+
     @Test
     public void testMinimalSecondOrderOperator() {
         CC.setDefaultPrintMode(ToStringMode.REDBERRY_SOUT);
@@ -340,7 +402,6 @@ public class OneLoopActionTest {
         OneLoopAction action = OneLoopAction.calculateOneLoopAction(input);
         Tensor A = action.ACTION().get(1);
         A = RemoveDueToSymmetry.INSANCE.transform(A);
-        System.out.println(A);
         //this is the exact Barvinsky and Vilkovisky
         Tensor expected = Tensors.parse("1/12*F_{\\nu \\beta }^{\\epsilon }_{\\rho_5 }*F^{\\nu \\beta \\rho_5 }_{\\epsilon }+1/2*W^{\\rho_5 }_{\\alpha }*W^{\\alpha }_{\\rho_5 }+-1/45*Power[R, 2]+1/15*R^{\\mu \\nu }*R_{\\mu \\nu }");
         Assert.assertTrue(TensorUtils.equals(A, expected));
@@ -375,10 +436,10 @@ public class OneLoopActionTest {
         A = RemoveDueToSymmetry.INSANCE.transform(A);
         System.out.println(A);
         //this is the exact K.V. result with corrections that 1/12*F_..*F^.. is not under tr operation and that tr of 1 is 4
-        Tensor expected = Tensors.parse("1/30*Power[R, 2]+1/12*F_{\\nu \\beta }^{\\epsilon }_{\\rho_5 }*F^{\\nu \\beta \\rho_5 }_{\\epsilon }+1/15*R_{\\delta \\nu }*R^{\\delta \\nu }+1/2*W^{\\alpha }_{\\rho_5 }*W^{\\rho_5 }_{\\alpha }+1/6*R*W^{\\beta }_{\\beta }");
+        Tensor expected = Tensors.parse("11/135*R**2-8/135*R_\\mu\\nu*R^\\mu\\nu+2/3*F_\\mu\\nu\\alpha\\beta*F^\\mu\\nu\\alpha\\beta");
         Assert.assertTrue(TensorUtils.equals(A, expected));
 
-        
+
         TensorBuilder sb = new SumBuilder();
         for (Tensor s : A)
             if (s instanceof Product && s.getIndices().size() != 0) {
@@ -423,5 +484,76 @@ public class OneLoopActionTest {
         OneLoopInput input = new OneLoopInput(2, KINV, K, S, W, null, null, F, OneLoopUtils.antiDeSitterBackround());
 
         OneLoopAction action = OneLoopAction.calculateOneLoopAction(input);
+    }
+
+    private static String reduce2Redberry(String exrpession) {
+        exrpession = exrpession.replace('&', '*');
+        Pattern pattern = Pattern.compile("(R|n|hk|d)\\(([a-zA-Z0-9,]*)\\)");
+        Matcher matcher = pattern.matcher(exrpession);
+        StringBuffer sb = new StringBuffer();
+        String group, tensorName, indices;
+
+        while (matcher.find()) {
+            group = matcher.group();
+            tensorName = matcher.group(1);
+            indices = matcher.group(2);
+            if (tensorName.equals("R")) {
+                String[] indicesArray = indices.split(",");
+                assert indicesArray.length == 2 || indicesArray.length == 4;
+                if (indicesArray.length == 4) {
+                    indices = "^{" + indicesArray[0] + "}_{";
+                    for (int i = 1; i < 4; ++i)
+                        indices += indicesArray[i] + " ";
+                    indices += "}";
+                } else
+                    indices = "_{" + indices.replace(',', ' ') + "}";
+            } else if (tensorName.equals("n"))
+                indices = "_{" + indices.replace(',', ' ') + "}";
+            else
+                indices = "^{" + indices.replace(',', ' ') + "}";
+            group = tensorName + indices;
+            group = group.replace("al", "\\\\alpha");
+            group = group.replace("be", "\\\\beta");
+            group = group.replace("gm", "\\\\gamma");
+            group = group.replace("de", "\\\\delta");
+            group = group.replace("s", "\\\\sigma");
+            group = group.replace("ro", "\\\\rho");
+            group = group.replace("mu", "\\\\mu");
+            group = group.replace("nu", "\\\\nu");
+            group = group.replace("j1", "");
+            group = group.replace("j2", "");
+            group = group.replace("j3", "");
+            group = group.replace("j4", "");
+            group = group.replace("j5", "");
+            group = group.replace("j6", "");
+            group = group.replace("j7", "");
+            group = group.replace("j8", "");
+
+            matcher.appendReplacement(sb, group);
+        }
+        matcher.appendTail(sb);
+        String result = sb.toString();
+        Tensors.parse(result);
+        return result;
+    }
+
+    @Test
+    public void reduce2redberryRR() {
+        String exrpession = "L**2/10 *(R(s,al,be,gm)*R(ro,mu,nu,de) *n(s)*n(ro))*hk(de,j1,j2)*d(mu,nu,al,be,j2,j3)*hk(gm,j3,j1) + L**2*(L-1)**2*(L-2)*n(s)*n(ro) *(2/45*R(ro,al,de,nu)*R(s,be,mu,gm)-1/120*R(ro,de,al,nu)*R(s,be,mu,gm)) *hk(be,gm,de,j1,j2)*d(al,j2,j3)*hk(mu,nu,j3,j1) + L**2*(L-1)*n(ro)*n(s) *(-1/10*R(s,mu,gm,nu)*R(ro,al,de,be)+1/15*R(s,de,al,nu)*R(ro,be,mu,gm) +1/60*R(s,be,de,nu)*R(ro,gm,mu,al)) *hk(de,j1,j2)*d(al,be,gm,j2,j3)*hk(mu,nu,j3,j1) + L**2*(L-1)**2*n(s)*n(ro) *(-1/20*R(ro,mu,be,nu)*R(s,de,al,gm)+1/180*R(ro,al,nu,be)*R(s,gm,de,mu) -7/360*R(ro,mu,gm,nu)*R(s,al,de,be)-1/240*R(ro,de,be,nu)*R(s,gm,al,mu) -1/120*R(ro,be,gm,nu)*R(s,al,de,mu)-1/30*R(ro,de,be,nu)*R(s,al,gm,mu)) *hk(gm,de,j1,j2)*d(al,be,j2,j3)*hk(mu,nu,j3,j1) + L**2*(L-1)*(L-2)*n(s)*n(ro) *(-1/30*R(s,gm,nu,be)*R(ro,al,de,mu)-1/180*R(s,mu,gm,nu)*R(ro,al,be,de) +1/180*R(s,mu,gm,de)*R(ro,al,be,nu)) *hk(de,j1,j2)*d(mu,nu,j2,j3)*hk(al,be,gm,j3,j1) + L**2*(L-1)**2*(L-2)*n(s)*n(ro) *(1/45*R(ro,mu,gm,nu)*R(s,al,be,de)-1/80*R(ro,be,nu,gm)*R(s,mu,al,de) +1/90*R(ro,be,nu,gm)*R(s,de,al,mu)) *hk(mu,nu,j1,j2)*d(de,j2,j3)*hk(al,be,gm,j3,j1) + L**2*(L-1)*n(s)*n(ro) *(7/120*R(ro,be,gm,nu)*R(s,mu,al,de)-3/40*R(ro,be,gm,de)*R(s,mu,al,nu) +1/120*R(ro,de,gm,nu)*R(s,al,be,mu)) *hk(mu,nu,j1,j2)*d(al,be,gm,j2,j3)*hk(de,j3,j1) + L**2*(L-1)*(L-2)*n(s)*n(ro) *(-1/24*R(ro,mu,gm,nu)*R(s,al,be,de)-1/180*R(ro,nu,gm,de)*R(s,al,be,mu) -1/360*R(ro,de,gm,nu)*R(s,al,be,mu)) *hk(al,be,gm,j1,j2)*d(mu,nu,j2,j3)*hk(de,j3,j1) - L**2*(L-1)*(L-2)*(L-3)*(n(s)*n(ro) *R(s,al,be,gm)*R(ro,mu,nu,de)) *hk(de,j1,j2)*d(gm,j2,j3)*hk(mu,nu,al,be,j3,j1) /120 - L**2*(L-1)**2*(L-2)*(L-3)*(n(s)*n(ro) *R(ro,gm,be,mu)*R(s,al,de,nu)) *hk(al,be,gm,de,j1,j2)*hk(mu,nu,j2,j1) /80 + L**2*n(ro) *(-1/8*R(be,gm)*R(ro,nu,al,mu)+3/20*R(be,gm)*R(ro,mu,al,nu) +3/40*R(al,mu)*R(ro,be,gm,nu)+1/40*R(s,be,gm,mu)*R(ro,nu,al,s) -3/20*R(s,al,be,mu)*R(ro,gm,nu,s)+1/10*R(s,al,be,nu)*R(ro,gm,mu,s)) *hk(mu,j1,j2)*d(al,be,gm,j2,j3)*hk(nu,j3,j1) + L**2*(L-1)*n(ro) *(1/20*R(al,nu)*R(ro,gm,be,mu) +1/20*R(al,gm)*R(ro,mu,be,nu)+1/10*R(al,be)*R(ro,mu,gm,nu) +1/20*R(s,al,nu,gm)*R(ro,s,be,mu)-1/60*R(s,mu,al,nu)*R(ro,be,s,gm) +1/10*R(s,al,be,gm)*R(ro,mu,s,nu)-1/12*R(s,al,be,nu)*R(ro,mu,s,gm)) *hk(gm,j1,j2)*d(al,be,j2,j3)*hk(mu,nu,j3,j1) + L**2*(L-1)**2*n(ro) *(1/60*R(al,mu)*R(ro,be,nu,gm)-1/20*R(al,mu)*R(ro,gm,nu,be) +1/120*R(al,be)*R(ro,mu,nu,gm)+3/40*R(al,gm)*R(ro,nu,be,mu) +1/20*R(s,gm,mu,al)*R(ro,nu,s,be)+1/120*R(s,al,mu,gm)*R(ro,be,nu,s) -1/40*R(s,al,mu,gm)*R(ro,s,nu,be)+1/40*R(s,al,mu,be)*R(ro,s,nu,gm) -1/20*R(s,al,mu,be)*R(ro,gm,nu,s)-1/40*R(s,mu,be,nu)*R(ro,gm,s,al)) *hk(al,be,j1,j2)*d(gm,j2,j3)*hk(mu,nu,j3,j1) + L**2*(L-1)*n(ro) *(1/20*R(s,mu,nu,be)*R(ro,gm,s,al)-7/60*R(s,be,mu,al)*R(ro,gm,nu,s) +1/20*R(s,be,mu,al)*R(ro,s,nu,gm)+1/10*R(s,mu,be,gm)*R(ro,nu,al,s) +1/60*R(s,be,mu,gm)*R(ro,al,nu,s)+7/120*R(al,be)*R(ro,nu,gm,mu) +11/60*R(be,mu)*R(ro,nu,al,gm)) *hk(al,be,j1,j2)*d(mu,nu,j2,j3)*hk(gm,j3,j1) + L**2*(L-1)*(L-2)*n(ro) *(7/240*R(al,be)*R(ro,gm,mu,nu)+7/240*R(al,nu)*R(ro,be,gm,mu) -1/60*R(al,mu)*R(ro,be,gm,nu)-1/24*R(s,al,be,nu)*R(ro,s,gm,mu) +1/15*R(s,al,be,nu)*R(ro,mu,gm,s)+1/40*R(s,al,be,mu)*R(ro,s,gm,nu) +1/40*R(be,gm)*R(ro,nu,mu,al)+1/48*R(s,be,gm,mu)*R(ro,nu,al,s)) *hk(al,be,gm,j1,j2)*d(mu,j2,j3)*hk(nu,j3,j1) + L**2*(L-1)**2*(L-2) *n(ro)*(-7/240*R(ro,be,gm,nu)*R(mu,al)+1/240*R(ro,mu,al,nu)*R(be,gm) -1/40*R(ro,nu,gm,s)*R(s,al,mu,be)) *hk(mu,nu,j1,j2)*hk(al,be,gm,j2,j1) + L*(L-1)*(L-2)*(L-3) *(1/180*R(mu,nu)*R(al,be)+7/720*R(s,al,be,ro)*R(ro,mu,nu,s)) *hk(mu,nu,al,be,j1,j1)";
+        System.out.println(reduce2Redberry(exrpession));
+    }
+
+    @Test
+    public void reduce2redberryFF() {
+        String exrpession = "- L**2*(L-1)**2*(R(mu,al,j2,j3)*R(nu,be,j4,j1)) &hk(mu,nu,j1,j2)&hk(al,be,j3,j4)/24 +L**2*(R(be,nu,j2,j3)*R(al,mu,j5,j1) - 5*R(be,mu,j2,j3)*R(al,nu,j5,j1)) &hk(mu,j1,j2)&d(al,be,j3,j4)&hk(nu,j4,j5)/24 - L**2*(L-1) *(1/48*R(be,nu,j2,j3)*R(al,mu,j5,j1)+1/48*R(be,mu,j2,j3)*R(al,nu,j5,j1)) &hk(mu,j1,j2)&d(nu,j3,j4)&hk(al,be,j4,j5)";
+        System.out.println(reduce2Redberry(exrpession));
+    }
+
+    @Test
+    public void test12121() {
+        System.out.println(Tensors.parse("4*(3*2**2+4*2+2)/1080"));
+        System.out.println(Tensors.parse("4*(-7*2**2+4*2+12)/540"));
+        System.out.println(Tensors.parse("2**3/12"));
+
     }
 }

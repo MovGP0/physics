@@ -22,18 +22,15 @@
  */
 package cc.redberry.physics.utils;
 
-import cc.redberry.core.combinatorics.symmetries.Symmetries;
-import cc.redberry.core.context.CC;
 import cc.redberry.core.indexmapping.IndexMappings;
 import cc.redberry.core.number.*;
 import cc.redberry.core.tensor.*;
-import cc.redberry.core.tensorgenerator.GeneratedTensor;
-import cc.redberry.core.tensorgenerator.TensorGenerator;
+import cc.redberry.core.tensor.iterator.*;
+import cc.redberry.core.tensorgenerator.*;
 import cc.redberry.core.transformations.*;
 import cc.redberry.core.utils.*;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  *
@@ -76,13 +73,12 @@ public final class InverseTensor {
 
         if (equation.get(1) instanceof Sum)
             for (Tensor summand : equation.get(1))
-                //TODO //FIXME !!! make full scalars split (not only indexless)
-                rightSplit.add(Split.split(summand));
+                rightSplit.add(Split.splitScalars(summand));
         else
-            rightSplit.add(Split.split(equation.get(1)));
+            rightSplit.add(Split.splitScalars(equation.get(1)));
         List<Expression> equationsList = new ArrayList<>();
         for (Tensor summand : equation.get(0)) {
-            Split current = Split.split(summand);
+            Split current = Split.splitScalars(summand);
             boolean one = false;
             for (Split split : rightSplit)
                 if (TensorUtils.equals(current.factor, split.factor)) {
@@ -115,7 +111,44 @@ public final class InverseTensor {
                                               Transformation[] transformations,
                                               String mapleBinDir,
                                               String path) {
+        return findInverseWithMaple(toInverse, equation, samples, symmetricForm, false, transformations, mapleBinDir, path);
+    }
+
+    public static Tensor findInverseWithMaple(Expression toInverse,
+                                              Expression equation,
+                                              Tensor[] samples,
+                                              boolean symmetricForm,
+                                              boolean keepFreeParametres,
+                                              Transformation[] transformations,
+                                              String mapleBinDir,
+                                              String path) {
         InverseTensor inverseTensor = new InverseTensor(toInverse, equation, samples, symmetricForm, transformations);
+        final Expression[] equations = inverseTensor.equations.clone();
+
+        HashMap<TensorWrapperWithEquals, Tensor> tensorSubstitutions = new HashMap<>();
+        SymbolsGenerator generator = new SymbolsGenerator("scalar", ArraysUtils.addAll(samples, toInverse, equation));
+        int i;
+        for (i = 0; i < equations.length; ++i) {
+            Expression eq = equations[i];
+            TensorLastIterator iterator = new TensorLastIterator(eq);
+            Tensor t;
+            while ((t = iterator.next()) != null) {
+                if (!(t instanceof Product) || t.getIndices().size() == 0)
+                    continue;
+                Split split = Split.splitIndexless(t);
+                if (split.factor.getIndices().size() == 0)
+                    continue;
+                TensorWrapperWithEquals twwe = new TensorWrapperWithEquals(split.factor);
+                if (!tensorSubstitutions.containsKey(twwe)) {
+                    Tensor s;
+                    tensorSubstitutions.put(twwe, s = generator.take());
+                    iterator.set(Tensors.multiply(s, split.summand));
+                } else
+                    iterator.set(Tensors.multiply(tensorSubstitutions.get(twwe), split.summand));
+            }
+            equations[i] = (Expression) iterator.result();
+        }
+
         System.out.println("Inverse tensor: " + inverseTensor.generalInverse);
         System.out.println();
         try {
@@ -123,19 +156,19 @@ public final class InverseTensor {
             PrintStream file = new PrintStream(output);
             file.append("with(StringTools):\n");
             file.append("ans:=array([");
-            for (int i = 0; i < inverseTensor.uncknownCoefficients.length; ++i)
+            for (i = 0; i < inverseTensor.uncknownCoefficients.length; ++i)
                 if (i == inverseTensor.uncknownCoefficients.length - 1)
                     file.append(inverseTensor.uncknownCoefficients[i].toString());
                 else
                     file.append(inverseTensor.uncknownCoefficients[i] + ",");
             file.append("]):\n");
 
-            file.println("eq:=array(1.." + inverseTensor.equations.length + "):");
-            for (int i = 0; i < inverseTensor.equations.length; i++)
-                file.println("eq[" + (i + 1) + "]:=" + inverseTensor.equations[i] + ":");
+            file.println("eq:=array(1.." + equations.length + "):");
+            for (i = 0; i < equations.length; i++)
+                file.println("eq[" + (i + 1) + "]:=" + equations[i] + ":");
 
-            file.print("Result := solve({seq(eq[i],i=1.." + inverseTensor.equations.length + ")},[");
-            for (int i = 0; i < inverseTensor.uncknownCoefficients.length; ++i)
+            file.print("Result := solve({seq(eq[i],i=1.." + equations.length + ")},[");
+            for (i = 0; i < inverseTensor.uncknownCoefficients.length; ++i)
                 if (i == inverseTensor.uncknownCoefficients.length - 1)
                     file.append(inverseTensor.uncknownCoefficients[i].toString());
                 else
@@ -178,16 +211,46 @@ public final class InverseTensor {
             DataInputStream in = new DataInputStream(fstream);
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             String strLine;
-            int i = -1;
+            i = -1;
             while ((strLine = br.readLine()) != null)
                 coefficientsResults[++i] = Tensors.parseExpression(strLine);
             Tensor inverse = inverseTensor.generalInverse;
             for (Expression coef : coefficientsResults)
-                inverse = (Expression) coef.transform(inverse);
+                if (coef.isIdentity()) {
+                    if (!keepFreeParametres)
+                        inverse = Tensors.expression(coef.get(0), Complex.ZERO).transform(inverse);
+                } else
+                    inverse = (Expression) coef.transform(inverse);
+            for (Map.Entry<TensorWrapperWithEquals, Tensor> entry : tensorSubstitutions.entrySet())
+                inverse = Tensors.expression(entry.getValue(), entry.getKey().tensor).transform(inverse);
             in.close();
             return inverse;
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private static final class TensorWrapperWithEquals {
+
+        private final Tensor tensor;
+
+        public TensorWrapperWithEquals(Tensor tensor) {
+            this.tensor = tensor;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            final TensorWrapperWithEquals other = (TensorWrapperWithEquals) obj;
+            return TensorUtils.equals(tensor, other.tensor);
+        }
+
+        @Override
+        public int hashCode() {
+            return tensor.hashCode();
         }
     }
 }
