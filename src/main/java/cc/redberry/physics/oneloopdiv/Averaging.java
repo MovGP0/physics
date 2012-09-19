@@ -9,7 +9,7 @@ import java.util.*;
 import java.util.List;
 import org.apache.commons.math3.util.*;
 
-public class Averaging implements Transformation {
+public final class Averaging implements Transformation {
 
     private final SimpleTensor const_n;
 
@@ -68,9 +68,10 @@ public class Averaging implements Transformation {
                 return tensor;
             if (count % 2 != 0)
                 return Complex.ZERO;
+//            System.out.println(count);
             count = count / 2;
             Tensor averaged = average(ib.getIndices().getAllIndices().copy());
-            long factor = ArithmeticUtils.pow((long) 2, count) * ArithmeticUtils.factorial(count + 1);
+            long factor = ArithmeticUtils.pow((long) 2, count) * ArithmeticUtils.factorial(count + 1);//may be BigInteger?
             Complex number = new Complex((long) factor).reciprocal();
             averaged = Expand.expand(averaged);
             newProductElements.add(number);
