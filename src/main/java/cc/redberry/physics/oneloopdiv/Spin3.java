@@ -23,7 +23,7 @@ import cc.redberry.core.tensor.Tensors;
  *
  * @author stas
  */
-public class Main {
+public class Spin3 {
 
     /**
      * @param args the command line arguments

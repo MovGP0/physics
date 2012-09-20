@@ -467,7 +467,7 @@ public final class OneLoopAction {
 
         Expression kronecker = (Expression) Tensors.parse("d_{\\mu}^{\\mu}=4");
         Transformation n2 = new SqrSubs(Tensors.parseSimple("n_\\mu")), n2Transformer = new Transformer(TraverseState.Leaving, new Transformation[]{n2});
-        Transformation[] common = new Transformation[]{ContractIndices.INSTANCE, n2Transformer, kronecker};
+        Transformation[] common = new Transformation[]{ContractIndices.ContractIndices, n2Transformer, kronecker};
         Transformation[] all = ArraysUtils.addAll(common, riemansSubstitutions);
         Tensor temp;
 

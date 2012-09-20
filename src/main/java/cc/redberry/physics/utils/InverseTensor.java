@@ -62,11 +62,12 @@ public final class InverseTensor {
         Tensor temp = equation;
         temp = toInverse.transform(temp);
         temp = generalInverse.transform(temp);
-        transformations = ArraysUtils.addAll(new Transformation[]{ContractIndices.INSTANCE}, transformations);
+        transformations = ArraysUtils.addAll(new Transformation[]{ContractIndices.ContractIndices}, transformations);
         temp = Expand.expand(temp, transformations);
 
         for (Transformation transformation : transformations)
             temp = transformation.transform(temp);
+        temp = CollectNonScalars.collectNonScalars(temp);
         equation = (Expression) temp;
 
         List<Split> rightSplit = new ArrayList<>();

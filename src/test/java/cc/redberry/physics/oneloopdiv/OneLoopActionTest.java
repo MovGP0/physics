@@ -93,7 +93,7 @@ public class OneLoopActionTest {
 
     @Test
     public void testVectorField() {
-        CC.setDefaultPrintMode(ToStringMode.REDBERRY_SOUT);
+        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
         Tensors.addSymmetry("P_\\mu\\nu", IndexType.GreekLower, false, 1, 0);
 
         Expression KINV = Tensors.parseExpression("KINV_\\alpha^\\beta=d_\\alpha^\\beta+\\gamma*n_\\alpha*n^\\beta");
@@ -133,7 +133,7 @@ public class OneLoopActionTest {
     @Ignore
     @Test
     public void testSquaredVectorField() {
-        CC.setDefaultPrintMode(ToStringMode.REDBERRY_SOUT);
+        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
         Tensors.addSymmetry("P_\\mu\\nu", IndexType.GreekLower, false, 1, 0);
 
         Expression KINV = Tensors.parseExpression("KINV_\\alpha^\\beta=d_\\alpha^\\beta+(2*\\gamma+Power[\\gamma,2])*n_\\alpha*n^\\beta");
@@ -205,7 +205,7 @@ public class OneLoopActionTest {
 
     @Test
     public void testLambdaGaugeGravityGhosts0() {
-        CC.setDefaultPrintMode(ToStringMode.REDBERRY_SOUT);
+        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
         Tensors.addSymmetry("P_\\mu\\nu", IndexType.GreekLower, false, 1, 0);
 
         Expression KINV = Tensors.parseExpression("KINV_\\alpha^\\beta=d_\\alpha^\\beta+gamma*n_\\alpha*n^\\beta");
@@ -233,7 +233,7 @@ public class OneLoopActionTest {
 
     @Test
     public void testLambdaGaugeGravityGhosts() {
-        CC.setDefaultPrintMode(ToStringMode.REDBERRY_SOUT);
+        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
         Tensors.addSymmetry("P_\\mu\\nu", IndexType.GreekLower, false, 1, 0);
 
         Expression KINV = Tensors.parseExpression("KINV_\\alpha^\\beta=d_\\alpha^\\beta+gamma*n_\\alpha*n^\\beta");
@@ -266,7 +266,7 @@ public class OneLoopActionTest {
     @Ignore
     @Test
     public void testLambdaGaugeGravityMain() {
-        CC.setDefaultPrintMode(ToStringMode.REDBERRY_SOUT);
+        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
 
         Expression KINV = Tensors.parseExpression("KINV_\\alpha\\beta^\\gamma\\delta = "
                 + "(d_\\alpha^\\gamma*d_\\beta^\\delta+d_\\beta^\\gamma*d_\\alpha^\\delta)/2+"
@@ -326,7 +326,7 @@ public class OneLoopActionTest {
 
     @Test
     public void testMinimalSecondOrderOperator() {
-        CC.setDefaultPrintMode(ToStringMode.REDBERRY_SOUT);
+        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
 
         Expression KINV = Tensors.parseExpression("KINV_\\alpha^\\beta=d_\\alpha^\\beta");
         Expression K = Tensors.parseExpression("K^\\mu\\nu_\\alpha^\\beta=d_\\alpha^\\beta*g^{\\mu\\nu}");
@@ -348,7 +348,7 @@ public class OneLoopActionTest {
 
     @Test
     public void testMinimalSecondOrderOperatorBarvinskyVilkovisky() {
-        CC.setDefaultPrintMode(ToStringMode.REDBERRY_SOUT);
+        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
 
         //Phys. Rep. 119 ( 1985) 1-74 
         Expression KINV = Tensors.parseExpression("KINV_\\alpha^\\beta=d_\\alpha^\\beta");
@@ -370,7 +370,7 @@ public class OneLoopActionTest {
 
     @Test
     public void testMinimalFourthOrderOperator() {
-        CC.setDefaultPrintMode(ToStringMode.REDBERRY_SOUT);
+        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
         Tensors.addSymmetry("P_\\mu\\nu", IndexType.GreekLower, false, 1, 0);
 
         Expression KINV = Tensors.parseExpression("KINV_\\alpha^\\beta=d_\\alpha^\\beta");
@@ -408,7 +408,7 @@ public class OneLoopActionTest {
         };
         Expression kronecker = (Expression) Tensors.parse("d_{\\mu}^{\\mu}=4");
         Transformation n2 = new SqrSubs(Tensors.parseSimple("n_\\mu")), n2Transformer = new Transformer(TraverseState.Leaving, new Transformation[]{n2});
-        Transformation[] common = new Transformation[]{ContractIndices.INSTANCE, n2Transformer, kronecker};
+        Transformation[] common = new Transformation[]{ContractIndices.ContractIndices, n2Transformer, kronecker};
         Transformation[] all = ArraysUtils.addAll(common, riemansSubstitutions);
 
         Tensor t;

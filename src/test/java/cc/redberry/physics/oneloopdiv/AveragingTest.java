@@ -17,8 +17,8 @@ public class AveragingTest {
 
         Tensor t = Tensors.parse("F^\\alpha\\beta*n_{\\nu}*n_{\\alpha}*n_{\\beta}*n^{\\gamma}+V^\\beta\\alpha*n_{\\nu}*n_{\\alpha}*n_{\\beta}*n^{\\gamma}");
         t = new Averaging(Tensors.parseSimple("n_\\mu")).transform(t);
-        t = Expand.expand(t, ContractIndices.INSTANCE);
-        t = ContractIndices.INSTANCE.transform(t);
+        t = Expand.expand(t, ContractIndices.ContractIndices);
+        t = ContractIndices.ContractIndices.transform(t);
         Tensor expected = Tensors.parse("1/24*V^{\\gamma }_{\\nu }+1/24*V_{\\nu }^{\\gamma }+1/24*V_{\\alpha }^{\\alpha }*d^{\\gamma }_{\\nu }+1/24*d^{\\gamma }_{\\nu }*F_{\\beta }^{\\beta }+1/24*F_{\\nu }^{\\gamma }+1/24*F^{\\gamma }_{\\nu }");
         Assert.assertTrue(TensorUtils.equals(t, expected));
     }
@@ -32,13 +32,13 @@ public class AveragingTest {
 
     @Test
     public void test4_0() {
-        CC.setDefaultPrintMode(ToStringMode.REDBERRY_SOUT);
+        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
         for (int i = 0; i < 100; ++i) {
             CC.resetTensorNames();
             Tensor t = Tensors.parse("n^\\mu*n_\\mu*n_\\alpha*n^\\alpha*n_\\nu*n^\\nu");
             Expression d = (Expression) Tensors.parse("d_\\mu^\\mu=4");
             t = new Averaging(Tensors.parseSimple("n_\\mu")).transform(t);
-            t = Expand.expand(t, ContractIndices.INSTANCE, d);
+            t = Expand.expand(t, ContractIndices.ContractIndices, d);
             t = ContractIndices.contract(t);
             t = d.transform(t);
             if (!TensorUtils.isOne(t))
@@ -52,7 +52,7 @@ public class AveragingTest {
         Tensor t = Tensors.parse("n^\\mu*n_\\mu*n_\\alpha*n^\\alpha*n_\\nu*n^\\nu*n_\\lambda*n^\\lambda*n_\\rho*n^\\rho");
         Expression d = (Expression) Tensors.parse("d_\\mu^\\mu=4");
         t = new Averaging(Tensors.parseSimple("n_\\mu")).transform(t);
-        t = Expand.expand(t, ContractIndices.INSTANCE);
+        t = Expand.expand(t, ContractIndices.ContractIndices);
         t = ContractIndices.contract(t);
         t = d.transform(t);
         Assert.assertTrue(TensorUtils.isOne(t));
@@ -64,7 +64,7 @@ public class AveragingTest {
         Tensors.addSymmetry("F_{\\mu\\nu\\alpha\\beta}", IndexType.GreekLower, true, new int[]{1, 0, 2, 3});
         ff = new Averaging(Tensors.parseSimple("n_\\mu")).transform(ff);
         ff = Expand.expand(ff);
-        ff = ContractIndices.INSTANCE.transform(ff);
+        ff = ContractIndices.ContractIndices.transform(ff);
         ff = ((Expression) Tensors.parse("F_{\\mu}^\\mu_\\alpha\\beta=0")).transform(ff);
 
         System.out.println(ff);
@@ -83,7 +83,7 @@ public class AveragingTest {
         Tensor t = Tensors.parse("a*n_\\mu*n_\\nu+g_{\\mu\\nu}*n_\\alpha*n^\\alpha+n_\\mu*n_\\nu*n_\\alpha*g^\\alpha");
         Expression d = Tensors.parseExpression("d_\\mu^\\mu =4");
         t = new Averaging(Tensors.parseSimple("n_\\mu")).transform(t);
-        t = Expand.expand(t, ContractIndices.INSTANCE, d);
+        t = Expand.expand(t, ContractIndices.ContractIndices, d);
         t = ContractIndices.contract(t);
         t = d.transform(t);
         Tensor expected = Tensors.parse("(1/4*a+1)*g_\\mu\\nu");
