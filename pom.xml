@@ -146,19 +146,19 @@
     </properties>
 
     <dependencies>
-        <dependency>
+<!--        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-math3</artifactId>
             <version>3.0</version>
         </dependency>
 
-        <!-- TODO discuss with Stas (??) -->
+         TODO discuss with Stas (??) 
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-math3</artifactId>
             <version>3.0</version>
             <classifier>sources</classifier>
-        </dependency>
+        </dependency>-->
         
         <dependency>
             <groupId>cc.redberry</groupId>

@@ -101,7 +101,6 @@ public final class OneLoopAction {
 //            + "((-1/10)*R^\\rho_{\\mu\\gamma\\nu}*R^\\sigma_{\\alpha\\delta\\beta}+(1/15)*R^\\rho_{\\delta\\alpha\\nu}*R^\\sigma_{\\beta\\mu\\gamma}+(1/60)*R^\\rho_{\\beta\\delta\\nu}*R^\\sigma_{\\gamma\\mu\\alpha})"
 //           
 //            ;
-    
     public static final String RR_ =
             "RR="
             + "(1/10)*Power[L,2]*HATK^\\delta*DELTA^{\\mu\\nu\\alpha\\beta}*HATK^\\gamma*n_\\sigma*n_\\rho*R^\\sigma_{\\alpha\\beta\\gamma}*R^\\rho_{\\mu\\nu\\delta}"
@@ -549,6 +548,8 @@ public final class OneLoopAction {
             temp = terms[i];
             temp = input.getL().transform(temp);
 
+            temp = input.getF().transform(temp);
+            temp = input.getHatF().transform(temp);
             for (Transformation riemannBackround : input.getRiemannBackround())
                 temp = riemannBackround.transform(temp);
 

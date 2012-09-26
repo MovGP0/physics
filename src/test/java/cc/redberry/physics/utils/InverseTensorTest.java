@@ -22,8 +22,6 @@
  */
 package cc.redberry.physics.utils;
 
-import cc.redberry.core.combinatorics.symmetries.Symmetries;
-import cc.redberry.core.combinatorics.symmetries.SymmetriesFactory;
 import cc.redberry.core.tensor.Expression;
 import cc.redberry.core.tensor.ExpressionFactory;
 import cc.redberry.core.tensor.Tensor;
@@ -32,7 +30,6 @@ import cc.redberry.core.transformations.Expand;
 import cc.redberry.core.transformations.SymmetrizeUpperLowerIndices;
 import cc.redberry.core.transformations.Transformation;
 import cc.redberry.core.utils.*;
-import java.io.*;
 import org.junit.*;
 import org.junit.Test;
 
@@ -43,8 +40,29 @@ import org.junit.Test;
  */
 public class InverseTensorTest {
 
-    public static final String mapleBinDir = "/home/stas/maple14/bin";
-    public static final String temporaryDir = "/home/stas/Projects/redberry/Garbage";
+    public final String mapleBinDir;
+    public final String temporaryDir;
+
+    public InverseTensorTest() {
+        String mapleBinDir;
+        mapleBinDir = System.getenv("MAPLE");
+        if (mapleBinDir == null) {
+            System.out.println("No MAPLE enviroment variable specified.");
+            mapleBinDir = System.getProperty("redberry.maple");
+        }
+        if (mapleBinDir == null)
+            System.out.println("No maple directory specified.");
+        else
+            System.out.println("MAPLE directory: " + mapleBinDir);
+
+        this.mapleBinDir = mapleBinDir;
+        temporaryDir = System.getProperty("java.io.tmpdir");
+    }
+
+    @Before
+    public void beforeMethod() {
+        Assume.assumeTrue(mapleBinDir != null);
+    }
 
     @Test
     public void testVectorField1() {
@@ -57,7 +75,6 @@ public class InverseTensorTest {
         Assert.assertTrue(TensorUtils.equals(expected, actual));
     }
 
-    
     @Test
     public void testVectorField2() {
         Expression toInverse = Tensors.parseExpression("D_mn = k_m*k_n-(1/a)*k_i*k^i*g_mn");

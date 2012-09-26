@@ -31,6 +31,7 @@ import cc.redberry.core.transformations.*;
 import cc.redberry.core.utils.*;
 import java.io.*;
 import java.util.*;
+import org.apache.commons.math3.random.*;
 
 /**
  *
@@ -187,7 +188,10 @@ public final class InverseTensor {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
+        
+        //TODO use temp file
+        //File.createTempFile(path, path)
+        
         try {
             Process p = Runtime.getRuntime().exec(mapleBinDir + "/maple " + path + "/equations.maple");
             BufferedReader bri = new BufferedReader(new InputStreamReader(p.getInputStream()));
