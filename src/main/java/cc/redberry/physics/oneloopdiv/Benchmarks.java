@@ -16,19 +16,62 @@
  */
 package cc.redberry.physics.oneloopdiv;
 
-import cc.redberry.core.context.*;
-import cc.redberry.core.indices.*;
-import cc.redberry.core.tensor.*;
-import cc.redberry.core.transformations.*;
-import cc.redberry.core.utils.*;
-import java.io.*;
+import cc.redberry.core.context.CC;
+import cc.redberry.core.context.ToStringMode;
+import cc.redberry.core.indices.IndexType;
+import cc.redberry.core.tensor.Expression;
+import cc.redberry.core.tensor.Tensors;
+import cc.redberry.core.transformations.ContractIndices;
+import cc.redberry.core.transformations.Expand;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 
 /**
+ * This class contains several performance benchmarks of one-loop divergences
+ * calculation. Here the summary:
  *
- * @author stas
+ *
+ * <pre>
+ * Machine:
+ *  Processor family: Intel(R) Core(TM) i5 CPU M 430  @ 2.27GHz.
+ *  -Xmx value : 3g.
+ *  Max memory used: 1.2g.
+ *  Java version: 1.7.0_03 HotSpot 64-bit server VM
+ *
+ * Benchmark results:
+ *  Minimal second order : 2 s.
+ *  Minimal fourth order : 2 s.
+ *  Vector field : 19 s.
+ *  Gravity ghosts : 19 s.
+ *  Squared vector field : 313 s.
+ *  Lambda gauge gravity : 612 s.
+ *  Spin 3 ghosts : 920 s.
+ * </pre>
+ * <pre>
+ * Machine:
+ *  Processor family: AMD Phenom(tm) II X6 1100T Processor
+ *  -Xmx value : 3g
+ *  Max memory used: 1.2g
+ *  Java version: 1.7.0_04 HotSpot 64-bit server VM
+ *
+ * Benchmark results:
+ *  Minimal second order : 1 s.
+ *  Minimal fourth order : 1 s.
+ *  Vector field : 14 s.
+ *  Gravity ghosts : 14 s.
+ *  Squared vector field : 219 s.
+ *  Lambda gauge gravity : 521 s.
+ *  Spin 3 ghosts : 627 s.
+ * </pre>
+ *
+ *
+ * @author Stanislav Poslavsky
  */
-public class Benchmarks {
+public final class Benchmarks {
 
+    private Benchmarks() {
+    }
     private static final OutputStream dummyOutputStream = new OutputStream() {
 
         @Override
@@ -69,7 +112,7 @@ public class Benchmarks {
         //Squared vector field : 219 s.
         //Lambda gauge gravity : 521 s.
         //Spin 3 ghosts : 627 s.
-        
+
         //suppressing output
         System.setOut(new PrintStream(dummyOutputStream));
         //burning JVM
@@ -99,6 +142,9 @@ public class Benchmarks {
         timer.restart();
     }
 
+    /**
+     * Warm up the JVM.
+     */
     public static void burnJVM() {
         testVectorField();
         for (int i = 0; i < 10; ++i)
@@ -129,6 +175,10 @@ public class Benchmarks {
         }
     }
 
+    /**
+     * This method calculates one-loop counterterms of the vector field in the
+     * non-minimal gauge.
+     */
     public static void testVectorField() {
         CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
         Tensors.addSymmetry("P_\\mu\\nu", IndexType.GreekLower, false, 1, 0);
@@ -149,9 +199,13 @@ public class Benchmarks {
 
         OneLoopInput input = new OneLoopInput(2, KINV, K, S, W, null, null, F);
 
-        OneLoopAction action = OneLoopAction.calculateOneLoopAction(input);
+        OneLoopCounterterms action = OneLoopCounterterms.calculateOneLoopCounterterms(input);
     }
 
+    /**
+     * This method calculates one-loop counterterms of the squared vector field
+     * in the non-minimal gauge.
+     */
     public static void testSquaredVectorField() {
         CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
         Tensors.addSymmetry("P_\\mu\\nu", IndexType.GreekLower, false, 1, 0);
@@ -208,9 +262,20 @@ public class Benchmarks {
         M = (Expression) gamma.transform(lambda.transform(M));
 
         OneLoopInput input = new OneLoopInput(4, KINV, K, S, W, N, M, F);
-        OneLoopAction action = OneLoopAction.calculateOneLoopAction(input);
+        OneLoopCounterterms action = OneLoopCounterterms.calculateOneLoopCounterterms(input);
     }
 
+    /**
+     * This method calculates ghosts contribution to the one-loop counterterms
+     * of the gravitational field in the non-minimal gauge. The gauge fixing
+     * term in LaTeX notation:
+     * <pre>
+     *  &nbsp;&nbsp;&nbsp;&nbsp; S_{gf} = -1/2 \int d^4 x \sqrt{-g} g_{\mu\nu} \chi^\mu \chi^\nu,
+     *  where
+     *  &nbsp;&nbsp;&nbsp;&nbsp; \chi^\mu = 1/\sqrt{1+\lambda} (g^{\mu\alpha} \nabla^\beta h_{\alpha\beta}-1/2 g^{\alpha\beta} \nabla^\mu h_{\alpha\beta})
+     * </pre>
+     *
+     */
     public static void testGravityGhosts() {
         CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
         Tensors.addSymmetry("P_\\mu\\nu", IndexType.GreekLower, false, 1, 0);
@@ -230,9 +295,19 @@ public class Benchmarks {
 
         OneLoopInput input = new OneLoopInput(2, KINV, K, S, W, null, null, F);
 
-        OneLoopAction action = OneLoopAction.calculateOneLoopAction(input);
+        OneLoopCounterterms action = OneLoopCounterterms.calculateOneLoopCounterterms(input);
     }
 
+    /**
+     * This method calculates the main contribution to the one-loop counterterms
+     * of the gravitational field in the non-minimal gauge. The gauge fixing
+     * term in LaTeX notation:
+     * <pre>
+     *  &nbsp;&nbsp;&nbsp;&nbsp; S_{gf} = -1/2 \int d^4 x \sqrt{-g} g_{\mu\nu} \chi^\mu \chi^\nu,
+     *  where
+     *  &nbsp;&nbsp;&nbsp;&nbsp; \chi^\mu = 1/\sqrt{1+\lambda} (g^{\mu\alpha} \nabla^\beta h_{\alpha\beta}-1/2 g^{\alpha\beta} \nabla^\mu h_{\alpha\beta})
+     * </pre>
+     */
     public static void testLambdaGaugeGravity() {
         CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
 
@@ -280,9 +355,13 @@ public class Benchmarks {
 
         OneLoopInput input = new OneLoopInput(2, KINV, K, S, W, null, null, F);
 
-        OneLoopAction action = OneLoopAction.calculateOneLoopAction(input);
+        OneLoopCounterterms action = OneLoopCounterterms.calculateOneLoopCounterterms(input);
     }
 
+    /**
+     * This method calculates one-loop counterterms of the second order minimal
+     * operator.
+     */
     public static void testMinimalSecondOrderOperator() {
         //TIME = 6.1 s
         CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
@@ -295,9 +374,14 @@ public class Benchmarks {
 
         OneLoopInput input = new OneLoopInput(2, KINV, K, S, W, null, null, F);
 
-        OneLoopAction action = OneLoopAction.calculateOneLoopAction(input);
+        OneLoopCounterterms action = OneLoopCounterterms.calculateOneLoopCounterterms(input);
     }
 
+    /**
+     * This method calculates one-loop counterterms of the second order minimal
+     * operator in Barvinsky and Vilkovisky notation (Phys. Rep. 119 ( 1985)
+     * 1-74 ).
+     */
     public static void testMinimalSecondOrderOperatorBarvinskyVilkovisky() {
         //TIME = 4.5 s
         CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
@@ -312,9 +396,13 @@ public class Benchmarks {
 
         OneLoopInput input = new OneLoopInput(2, KINV, K, S, W, null, null, F);
 
-        OneLoopAction action = OneLoopAction.calculateOneLoopAction(input);
+        OneLoopCounterterms action = OneLoopCounterterms.calculateOneLoopCounterterms(input);
     }
 
+    /**
+     * This method calculates one-loop counterterms of the fourth order minimal
+     * operator.
+     */
     public static void testMinimalFourthOrderOperator() {
         //TIME = 6.2 s
         CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
@@ -330,9 +418,13 @@ public class Benchmarks {
         Expression F = Tensors.parseExpression("F_\\mu\\nu\\alpha\\beta=F_\\mu\\nu\\alpha\\beta");
 
         OneLoopInput input = new OneLoopInput(4, KINV, K, S, W, N, M, F);
-        OneLoopAction action = OneLoopAction.calculateOneLoopAction(input);
+        OneLoopCounterterms action = OneLoopCounterterms.calculateOneLoopCounterterms(input);
     }
 
+    /**
+     * This method calculates ghosts contribution to the one-loop counterterms
+     * of the theory with spin = 3.
+     */
     public static void testSpin3Ghosts() {
         //TIME = 990 s
         CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
@@ -367,9 +459,19 @@ public class Benchmarks {
 
         OneLoopInput input = new OneLoopInput(2, KINV, K, S, W, null, null, F, OneLoopUtils.antiDeSitterBackround());
 
-        OneLoopAction action = OneLoopAction.calculateOneLoopAction(input);
+        OneLoopCounterterms action = OneLoopCounterterms.calculateOneLoopCounterterms(input);
     }
 
+    /**
+     * This method calculates the main contribution to the one-loop counterterms
+     * of the gravitational field in general the non-minimal gauge. The gauge
+     * fixing term in LaTeX notation:
+     * <pre>
+     *  &nbsp;&nbsp;&nbsp;&nbsp; S_{gf} = -1/2 \int d^4 x \sqrt{-g} g_{\mu\nu} \chi^\mu \chi^\nu,
+     *  where
+     *  &nbsp;&nbsp;&nbsp;&nbsp; \chi^\mu = 1/\sqrt{1+\lambda} (g^{\mu\alpha} \nabla^\beta h_{\alpha\beta}-(1+\beta)/2 g^{\alpha\beta} \nabla^\mu h_{\alpha\beta})
+     * </pre>
+     */
     public static void testNonMinimalGaugeGravity() {
         //FIXME works more than hour
         CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
@@ -426,6 +528,6 @@ public class Benchmarks {
 
         OneLoopInput input = new OneLoopInput(2, KINV, K, S, W, null, null, F);
 
-        OneLoopAction action = OneLoopAction.calculateOneLoopAction(input);        
+        OneLoopCounterterms action = OneLoopCounterterms.calculateOneLoopCounterterms(input);
     }
 }

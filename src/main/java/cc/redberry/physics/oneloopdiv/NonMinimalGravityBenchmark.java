@@ -27,10 +27,13 @@ package cc.redberry.physics.oneloopdiv;
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public class NonMinimalGravityBenchmark {
+public final class NonMinimalGravityBenchmark {
+
+    private NonMinimalGravityBenchmark() {
+    }
 
     public static void main(String[] args) {
-        Benchmarks.burnJVM();
+//        Benchmarks.burnJVM();
         Benchmarks.Timer timer = new Benchmarks.Timer();
         timer.start();
         Benchmarks.testNonMinimalGaugeGravity();

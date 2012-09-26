@@ -1,3 +1,25 @@
+/*
+ * Redberry: symbolic tensor computations.
+ *
+ * Copyright (c) 2010-2012:
+ *   Stanislav Poslavsky   <stvlpos@mail.ru>
+ *   Bolotin Dmitriy       <bolotin.dmitriy@gmail.com>
+ *
+ * This file is part of Redberry.
+ *
+ * Redberry is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Redberry is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Redberry. If not, see <http://www.gnu.org/licenses/>.
+ */
 package cc.redberry.physics.oneloopdiv;
 
 import cc.redberry.core.context.CC;
@@ -11,12 +33,25 @@ import cc.redberry.core.tensor.Expression;
 import cc.redberry.core.tensor.SimpleTensor;
 import cc.redberry.core.tensor.Tensor;
 import cc.redberry.core.tensor.Tensors;
-import cc.redberry.core.tensor.iterator.*;
-import cc.redberry.core.transformations.*;
+import cc.redberry.core.tensor.iterator.TraverseState;
+import cc.redberry.core.transformations.ContractIndices;
+import cc.redberry.core.transformations.Expand;
+import cc.redberry.core.transformations.Transformation;
+import cc.redberry.core.transformations.Transformer;
 import cc.redberry.core.utils.ArraysUtils;
 import cc.redberry.core.utils.Indicator;
 import java.util.Arrays;
 
+/**
+ * This class is a container of input parameters for one-loop counterterms
+ * calculation. This class is always used in conjunction with {@link OneLoopActionDiv},
+ * which performs the main calculation. The input parametres 
+ *
+ * @see OneLoopActionDiv
+ *
+ * @author Dmitry Bolotin
+ * @author Stanislav Poslavsky
+ */
 public final class OneLoopInput {
 
     //[KINV,K,S,W,N,M]
@@ -266,10 +301,6 @@ public final class OneLoopInput {
 
     public Expression getF() {
         return F;
-//        int[] indices = new int[2 + matrixIndicesCount];
-//        for (int i = 0; i < indices.length; ++i)
-//            indices[i] = IndicesUtils.createIndex(i, IndexType.GreekLower, false);
-//        return (Expression) Tensors.parse("F" + IndicesUtils.toString(indices, ToStringMode.REDBERRY) + "=0");
     }
 
     public Expression[] getNablaS() {

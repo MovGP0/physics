@@ -22,9 +22,11 @@
  */
 package cc.redberry.physics.oneloopdiv;
 
+import cc.redberry.core.number.*;
 import cc.redberry.core.tensor.*;
 import cc.redberry.core.tensor.iterator.*;
 import cc.redberry.core.transformations.*;
+import cc.redberry.core.utils.*;
 import org.junit.*;
 
 /**
@@ -34,13 +36,13 @@ import org.junit.*;
  */
 public class SqrSubsTest {
 
-
     @Test
     public void test1() {
         SimpleTensor n = (SimpleTensor) Tensors.parse("n_{a}");
         Transformation tr = new Transformer(TraverseState.Leaving, new Transformation[]{new SqrSubs(n)});
         Tensor t = Tensors.parse("n_m*n^m*a*n_a*n^a*n_i*n^j*b");
-        System.out.println(tr.transform(t));
+        t = tr.transform(t);
+        Assert.assertTrue(TensorUtils.equals(t, Tensors.parse("a*b*n_{i}*n^{j}")));
     }
 
     @Test
@@ -48,6 +50,7 @@ public class SqrSubsTest {
         SimpleTensor n = (SimpleTensor) Tensors.parse("n_{a}");
         Transformation tr = new Transformer(TraverseState.Leaving, new Transformation[]{new SqrSubs(n)});
         Tensor t = Tensors.parse("n_m*n^m*n_a*n^a+2");
-        System.out.println(tr.transform(t));
+        t = tr.transform(t);
+        Assert.assertTrue(TensorUtils.equals(t, Tensors.parse("3")));
     }
 }

@@ -30,13 +30,14 @@ import cc.redberry.core.tensor.Tensors;
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public class OneLoopUtils {
+public final class OneLoopUtils {
 
     private OneLoopUtils() {
     }
     private static Expression[] antiDeSitterBackround = {
-        Tensors.parseExpression("R_{\\mu\\nu} = -g_{\\mu\\nu}*LAMBDA"),
-        Tensors.parseExpression("R_{\\mu\\nu\\alpha\\beta} = (1/3)*(g_{\\mu\\beta}*g_{\\nu\\alpha}-g_{\\mu\\alpha}*g_{\\nu\\beta})*LAMBDA")};
+        Tensors.parseExpression("R_{\\mu\\nu\\alpha\\beta} = (1/3)*(g_{\\mu\\beta}*g_{\\nu\\alpha}-g_{\\mu\\alpha}*g_{\\nu\\beta})*LAMBDA"),
+        Tensors.parseExpression("R_{\\mu\\nu} = -g_{\\mu\\nu}*LAMBDA")
+    };
 
     public static Expression[] antiDeSitterBackround() {
         return antiDeSitterBackround.clone();

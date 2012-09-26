@@ -97,19 +97,17 @@ public class AveragingTest {
         Tensor expected = Tensors.parse("1");
         Assert.assertTrue(TensorUtils.equals(t, expected));
     }
-    
-    
+
     @Test
     public void test9() {
         Tensor t = Tensors.parse("n_\\mu*n_\\nu*n^\\alpha*n^\\beta");
         t = new Averaging(Tensors.parseSimple("n_\\mu")).transform(t);
-        System.out.println(t);
+        Assert.assertTrue(TensorUtils.equals(t, Tensors.parse("1/24*(d^{\\alpha }_{\\nu }*d^{\\beta }_{\\mu }+d^{\\alpha }_{\\mu }*d^{\\beta }_{\\nu }+g^{\\alpha \\beta }*g_{\\mu \\nu })")));
     }
-    
-    @Test
+
+    @Test(timeout = 2000)
     public void test10() {
         Tensor t = Tensors.parse("n_\\mu*n_\\nu*n^\\alpha*n^\\beta*n^\\gamma*n^\\lambda*n^\\sigma*n^\\rho*n^\\theta*n^\\zeta");
-        t = new Averaging(Tensors.parseSimple("n_\\mu")).transform(t);
-        System.out.println(t);
+        new Averaging(Tensors.parseSimple("n_\\mu")).transform(t);
     }
 }

@@ -38,7 +38,7 @@ import cc.redberry.core.utils.*;
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public final class OneLoopAction {
+public final class OneLoopCounterterms {
 
     public static final String Flat_ =
             "Flat="
@@ -303,7 +303,7 @@ public final class OneLoopAction {
     public static final String ACTION_ = "ACTION = Flat + WR + SR + SSR + FF + FR + RR";
     private final Expression Flat, WR, SR, SSR, FF, FR, RR, DELTA_1, DELTA_2, DELTA_3, DELTA_4, ACTION;
 
-    private OneLoopAction(Expression Flat, Expression WR, Expression SR, Expression SSR, Expression FF, Expression FR, Expression RR, Expression DELTA_1, Expression DELTA_2, Expression DELTA_3, Expression DELTA_4, Expression ACTION) {
+    private OneLoopCounterterms(Expression Flat, Expression WR, Expression SR, Expression SSR, Expression FF, Expression FR, Expression RR, Expression DELTA_1, Expression DELTA_2, Expression DELTA_3, Expression DELTA_4, Expression ACTION) {
         this.Flat = Flat;
         this.WR = WR;
         this.SR = SR;
@@ -330,55 +330,21 @@ public final class OneLoopAction {
 //    public Expression DELTA_2(){return DELTA_2;}
 //    public Expression DELTA_3(){return DELTA_3;}
 //    public Expression DELTA_4(){return DELTA_4;}
-    public Expression Flat() {
-        return Flat;
-    }
-
-    public Expression WR() {
-        return WR;
-    }
-
-    public Expression SR() {
-        return SR;
-    }
-
-    public Expression SSR() {
-        return SSR;
-    }
-
-    public Expression FF() {
-        return FF;
-    }
-
-    public Expression FR() {
-        return FR;
-    }
-
-    public Expression RR() {
-        return RR;
-    }
-
-    public Expression ACTION() {
-        return ACTION;
-    }
-
-    public Expression DELTA_1() {
-        return DELTA_1;
-    }
-
-    public Expression DELTA_2() {
-        return DELTA_2;
-    }
-
-    public Expression DELTA_3() {
-        return DELTA_3;
-    }
-
-    public Expression DELTA_4() {
-        return DELTA_4;
-    }
-
-    public static OneLoopAction calculateOneLoopAction(OneLoopInput input) {
+   
+    public Expression Flat(){return Flat;}
+    public Expression WR(){return WR;}
+    public Expression SR(){return SR;}
+    public Expression SSR(){return SSR;}
+    public Expression FF(){return FF;}
+    public Expression FR(){return FR;}
+    public Expression RR(){return RR;}
+    public Expression ACTION(){return ACTION;}
+    public Expression DELTA_1(){return DELTA_1;}
+    public Expression DELTA_2(){return DELTA_2;}
+    public Expression DELTA_3(){return DELTA_3;}
+    public Expression DELTA_4(){return DELTA_4;}
+   
+    public static OneLoopCounterterms calculateOneLoopCounterterms(OneLoopInput input) {
         Tensors.addSymmetry("R_\\mu\\nu", IndexType.GreekLower, false, new int[]{1, 0});
         Tensors.addSymmetry("R_\\mu\\nu\\alpha\\beta", IndexType.GreekLower, true, new int[]{0, 1, 3, 2});
         Tensors.addSymmetry("R_\\mu\\nu\\alpha\\beta", IndexType.GreekLower, false, new int[]{2, 3, 0, 1});
@@ -592,6 +558,6 @@ public final class OneLoopAction {
 
         System.out.println(ACTION);
 
-        return new OneLoopAction(Flat, WR, SR, SSR, FF, FR, RR, deltaExpressions[0], deltaExpressions[1], deltaExpressions[2], deltaExpressions[3], ACTION);
+        return new OneLoopCounterterms(Flat, WR, SR, SSR, FF, FR, RR, deltaExpressions[0], deltaExpressions[1], deltaExpressions[2], deltaExpressions[3], ACTION);
     }
 }

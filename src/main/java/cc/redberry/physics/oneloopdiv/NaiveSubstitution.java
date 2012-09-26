@@ -25,7 +25,8 @@ package cc.redberry.physics.oneloopdiv;
 import cc.redberry.core.indexmapping.IndexMappingBuffer;
 import cc.redberry.core.indexmapping.IndexMappings;
 import cc.redberry.core.tensor.Tensor;
-import cc.redberry.core.tensor.iterator.*;
+import cc.redberry.core.tensor.iterator.TraverseState;
+import cc.redberry.core.tensor.iterator.TreeTraverseIterator;
 import cc.redberry.core.transformations.ApplyIndexMapping;
 import cc.redberry.core.transformations.Transformation;
 
