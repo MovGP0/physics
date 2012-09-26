@@ -27,7 +27,7 @@ import java.io.*;
  *
  * @author stas
  */
-public class Performance {
+public class Benchmarks {
 
     private static final OutputStream dummyOutputStream = new OutputStream() {
 
@@ -37,7 +37,39 @@ public class Performance {
     };
     private static final PrintStream defaultOutputStream = System.out;
 
+    private static void println(String str) {
+        defaultOutputStream.println(str);
+    }
+
     public static void main(String[] args) {
+        //Processor family: Intel(R) Core(TM) i5 CPU M 430  @ 2.27GHz.
+        //-Xmx value : 3g.
+        //Max memory used: 1.2g.
+        //Java version: 1.7.0_03 HotSpot 64-bit server VM
+        //Benchmark results:
+        //
+        //Minimal second order : 2 s.
+        //Minimal fourth order : 2 s.
+        //Vector field : 19 s.
+        //Gravity ghosts : 19 s.
+        //Squared vector field : 313 s.
+        //Lambda gauge gravity : 612 s.
+        //Spin 3 ghosts : 920 s.
+
+        //Processor family: AMD Phenom(tm) II X6 1100T Processor
+        //-Xmx value : 3g
+        //Max memory used: 1.2g
+        //Java version: 1.7.0_04 HotSpot 64-bit server VM
+        //Benchmark results:
+        //
+        //Minimal second order : 1 s.
+        //Minimal fourth order : 1 s.
+        //Vector field : 14 s.
+        //Gravity ghosts : 14 s.
+        //Squared vector field : 219 s.
+        //Lambda gauge gravity : 521 s.
+        //Spin 3 ghosts : 627 s.
+        
         //suppressing output
         System.setOut(new PrintStream(dummyOutputStream));
         //burning JVM
@@ -67,19 +99,15 @@ public class Performance {
         timer.restart();
     }
 
-    private static void println(String str) {
-        defaultOutputStream.println(str);
-    }
-
-    private static void burnJVM() {
+    public static void burnJVM() {
         testVectorField();
         for (int i = 0; i < 10; ++i)
             testMinimalFourthOrderOperator();
     }
 
-    private static class Timer {
+    static class Timer {
 
-        long start, stop;
+        private long start, stop;
 
         public Timer() {
         }
@@ -398,47 +426,6 @@ public class Performance {
 
         OneLoopInput input = new OneLoopInput(2, KINV, K, S, W, null, null, F);
 
-        OneLoopAction action = OneLoopAction.calculateOneLoopAction(input);
-        Tensor A = action.ACTION().get(1);
-        ProductBuilder pb = new ProductBuilder();
-        for (Tensor t : A)
-            if (TensorUtils.isIndexless(t))
-                pb.put(t);
-            else {
-                Split split = Split.splitIndexless(t);
-                System.out.println(split.factor + " :  " + split.summand);
-            }
-        System.out.println("Indexless: " + pb.build());
-
-        System.out.println("\n\n\n\n\n");
-
-
-        A = Expand.expand(Together.together(A));
-        pb = new ProductBuilder();
-        for (Tensor t : A)
-            if (TensorUtils.isIndexless(t))
-                pb.put(t);
-            else {
-                Split split = Split.splitIndexless(t);
-                System.out.println(split.factor + " :  " + split.summand);
-            }
-        System.out.println("Indexless: " + pb.build());
-
-        //TODO simplify result
-        //non simplified result
-//        Tensor expected = Tensors.parse("-43/960*R**2*la**6*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+31751/2880*R**2*la**4*(1+la)**(-1)*(1+la)**(-1)-161/960*R**2*la**7*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+3311/1920*R**2*la**6*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+3833/5760*R**2*la**8*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-281/60*R**2*la**4*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-59/12*R**2*la**2*(1+la)**(-1)+34979/5760*R**2*la**5*(1+la)**(-1)*(1+la)**(-1)-7651/1440*R**2*la**4*(1+la)**(-1)+1627/2880*R**2*la**5*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+(7/45*la**10*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-107/30*la+1631/720*la**7*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-6841/160*la**4*(1+la)**(-1)*(1+la)**(-1)-4619/5760*la**7*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+101/96*la**8*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+3211/360*la**3*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+1729/80*la**4*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-18517/960*la**5*(1+la)**(-1)*(1+la)**(-1)-3697/2880*la**8*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-179/720*la**9*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-3109/5760*la**6*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+953/1440*la**9*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-2533/720*la**6*(1+la)**(-1)*(1+la)**(-1)+79/30*la**5*(1+la)**(-1)-2551/2880*la**5*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+127/30*la*(1+la)**(-1)+7/6+10387/1152*la**6*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-25/48*la**8*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-5477/2880*la**6*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-2825/72*la**3*(1+la)**(-1)*(1+la)**(-1)+881/36*la**2*(1+la)**(-1)-95/9*la**2*(1+la)**(-1)*(1+la)**(-1)+6197/180*la**3*(1+la)**(-1)-301/480*la**4*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-23/30*la**4-299/60*la**3-541/60*la**2+1067/1440*la**7*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+4003/240*la**4*(1+la)**(-1)-803/1440*la**5*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+281/1440*la**6*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+155/8*la**5*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-571/240*la**7*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1))*R^{\\mu \\nu }*R_{\\mu \\nu }-3223/360*R**2*la**3*(1+la)**(-1)-667/360*R**2*la**3*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-1109/288*R**2*la**5*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-91/60*R**2*la**5*(1+la)**(-1)-1/30*R**2*la**10*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+9/20*R**2*la**4-7349/11520*R**2*la**7*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+157/60*R**2*la**2+181/120*R**2*la**3+103/320*R**2*la**4*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-13/10*R**2*la*(1+la)**(-1)+859/480*R**2*la**7*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+7/12*R**2-20419/11520*R**2*la**6*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-3181/5760*R**2*la**5*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-533/480*R**2*la**7*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-15/64*R**2*la**8*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+601/72*R**2*la**3*(1+la)**(-1)*(1+la)**(-1)+13/10*R**2*la+25/96*R**2*la**8*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)-4955/2304*R**2*la**6*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+919/480*R**2*la**6*(1+la)**(-1)*(1+la)**(-1)-139/960*R**2*la**9*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+17/480*R**2*la**9*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)*(1+la)**(-1)+4/3*R**2*la**2*(1+la)**(-1)*(1+la)**(-1)");
-//        Assert.assertTrue(TensorUtils.equals(A, expected));
-
-        //simplified result
-        //Tensor expected = Tensors.parse("1/12*(c1*R_\\mu\\nu*R^\\mu\\nu+c2*R**2+c3*R*LA+c4*LA**2");
-        //where
-        //Expression c1 = Tensors.parseExpression("c1 = la**2*(2*ga**4+8*ga**3+12*ga**2+8*ga+8)+la*(-8*ga**4-16*ga**3-4*ga**2+8*ga+8)+(8*ga**4-8*ga**2+14)");
-        //Expression c2 = Tensors.parseExpression("c2 = la**2*(ga**4+4*ga**3+6*ga**2+4*ga+4)+la*(-4*ga**4-8*ga**3-6*ga**2-4*ga)+(4*ga**4+4*ga**2+7)");
-        //Expression c3 = Tensors.parseExpression("c3 = la**2*(-12*ga**4-48*ga**3-72*ga**2-48*ga-48)+la*(48*ga**4+72*ga**3-8*ga**2-40*ga-56)+(-48*ga**4+48*ga**3+40*ga**2+8*ga-104)");
-        //Expression c4 = Tensors.parseExpression("c4 = la**2*(23*ga**4+96*ga**3+144*ga**2+96*ga+96)+la*(-96*ga**4-96*ga**3+144*ga**2+192*ga+192)+(96*ga**4-192*ga**3-144*ga**2+96*ga+240)");
-        //expected = c1.transform(expected);
-        //expected = c2.transform(expected);
-        //expected = c3.transform(expected);
-        //expected = c4.transform(expected);
+        OneLoopAction action = OneLoopAction.calculateOneLoopAction(input);        
     }
 }
