@@ -22,76 +22,151 @@
  */
 package cc.redberry.physics.utils;
 
+import cc.redberry.core.context.CC;
 import cc.redberry.core.indexmapping.IndexMappings;
-import cc.redberry.core.number.*;
+import cc.redberry.core.number.Complex;
 import cc.redberry.core.tensor.*;
-import cc.redberry.core.tensor.iterator.*;
-import cc.redberry.core.tensorgenerator.*;
-import cc.redberry.core.transformations.*;
-import cc.redberry.core.utils.*;
+import cc.redberry.core.tensor.iterator.TensorLastIterator;
+import cc.redberry.core.tensorgenerator.GeneratedTensor;
+import cc.redberry.core.tensorgenerator.SymbolsGenerator;
+import cc.redberry.core.tensorgenerator.TensorGenerator;
+import cc.redberry.core.transformations.CollectNonScalars;
+import cc.redberry.core.transformations.ContractIndices;
+import cc.redberry.core.transformations.Expand;
+import cc.redberry.core.transformations.Transformation;
+import cc.redberry.core.utils.ArraysUtils;
+import cc.redberry.core.utils.THashMap;
+import cc.redberry.core.utils.TensorUtils;
+
 import java.io.*;
 import java.util.*;
-import org.apache.commons.math3.random.*;
 
 /**
+ * This class provides opportunities to find inverse of tensor. In
+ * other words it can be used to solve the the equation of the form
+ * <pre>
+ *     <i>T^{ij..}_{kp..}*Tinv^{kp..}_{mn..} = d^{i}_{m}*d^{j}_{m}*.. + ... (combinations of kroneckers),<i/>
+ * </pre>
+ * where <i>T</i> is specified tensor, <i>Tinv</i> is unknown tensor
+ * and <i>d</i> - kronecker delta.
+ * <p/>
+ * The main goal of this class is to create the tensor <i>Tinv</i> of the
+ * most general form with unknown coefficients, and produce a system of
+ * linear equations on these coefficients. The resulting equations can
+ * then be solved and coefficients values substituted in generated
+ * <i>Tinv</i> tensor.
+ * </p>
  *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
+ * @since 1.0
  */
 public final class InverseTensor {
 
     private final Expression[] equations;
-    private final SimpleTensor[] uncknownCoefficients;
+    private final SimpleTensor[] unknownCoefficients;
     private final Expression generalInverse;
 
     public InverseTensor(Expression toInverse, Expression equation, Tensor[] samples) {
         this(toInverse, equation, null, false, new Transformation[0]);
     }
 
-    public InverseTensor(Expression toInverse, Expression equation, Tensor[] samples, boolean symmetricForm, Transformation[] transformations) {
+    /**
+     * Creates the {@Code InverseTensor} instance from the specified equation.
+     *
+     * @param toInverse       expression specifying tensor to be inverse
+     * @param equation        linear equation on the unknown tensor
+     * @param samples         samples from which inverse should be formed
+     * @param symmetricForm   specifies whether inverse tensor should be symmetric
+     * @param transformations additional simplification rules, which can be taken
+     *                        into account when forming a system of linear equations
+     */
+    public InverseTensor(Expression toInverse,
+                         Expression equation,
+                         Tensor[] samples,
+                         boolean symmetricForm,
+                         Transformation[] transformations) {
+        if (!(equation.get(0) instanceof Product))
+            throw new IllegalArgumentException("Equation l.h.s. is not a product of tensors.");
+
         Product leftEq = (Product) equation.get(0);
+
+        //matching toInverse l.h.s in equation
         Tensor inverseLhs = null;
         for (Tensor t : leftEq)
             if (!IndexMappings.mappingExists(t, toInverse.get(0))) {
                 inverseLhs = t;
                 break;
             }
-        GeneratedTensor generatedTensor = TensorGenerator.generateStructure("c", inverseLhs.getIndices(), symmetricForm, samples);
-        uncknownCoefficients = generatedTensor.coefficients;
-        generalInverse = ExpressionFactory.FACTORY.create(inverseLhs, generatedTensor.generatedTensor);
 
+        //creating tensor of the most general form from the specified samples
+        GeneratedTensor generatedTensor = TensorGenerator.generateStructure(newCoefficientName(toInverse, equation), inverseLhs.getIndices(), symmetricForm, samples);
+        unknownCoefficients = generatedTensor.coefficients;
+        //creating inverse tensor expression
+        generalInverse = Tensors.expression(inverseLhs, generatedTensor.generatedTensor);
+
+        //substituting toInverse and generalInverse into equation
         Tensor temp = equation;
         temp = toInverse.transform(temp);
         temp = generalInverse.transform(temp);
-        transformations = ArraysUtils.addAll(new Transformation[]{ContractIndices.ContractIndices}, transformations);
-        temp = Expand.expand(temp, transformations);
 
+        //collecting all transformations in single array
+        transformations = ArraysUtils.addAll(new Transformation[]{ContractIndices.ContractIndices}, transformations);
+
+        //preparing equation
+        temp = Expand.expand(temp, transformations);
         for (Transformation transformation : transformations)
             temp = transformation.transform(temp);
         temp = CollectNonScalars.collectNonScalars(temp);
         equation = (Expression) temp;
 
-        List<Split> rightSplit = new ArrayList<>();
 
+        //processing r.h.s. of the equation
+        List<Split> rightSplit = new ArrayList<>();
         if (equation.get(1) instanceof Sum)
             for (Tensor summand : equation.get(1))
                 rightSplit.add(Split.splitScalars(summand));
         else
             rightSplit.add(Split.splitScalars(equation.get(1)));
+
+        //forming system of linear equations
         List<Expression> equationsList = new ArrayList<>();
         for (Tensor summand : equation.get(0)) {
             Split current = Split.splitScalars(summand);
             boolean one = false;
             for (Split split : rightSplit)
                 if (TensorUtils.equals(current.factor, split.factor)) {
-                    equationsList.add(ExpressionFactory.FACTORY.create(current.summand, split.summand));
+                    equationsList.add(Tensors.expression(current.summand, split.summand));
                     one = true;
                     break;
                 }
             if (!one)
-                equationsList.add(ExpressionFactory.FACTORY.create(current.summand, Complex.ZERO));
+                equationsList.add(Tensors.expression(current.summand, Complex.ZERO));
         }
         this.equations = equationsList.toArray(new Expression[equationsList.size()]);
+    }
+
+    private static String newCoefficientName(Tensor... tensors) {
+        Set<SimpleTensor> simpleTensors = TensorUtils.getAllSymbols(tensors);
+        List<Character> forbidden = new ArrayList<>();
+        for (SimpleTensor tensor : simpleTensors) {
+            String name = CC.getNameDescriptor(tensor.getName()).getName(tensor.getIndices());
+            try {
+                Integer.parseInt(name.substring(1));
+                forbidden.add(name.charAt(0));
+            } catch (NumberFormatException e) {
+            }
+        }
+        Collections.sort(forbidden);
+        char c = 'a';
+        for (int i = 0; i < forbidden.size(); ++i) {
+            if (c != forbidden.get(i).charValue())
+                break;
+            else {
+                ++c;
+            }
+        }
+        return String.valueOf(c);
     }
 
     public Expression[] getEquations() {
@@ -102,8 +177,8 @@ public final class InverseTensor {
         return generalInverse;
     }
 
-    public SimpleTensor[] getUncknownCoefficients() {
-        return uncknownCoefficients.clone();
+    public SimpleTensor[] getUnknownCoefficients() {
+        return unknownCoefficients.clone();
     }
 
     public static Tensor findInverseWithMaple(Expression toInverse,
@@ -120,14 +195,14 @@ public final class InverseTensor {
                                               Expression equation,
                                               Tensor[] samples,
                                               boolean symmetricForm,
-                                              boolean keepFreeParametres,
+                                              boolean keepFreeParameters,
                                               Transformation[] transformations,
                                               String mapleBinDir,
                                               String path) {
         InverseTensor inverseTensor = new InverseTensor(toInverse, equation, samples, symmetricForm, transformations);
         final Expression[] equations = inverseTensor.equations.clone();
 
-        HashMap<TensorWrapperWithEquals, Tensor> tensorSubstitutions = new HashMap<>();
+        THashMap<Tensor, Tensor> tensorSubstitutions = new THashMap<>();
         SymbolsGenerator generator = new SymbolsGenerator("scalar", ArraysUtils.addAll(samples, toInverse, equation));
         int i;
         for (i = 0; i < equations.length; ++i) {
@@ -140,13 +215,12 @@ public final class InverseTensor {
                 Split split = Split.splitIndexless(t);
                 if (split.factor.getIndices().size() == 0)
                     continue;
-                TensorWrapperWithEquals twwe = new TensorWrapperWithEquals(split.factor);
-                if (!tensorSubstitutions.containsKey(twwe)) {
+                if (!tensorSubstitutions.containsKey(split.factor)) {
                     Tensor s;
-                    tensorSubstitutions.put(twwe, s = generator.take());
+                    tensorSubstitutions.put(split.factor, s = generator.take());
                     iterator.set(Tensors.multiply(s, split.summand));
                 } else
-                    iterator.set(Tensors.multiply(tensorSubstitutions.get(twwe), split.summand));
+                    iterator.set(Tensors.multiply(tensorSubstitutions.get(split.factor), split.summand));
             }
             equations[i] = (Expression) iterator.result();
         }
@@ -158,11 +232,11 @@ public final class InverseTensor {
             PrintStream file = new PrintStream(output);
             file.append("with(StringTools):\n");
             file.append("ans:=array([");
-            for (i = 0; i < inverseTensor.uncknownCoefficients.length; ++i)
-                if (i == inverseTensor.uncknownCoefficients.length - 1)
-                    file.append(inverseTensor.uncknownCoefficients[i].toString());
+            for (i = 0; i < inverseTensor.unknownCoefficients.length; ++i)
+                if (i == inverseTensor.unknownCoefficients.length - 1)
+                    file.append(inverseTensor.unknownCoefficients[i].toString());
                 else
-                    file.append(inverseTensor.uncknownCoefficients[i] + ",");
+                    file.append(inverseTensor.unknownCoefficients[i] + ",");
             file.append("]):\n");
 
             file.println("eq:=array(1.." + equations.length + "):");
@@ -170,15 +244,15 @@ public final class InverseTensor {
                 file.println("eq[" + (i + 1) + "]:=" + equations[i] + ":");
 
             file.print("Result := solve({seq(eq[i],i=1.." + equations.length + ")},[");
-            for (i = 0; i < inverseTensor.uncknownCoefficients.length; ++i)
-                if (i == inverseTensor.uncknownCoefficients.length - 1)
-                    file.append(inverseTensor.uncknownCoefficients[i].toString());
+            for (i = 0; i < inverseTensor.unknownCoefficients.length; ++i)
+                if (i == inverseTensor.unknownCoefficients.length - 1)
+                    file.append(inverseTensor.unknownCoefficients[i].toString());
                 else
-                    file.append(inverseTensor.uncknownCoefficients[i] + ",");
+                    file.append(inverseTensor.unknownCoefficients[i] + ",");
             file.append("]);\n");
             file.println("file:=fopen(\"" + path + "/equations.mapleOut\",WRITE):");
             file.append("if nops(Result) <> 0 then\n");
-            file.append("for k from 1 to " + inverseTensor.uncknownCoefficients.length + " do\n");
+            file.append("for k from 1 to " + inverseTensor.unknownCoefficients.length + " do\n");
             file.append("temp1 := SubstituteAll(convert(lhs(Result[1][k]), string), \"^\", \"**\");\n");
             file.append("temp2 := SubstituteAll(convert(rhs(Result[1][k]), string), \"^\", \"**\");\n");
             file.append("fprintf(file,\"%s=%s\\n\",temp1,temp2);\n");
@@ -188,10 +262,9 @@ public final class InverseTensor {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        
-        //TODO use temp file
-        //File.createTempFile(path, path)
-        
+
+        //TODO maybe use temp file
+
         try {
             Process p = Runtime.getRuntime().exec(mapleBinDir + "/maple " + path + "/equations.maple");
             BufferedReader bri = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -209,7 +282,7 @@ public final class InverseTensor {
         }
 
         try {
-            Expression[] coefficientsResults = new Expression[inverseTensor.uncknownCoefficients.length];
+            Expression[] coefficientsResults = new Expression[inverseTensor.unknownCoefficients.length];
             FileInputStream fstream = new FileInputStream(path + "/equations.mapleOut");
             if (fstream.available() == 0)
                 return null;
@@ -222,40 +295,16 @@ public final class InverseTensor {
             Tensor inverse = inverseTensor.generalInverse;
             for (Expression coef : coefficientsResults)
                 if (coef.isIdentity()) {
-                    if (!keepFreeParametres)
+                    if (!keepFreeParameters)
                         inverse = Tensors.expression(coef.get(0), Complex.ZERO).transform(inverse);
                 } else
                     inverse = (Expression) coef.transform(inverse);
-            for (Map.Entry<TensorWrapperWithEquals, Tensor> entry : tensorSubstitutions.entrySet())
-                inverse = Tensors.expression(entry.getValue(), entry.getKey().tensor).transform(inverse);
+            for (Map.Entry<Tensor, Tensor> entry : tensorSubstitutions.entrySet())
+                inverse = Tensors.expression(entry.getValue(), entry.getKey()).transform(inverse);
             in.close();
             return inverse;
         } catch (Exception e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    private static final class TensorWrapperWithEquals {
-
-        private final Tensor tensor;
-
-        public TensorWrapperWithEquals(Tensor tensor) {
-            this.tensor = tensor;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            final TensorWrapperWithEquals other = (TensorWrapperWithEquals) obj;
-            return TensorUtils.equals(tensor, other.tensor);
-        }
-
-        @Override
-        public int hashCode() {
-            return tensor.hashCode();
         }
     }
 }

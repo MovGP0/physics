@@ -40,8 +40,15 @@ import cc.redberry.core.utils.ArraysUtils;
 import cc.redberry.core.utils.Indicator;
 
 /**
+ * This class is a container of the calculated one-loop counterterms.
+ * <p/>
+ * It has no constructors and can be created using the static
+ * method {@link #calculateOneLoopCounterterms(OneLoopInput)}, which
+ * performs the whole calculation of the one-loop counterterms.
+ *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
+ * @since 1.0
  */
 public final class OneLoopCounterterms {
 
@@ -305,7 +312,7 @@ public final class OneLoopCounterterms {
                     + "HATK^{\\mu}*HATK^{\\alpha}*HATK^{\\nu}*HATK^{\\beta}+"
                     + "HATK^{\\alpha}*HATK^{\\beta}*HATK^{\\nu}*HATK^{\\mu}+"
                     + "HATK^{\\beta}*HATK^{\\alpha}*HATK^{\\nu}*HATK^{\\mu})";
-    public static final String ACTION_ = "ACTION = Flat + WR + SR + SSR + FF + FR + RR";
+    public static final String ACTION_ = "counterterms = Flat + WR + SR + SSR + FF + FR + RR";
     private final Expression Flat, WR, SR, SSR, FF, FR, RR, DELTA_1, DELTA_2, DELTA_3, DELTA_4, ACTION;
 
     private OneLoopCounterterms(Expression Flat, Expression WR, Expression SR, Expression SSR, Expression FF, Expression FR, Expression RR, Expression DELTA_1, Expression DELTA_2, Expression DELTA_3, Expression DELTA_4, Expression ACTION) {
@@ -330,60 +337,130 @@ public final class OneLoopCounterterms {
 //    public Expression FF(){return FF;}
 //    public Expression FR(){return FR;}
 //    public Expression RR(){return RR;}
-//    public Expression ACTION(){return ACTION;}
+//    public Expression counterterms(){return counterterms;}
 //    public Expression DELTA_1(){return DELTA_1;}
 //    public Expression DELTA_2(){return DELTA_2;}
 //    public Expression DELTA_3(){return DELTA_3;}
 //    public Expression DELTA_4(){return DELTA_4;}
 
+    /**
+     * Returns the Flat counterterms part
+     *
+     * @return Flat counterterms part
+     */
     public Expression Flat() {
         return Flat;
     }
 
+    /**
+     * Returns the WR counterterms part
+     *
+     * @return WR counterterms part
+     */
     public Expression WR() {
         return WR;
     }
 
+    /**
+     * Returns the SR counterterms part
+     *
+     * @return SR counterterms part
+     */
     public Expression SR() {
         return SR;
     }
 
+    /**
+     * Returns the SSR counterterms part
+     *
+     * @return SSR counterterms part
+     */
     public Expression SSR() {
         return SSR;
     }
 
+    /**
+     * Returns the FF counterterms part
+     *
+     * @return FF counterterms part
+     */
     public Expression FF() {
         return FF;
     }
 
+    /**
+     * Returns the FR counterterms part
+     *
+     * @return FR counterterms part
+     */
     public Expression FR() {
         return FR;
     }
 
+    /**
+     * Returns the RR counterterms part
+     *
+     * @return RR counterterms part
+     */
     public Expression RR() {
         return RR;
     }
 
-    public Expression ACTION() {
+    /**
+     * Return resulting counterterms, i.e. the Flat + WR + SR + SSR + FF + FR + RR.
+     * In order to obtain the divergent part of the one loop effective action, one should
+     * integrate counterterms over space volume and multiply on 1/(16*\pi^2*(d-4)) factor.
+     *
+     * @return
+     */
+    public Expression counterterms() {
         return ACTION;
     }
 
+    /**
+     * Returns \Delta^{\mu ...} tensor, where dots mean 'matrix' indices.
+     *
+     * @return \Delta^{\mu ...} tensor, where dots mean 'matrix' indices.
+     */
     public Expression DELTA_1() {
         return DELTA_1;
     }
 
+    /**
+     * Returns \Delta^{\mu\nu ...} tensor, where dots mean 'matrix' indices.
+     *
+     * @return \Delta^{\mu\nu ...} tensor, where dots mean 'matrix' indices.
+     */
     public Expression DELTA_2() {
         return DELTA_2;
     }
 
+    /**
+     * Returns \Delta^{\mu\nu\alpha ...} tensor, where dots mean 'matrix' indices.
+     *
+     * @return \Delta^{\mu\nu\alpha ...} tensor, where dots mean 'matrix' indices.
+     */
     public Expression DELTA_3() {
         return DELTA_3;
     }
 
+    /**
+     * Returns \Delta^{\mu\nu\alpha\beta ...} tensor, where dots mean 'matrix' indices.
+     *
+     * @return \Delta^{\mu\nu\alpha\beta ...} tensor, where dots mean 'matrix' indices.
+     */
     public Expression DELTA_4() {
         return DELTA_4;
     }
 
+    /**
+     * This method performs the calculation of the one-loop counterterms.
+     * During the calculation, it also prints the interim results to
+     * standard output.
+     *
+     * @param input input parameters container.
+     * @return resulting counterterms container.
+     */
     public static OneLoopCounterterms calculateOneLoopCounterterms(OneLoopInput input) {
         Tensors.addSymmetry("R_\\mu\\nu", IndexType.GreekLower, false, new int[]{1, 0});
         Tensors.addSymmetry("R_\\mu\\nu\\alpha\\beta", IndexType.GreekLower, true, new int[]{0, 1, 3, 2});
@@ -425,7 +502,7 @@ public final class OneLoopCounterterms {
 
         Expression Flat, WR, SR, SSR, FF, FR, RR, DELTA_1, DELTA_2, DELTA_3, DELTA_4, ACTION;
 
-        //preprocessor for Flat, WR, SR, SSR, FF, FR, RR, ACTION
+        //preprocessor for Flat, WR, SR, SSR, FF, FR, RR, counterterms
         IndicesInsertion termIndicesInsertion = new IndicesInsertion(
                 IndicesFactory.createSimple(null, upper),
                 IndicesFactory.createSimple(null, IndicesUtils.getIndicesNames(upper)),

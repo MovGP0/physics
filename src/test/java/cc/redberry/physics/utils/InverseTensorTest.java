@@ -29,12 +29,13 @@ import cc.redberry.core.tensor.Tensors;
 import cc.redberry.core.transformations.Expand;
 import cc.redberry.core.transformations.SymmetrizeUpperLowerIndices;
 import cc.redberry.core.transformations.Transformation;
-import cc.redberry.core.utils.*;
-import org.junit.*;
+import cc.redberry.core.utils.TensorUtils;
+import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
- *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
@@ -65,6 +66,12 @@ public class InverseTensorTest {
     }
 
     @Test
+    public void tesasy() {
+        char c = 'a';
+        System.out.println((int) c);
+    }
+
+    @Test
     public void testVectorField1() {
         Transformation[] transformations = new Transformation[]{Tensors.parseExpression("k_a*k^a=1")};
         Expression toInverse = Tensors.parseExpression("D_mn = k_m*k_n-(1/a)*k_i*k^i*g_mn");
@@ -72,6 +79,18 @@ public class InverseTensorTest {
         Tensor[] samples = {Tensors.parse("g_mn"), Tensors.parse("g^mn"), Tensors.parse("d_m^n"), Tensors.parse("k_m"), Tensors.parse("k^b")};
         Tensor expected = Tensors.parse("K^ac=-a*g^ac+a**2/(a-1)*k^a*k^c");
         Tensor actual = InverseTensor.findInverseWithMaple(toInverse, equation, samples, false, transformations, mapleBinDir, temporaryDir);
+        Assert.assertTrue(TensorUtils.equals(expected, actual));
+    }
+
+    @Test
+    public void testVectorField1a() {
+        Transformation[] transformations = new Transformation[]{Tensors.parseExpression("k_a*k^a=1")};
+        Expression toInverse = Tensors.parseExpression("D_mn = k_m*k_n-(1/c1)*k_i*k^i*g_mn");
+        Expression equation = Tensors.parseExpression("D_ab*K^ac=d_b^c");
+        Tensor[] samples = {Tensors.parse("g_mn"), Tensors.parse("g^mn"), Tensors.parse("d_m^n"), Tensors.parse("k_m"), Tensors.parse("k^b")};
+        Tensor expected = Tensors.parse("K^ac=-c1*g^ac+c1**2/(c1-1)*k^a*k^c");
+        Tensor actual = InverseTensor.findInverseWithMaple(toInverse, equation, samples, false, transformations, mapleBinDir, temporaryDir);
+        System.out.println(actual);
         Assert.assertTrue(TensorUtils.equals(expected, actual));
     }
 
@@ -95,11 +114,11 @@ public class InverseTensorTest {
                 + "6*(1/2+l*b)*(n_p*n_q*g^ab*d_r^c+n^a*n^b*g_pq*d_r^c)+"
                 + "6*(-1/4+l*b**2)*n_p*g_qr*n^a*g^bc");
         Expression toInverse = ExpressionFactory.FACTORY.create(Tensors.parseSimple("K^abc_pqr"),
-                                                                SymmetrizeUpperLowerIndices.symmetrizeUpperLowerIndices(toInv, true));
+                SymmetrizeUpperLowerIndices.symmetrizeUpperLowerIndices(toInv, true));
 
         Tensor eqRhs = Tensors.parse("d_i^a*d_j^b*d_k^c");
         Expression equation = ExpressionFactory.FACTORY.create(Tensors.parse("K^abc_pqr*KINV^pqr_ijk"),
-                                                               Expand.expand(SymmetrizeUpperLowerIndices.symmetrizeUpperLowerIndices(eqRhs, true)));
+                Expand.expand(SymmetrizeUpperLowerIndices.symmetrizeUpperLowerIndices(eqRhs, true)));
 
         Tensor[] samples = {Tensors.parse("g_mn"), Tensors.parse("g^mn"), Tensors.parse("d_m^n"), Tensors.parse("n_m"), Tensors.parse("n^b")};
 
@@ -114,7 +133,7 @@ public class InverseTensorTest {
 
         Expression toInverse =
                 Tensors.parseExpression("F_p^mn_q^rs = "
-                + "d^s_q*d^r_p*g^mn+d^m_q*d^n_p*g^rs+(-1)*d^r_p*d^n_q*g^ms+(-1)*d^s_p*d^m_q*g^rn");
+                        + "d^s_q*d^r_p*g^mn+d^m_q*d^n_p*g^rs+(-1)*d^r_p*d^n_q*g^ms+(-1)*d^s_p*d^m_q*g^rn");
         Expression equation = Tensors.parseExpression("F_p^mn_q^rs*iF^p_mn^a_bc=d^a_q*d_b^r*d_c^s-1/4*d^r_q*d_b^a*d_c^s");
 
         Tensor[] samples = {Tensors.parse("g_mn"), Tensors.parse("g^mn"), Tensors.parse("d_m^n")};

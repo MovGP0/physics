@@ -104,7 +104,7 @@ public final class OneLoopInput {
      *                      Lagrangian, i.e. the integer value of {@code L}.
      *                      Currently supported second and fourth order
      *                      operators.
-     * @param KINV          inverse tensors to tensor {@code Kn}. The input
+     * @param KINV          inverse of {@code Kn} tensor. The input
      *                      expression should be in the form
      *                      {@code KINV^{...}_{...} = ...}.
      * @param K             tensor {@code K} in the form {@code K^{...}_{...} = ....}.
@@ -142,7 +142,7 @@ public final class OneLoopInput {
      * expressions must be in the notation, discussed in the class summary. The Riemann
      * background is a number of transformations (usually substitutions) which defines the
      * additional rules for Riemann tensor processing. For example, it can be the anti de
-     * Sitter background ({@link OneLoopUtils#antiDeSitterBackround}) or flat background
+     * Sitter background ({@link OneLoopUtils#antiDeSitterBackground}) or flat background
      * (with R_\alpha\beta\gamma\rho = 0) and so on.
      *
      * @param operatorOrder     the order of the differential operator in the
