@@ -24,7 +24,7 @@
  * was developed by Konstantin Stepanyantz and can be found in published papers
  * [1-3]. A number of examples are placed in {@code OneLoopCountertermsTest}.
  * Performance benchmarks are placed in {@link  cc.redberry.physics.oneloopdiv.Benchmarks}.
- * The detailed description of the package usage are published [4].
+ * The detailed description of the package usage is published in [4].
  *
  *
  * <h3>Literature</h3>
@@ -49,6 +49,7 @@
  *
  * @see cc.redberry.physics.oneloopdiv.OneLoopCounterterms
  * @see cc.redberry.physics.oneloopdiv.OneLoopInput
+ * @see cc.redberry.physics.oneloopdiv.Benchmarks
  *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky

@@ -40,17 +40,65 @@ import cc.redberry.core.transformations.Transformation;
 import cc.redberry.core.transformations.Transformer;
 import cc.redberry.core.utils.ArraysUtils;
 import cc.redberry.core.utils.Indicator;
+
 import java.util.Arrays;
 
 /**
  * This class is a container of input parameters for one-loop counterterms
- * calculation. This class is always used in conjunction with {@link OneLoopActionDiv},
- * which performs the main calculation. The input parametres 
- *
- * @see OneLoopActionDiv
+ * calculation. It is always used in conjunction with {@link OneLoopCounterterms},
+ * which performs the main calculation. The notation used for input matrices is
+ * same as used in original works (see references in <a href =
+ * "package-summary.html">package info</a>). More details are in constructors
+ * summary.
+ * <p/>
+ * The main goal of this class is to prepare the hat-quantities
+ * (\hat K, \hat W etc.) for further processing in {@link OneLoopCounterterms}.
+ * All input expressions must be in the same notation as in the original works [1-3]
+ * and satisfy the following conditions:
+ * <ul>
+ * <li>L.h.s of input expressions should have only Greek lowercase indices</li>
+ * <li>Each l.h.s tensor should have string name defind by the following rules:
+ * tensor KINV - "KINV", tensor K - "K", tensor S - "S", tensor W - "W",
+ * tensor N - "N", tensor F - "F". </li>
+ * <li>The first {@code L - k} indices of each l.h.s. of expression are specified
+ * to be 'covariant' indices, i.e. indices which are contracted with derivatives in
+ * operator expansion. The rest {@code 2n} indices are the 'matrix' indices, i.e.
+ * indices which are contracted with fields in the Lagrangian.</li>
+ * <li>Each of the input tensors, except {@code F} and {@code KINV} must be
+ * symmetric on their 'covariant' indices.</li>
+ * </ul>
+ * <p/>
+ * <p><b>Note</b>: Currently supported are not all arbitrary Lagrangians. There
+ * is a full support of {@code L = 2} and {@code L = 4} theories with no odd on
+ * the number of derivatives terms in the operator, so input tensors {@code S^{...}_{...}}
+ * and {@code N^{...}_{...}} should be always zero. Also, input tensors should
+ * have only Greek lowercase indices.
+ * <p/>
+ * <p/>
+ * <h3>Literature</h3>
+ * <p/>
+ * [1] Petr I. Pronin, Konstantin V. Stepanyantz, <i>One loop counterterms for
+ * the dimensional regularization of arbitrary Lagrangians</i>, Phys. Lett. B414
+ * (1997) 117-122, <a
+ * href="http://arxiv.org/abs/hep-th/9707008">hep-th/9707008</a><br/>
+ * <p/>
+ * [2] P.I. Pronin, K. Stepanyantz, <i>One loop counterterms for higher
+ * derivative regularized Lagrangians</i>, Nucl. Phys. B485 (1997) 517-544, <a
+ * href="http://arxiv.org/abs/hep-th/9605206">hep-th/9605206</a><br/>
+ * <p/>
+ * <p/>
+ * [3] Petr I. Pronin, Konstantin V. Stepanyantz, <i>One loop background
+ * calculations in the general field theory</i>, <a
+ * href="http://arxiv.org/abs/hep-th/9604038">hep-th/9604038</a><br/>
+ * <p/>
+ * [4] D.A. Bolotin and S.V. Poslavsky, <i>Calculation of the one-loop
+ * counterterms in an arbitrary theory with Redberry</i>, preparing for
+ * publication
  *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
+ * @see OneLoopCounterterms
+ * @since 1.0
  */
 public final class OneLoopInput {
 
@@ -61,21 +109,103 @@ public final class OneLoopInput {
     private final Expression[] kn;
     private final Expression L;
     private static final int HAT_QUANTITIES_GENERAL_COUNT = 5;//K,S,W,N,M
-    private static final int INPUT_VALUES_GENERAL_COUNT = 6;//K,S,W,N,M
+    private static final int INPUT_VALUES_GENERAL_COUNT = 6;//KINV,K,S,W,N,M
     private final int actualInput, actualHatQuantities;
-    private final Transformation[] riemannBackround;
+    private final Transformation[] riemannBackground;
     private final Expression F;
     private final Expression HATF;
 
+    /**
+     * Constructs the {@code OneLoopInput} instance with specified {@code operatorOrder}
+     * (i.e. {@code L} value) and input expressions. Input expressions must be in the
+     * notation, discussed in the class summary.
+     *
+     * @param operatorOrder the order of the differential operator in the
+     *                      Lagrangian, i.e. the integer value of {@code L}.
+     *                      Currently supported second and fourth order
+     *                      operators.
+     * @param KINV          inverse tensors to tensor {@code Kn}. The input
+     *                      expression should be in the form
+     *                      {@code KINV^{...}_{...} = ...}.
+     * @param K             tensor {@code K} in the form {@code K^{...}_{...} = ....}.
+     * @param S             tensor {@code S}. Since odd terms in operator expansion
+     *                      is not supported yet, this tensor should be zeroed, so
+     *                      the r.h.s. of the expression should be always zero:
+     *                      {@code S^{...}_{...} = 0}.
+     * @param W             tensor {@code W} in the form {@code W^{...}_{...} = ....}.
+     * @param N             tensor {@code N}. Since odd terms in operator expansion
+     *                      is not supported yet, this tensor should be zeroed, so
+     *                      the r.h.s. of the expression should be always zero:
+     *                      {@code N^{...}_{...} = 0}. <b>Note:</b> if
+     *                      {@code operatorOrder = 2} this param should be {@code null}.
+     * @param M             tensor {@code M} in the form {@code M^{...}_{...} = ....}.
+     *                      <b>Note:</b> if {@code operatorOrder = 2} this param
+     *                      should be {@code null}                                    .
+     * @param F             tensor {@code F} in the form {@code F^{...}_{...} = ....}.
+     * @throws IllegalArgumentException if {@code operatorOrder} is not eqaul to 2 or 4
+     * @throws IllegalArgumentException if {@code S} or {@code N} are not zeroed
+     * @throws IllegalArgumentException if some of the input tensors have name different
+     *                                  from the specified
+     * @throws IllegalArgumentException if indices number of some of the input tensors
+     *                                  does not corresponds to the actual {@code operatorOrder}
+     * @throws IllegalArgumentException if indices of l.h.s. of input expressions contains non Greek lowercase indices.
+     */
     public OneLoopInput(int operatorOrder, Expression KINV, Expression K, Expression S, Expression W, Expression N, Expression M, Expression F) {
         this(operatorOrder, KINV, K, S, W, N, M, F, new Transformation[0]);
     }
 
-    public OneLoopInput(int operatorOrder, Expression KINV, Expression K, Expression S, Expression W, Expression N, Expression M, Expression F, Transformation[] riemannBackround) {
+    //TODO add references on the paper and Redberry site
+
+    /**
+     * Constructs the {@code OneLoopInput} instance with specified {@code operatorOrder}
+     * (i.e. {@code L} value), input expressions and riemann background rules. Input
+     * expressions must be in the notation, discussed in the class summary. The Riemann
+     * background is a number of transformations (usually substitutions) which defines the
+     * additional rules for Riemann tensor processing. For example, it can be the anti de
+     * Sitter background ({@link OneLoopUtils#antiDeSitterBackround}) or flat background
+     * (with R_\alpha\beta\gamma\rho = 0) and so on.
+     *
+     * @param operatorOrder     the order of the differential operator in the
+     *                          Lagrangian, i.e. the integer value of {@code L}.
+     *                          Currently supported second and fourth order
+     *                          operators.
+     * @param KINV              inverse tensors to tensor {@code Kn}. The input
+     *                          expression should be in the form
+     *                          {@code KINV^{...}_{...} = ...}.
+     * @param K                 tensor {@code K} in the form {@code K^{...}_{...} = ....}.
+     * @param S                 tensor {@code S}. Since odd terms in operator expansion
+     *                          is not supported yet, this tensor should be zeroed, so
+     *                          the r.h.s. of the expression should be always zero:
+     *                          {@code S^{...}_{...} = 0}.
+     * @param W                 tensor {@code W} in the form {@code W^{...}_{...} = ....}.
+     * @param N                 tensor {@code N}. Since odd terms in operator expansion
+     *                          is not supported yet, this tensor should be zeroed, so
+     *                          the r.h.s. of the expression should be always zero:
+     *                          {@code N^{...}_{...} = 0}. <b>Note:</b> if
+     *                          {@code operatorOrder = 2} this param should be {@code null}.
+     * @param M                 tensor {@code M} in the form {@code M^{...}_{...} = ....}.
+     *                          <b>Note:</b> if {@code operatorOrder = 2} this param
+     *                          should be {@code null}                                    .
+     * @param F                 tensor {@code F} in the form {@code F^{...}_{...} = ....}.
+     * @param riemannBackground additional background conditions, such as anti de Sitter etc.
+     *                          Empty array should be placed if no conditions specified.
+     * @throws IllegalArgumentException if {@code operatorOrder} is not eqaul to 2 or 4
+     * @throws IllegalArgumentException if {@code S} or {@code N} are not zeroed
+     * @throws IllegalArgumentException if some of the input tensors have name different
+     *                                  from the specified
+     * @throws IllegalArgumentException if indices number of some of the input tensors
+     *                                  does not corresponds to the actual {@code operatorOrder}
+     * @throws IllegalArgumentException if indices of l.h.s. of input expressions contains non Greek lowercase indices.
+     */
+    public OneLoopInput(int operatorOrder,
+                        Expression KINV,
+                        Expression K, Expression S, Expression W, Expression N, Expression M,
+                        Expression F,
+                        Transformation[] riemannBackground) {
         this.operatorOrder = operatorOrder;
-        if (operatorOrder > 4)
+        if (operatorOrder != 2 && operatorOrder != 4)
             throw new IllegalArgumentException();
-        this.riemannBackround = riemannBackround;
+        this.riemannBackground = riemannBackground;
         this.actualInput = operatorOrder + 2;
         this.actualHatQuantities = operatorOrder + 1;
 
@@ -129,14 +259,14 @@ public final class OneLoopInput {
         };
 
         IndicesInsertion insertion = new IndicesInsertion(IndicesFactory.createSimple(null, upper),
-                                                          IndicesFactory.createSimple(null, lower),
-                                                          indicator);
+                IndicesFactory.createSimple(null, lower),
+                indicator);
 
         StringBuilder sb;
         Tensor temp;
         String covariantIndicesString;
         Transformation n2 = new SqrSubs(Tensors.parseSimple("n_\\mu")), n2Transformer = new Transformer(TraverseState.Leaving, new Transformation[]{n2});
-        Transformation[] transformations = ArraysUtils.addAll(new Transformation[]{ContractIndices.ContractIndices, n2Transformer}, riemannBackround);
+        Transformation[] transformations = ArraysUtils.addAll(new Transformation[]{ContractIndices.ContractIndices, n2Transformer}, riemannBackground);
         for (i = 0; i < actualHatQuantities; ++i) {
             hatQuantities[i] = new Expression[operatorOrder + 1 - i];
             covariantIndicesString = IndicesUtils.toString(Arrays.copyOfRange(covariantIndices, 0, covariantIndices.length - i), ToStringMode.Redberry);
@@ -242,8 +372,6 @@ public final class OneLoopInput {
     }
 
     private void checkConsistency() {
-        if (operatorOrder % 2 != 0)
-            throw new IllegalArgumentException();
         int i;
         for (i = 0; i < actualInput; ++i) {
             if (!(inputValues[i].get(0) instanceof SimpleTensor))
@@ -279,22 +407,45 @@ public final class OneLoopInput {
         }
     }
 
+    /**
+     * Return i-th input expression from the [KINV, K, S, W, N, M] array.
+     *
+     * @param i position of the input expression in the array [KINV, K, S, W, N, M]
+     * @return i-th expression from the [KINV, K, S, W, N, M] array
+     */
     public Expression getInputParameter(int i) {
         return inputValues[i];
     }
 
+    /**
+     * Return the array of hat-quantities according to their
+     * position in the [HATK[],HATS[],HATW[], HATN[], HATM[]] array.
+     *
+     * @param k position of the [HATK[],HATS[],HATW[], HATN[], HATM[]] array
+     * @return k-th array from [HATK[],HATS[],HATW[], HATN[], HATM[]]
+     */
     public Expression[] getHatQuantities(int k) {
-        return hatQuantities[k];
+        return hatQuantities[k].clone();
     }
 
     Expression[][] getHatQuantities() {
         return hatQuantities;
     }
 
+    /**
+     * Returns the array of Kn expressions.
+     *
+     * @return array of Kn expressions
+     */
     public Expression[] getKnQuantities() {
         return kn.clone();
     }
 
+    /**
+     * Returns \hat F^{...}_{..} expression
+     *
+     * @return \hat F^{...}_{..} expression
+     */
     public Expression getHatF() {
         return HATF;
     }
@@ -315,19 +466,34 @@ public final class OneLoopInput {
         return nablaS;
     }
 
+    /**
+     * Returns an operator order as expression
+     *
+     * @return operator order as expression
+     */
     public Expression getL() {
         return L;
     }
 
+    /**
+     * Returns the number of 'matrix' indices in the expressions
+     *
+     * @return number of 'matrix' indices in the expressions
+     */
     public int getMatrixIndicesCount() {
         return matrixIndicesCount;
     }
 
+    /**
+     * Returns an operator order
+     *
+     * @return operator order
+     */
     public int getOperatorOrder() {
         return operatorOrder;
     }
 
-    public Transformation[] getRiemannBackround() {
-        return riemannBackround;
+    public Transformation[] getRiemannBackground() {
+        return riemannBackground;
     }
 }

@@ -29,7 +29,7 @@ import java.io.PrintStream;
 
 /**
  * This class contains several performance benchmarks of one-loop divergences
- * calculation. Here the summary:
+ * calculation. Here is the summary:
  *
  *
  * <pre>
