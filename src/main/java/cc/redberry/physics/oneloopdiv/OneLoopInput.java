@@ -48,13 +48,14 @@ import java.util.Arrays;
  * calculation. It is always used in conjunction with {@link OneLoopCounterterms},
  * which performs the main calculation. The notation used for input matrices is
  * same as used in original works (see references in <a href =
- * "package-summary.html">package info</a>). More details are in constructors
+ * "package-summary.html">package info</a>).
  * summary.
  * <p/>
  * The main goal of this class is to prepare the hat-quantities
  * (\hat K, \hat W etc.) for further processing in {@link OneLoopCounterterms}.
- * All input expressions must be in the same notation as in the original works [1-3]
- * and satisfy the following conditions:
+ * All input expressions must be in the same notation as in the original works
+ * (see references in <a href ="package-summary.html">package info</a>) and
+ * satisfy the following conditions:
  * <ul>
  * <li>L.h.s of input expressions should have only Greek lowercase indices</li>
  * <li>Each l.h.s tensor should have string name defind by the following rules:
@@ -73,27 +74,6 @@ import java.util.Arrays;
  * the number of derivatives terms in the operator, so input tensors {@code S^{...}_{...}}
  * and {@code N^{...}_{...}} should be always zero. Also, input tensors should
  * have only Greek lowercase indices.
- * <p/>
- * <p/>
- * <h3>Literature</h3>
- * <p/>
- * [1] Petr I. Pronin, Konstantin V. Stepanyantz, <i>One loop counterterms for
- * the dimensional regularization of arbitrary Lagrangians</i>, Phys. Lett. B414
- * (1997) 117-122, <a
- * href="http://arxiv.org/abs/hep-th/9707008">hep-th/9707008</a><br/>
- * <p/>
- * [2] P.I. Pronin, K. Stepanyantz, <i>One loop counterterms for higher
- * derivative regularized Lagrangians</i>, Nucl. Phys. B485 (1997) 517-544, <a
- * href="http://arxiv.org/abs/hep-th/9605206">hep-th/9605206</a><br/>
- * <p/>
- * <p/>
- * [3] Petr I. Pronin, Konstantin V. Stepanyantz, <i>One loop background
- * calculations in the general field theory</i>, <a
- * href="http://arxiv.org/abs/hep-th/9604038">hep-th/9604038</a><br/>
- * <p/>
- * [4] D.A. Bolotin and S.V. Poslavsky, <i>Calculation of the one-loop
- * counterterms in an arbitrary theory with Redberry</i>, preparing for
- * publication
  *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
