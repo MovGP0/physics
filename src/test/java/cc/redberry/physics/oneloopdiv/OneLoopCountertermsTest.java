@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-//@Ignore
+@Ignore
 public class OneLoopCountertermsTest {
 
     @Test

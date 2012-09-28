@@ -87,8 +87,7 @@
 
     <scm>
         <connection>scm:hg:http://bitbucket.org/redberry/redberry-physics</connection>
-        <!-- Releases are made manually -->
-        <!-- <developerConnection>scm:hg:https://bitbucket.org/redberry/redberry-1.0</developerConnection> -->
+        <tag>v1.0</tag>
         <url>https://bitbucket.org/redberry/redberry-physics/src</url>
     </scm>
 
@@ -130,7 +129,7 @@
                 </configuration>
             </plugin>
             <plugin>
-                <!-- TODO: remove or replace with castom assembly descriptor -->
+                <!-- TODO: remove or replace with custom assembly descriptor -->
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <descriptorRefs>
@@ -146,33 +145,11 @@
     </properties>
 
     <dependencies>
-<!--        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-math3</artifactId>
-            <version>3.0</version>
-        </dependency>
-
-         TODO discuss with Stas (??) 
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-math3</artifactId>
-            <version>3.0</version>
-            <classifier>sources</classifier>
-        </dependency>-->
-        
         <dependency>
             <groupId>cc.redberry</groupId>
             <artifactId>core</artifactId>
             <version>1.0.1-SNAPSHOT</version>
         </dependency>
-
-<!--        <dependency>
-            <groupId>cc.redberry</groupId>
-            <artifactId>core</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
-            <classifier>sources</classifier>
-        </dependency>-->
-        
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
