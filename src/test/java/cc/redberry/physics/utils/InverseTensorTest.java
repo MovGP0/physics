@@ -191,24 +191,4 @@ public class InverseTensorTest {
         Tensor expected = Tensors.parse("D^{j}_{k} = -I*m*(m**2-p_{\\mu }*p^{\\mu })**(-1)*d^{j}_{k}-I*(m**2-p_{\\mu }*p^{\\mu })**(-1)*G^{j}_{k}^{\\mu }*p_{\\mu }");
         Assert.assertTrue(TensorUtils.equals(r, expected));
     }
-    //def t = parse("K_\\mu\\nu = k_\\mu*k_\\nu - 1/a*k_\\alpha*k^\\alpha*g_\\mu\\nu")
-//def eq = parse("K^\\mu\\nu * D_\\nu\\alpha = d^\\mu_\\alpha")
-//def samples = [
-//        parse("g_\\mu\\nu"),
-//        parse("g^\\mu\\nu"),
-//        parse("k_\\mu"),
-//        parse("k^\\nu")]
-//def r = InverseTensor.findInverseWithMaple(t, eq, samples as Tensor[], false, new Transformation[0], mapleBinDir, temporaryDir)
-//println r
-
-//    t = parse("K^i_j = p_\\mu*G^{\\mu i}_j - m* d^i_j")
-//    eq = parse("K^i_j * D^j_k = I* d^i_k")
-//    samples = [
-//    parse("d^i_j"),
-//    parse("p_\\mu*G^{\\mu i}_j")]
-//    def tr = [
-//    parse("p_\\mu*p_\\nu*G^{\\mu i}_j*G^{\\nu j}_k = p_\\mu*p^\\mu*d^i_k")
-//    ]
-//    r = InverseTensor.findInverseWithMaple(t, eq, samples as Tensor[], false, tr as Transformation[], mapleBinDir, temporaryDir)
-//    println r
 }
