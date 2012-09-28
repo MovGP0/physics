@@ -26,20 +26,22 @@ import cc.redberry.core.context.CC;
 import cc.redberry.core.context.ToStringMode;
 import cc.redberry.core.indices.IndexType;
 import cc.redberry.core.tensor.*;
-import cc.redberry.core.tensor.iterator.*;
+import cc.redberry.core.tensor.iterator.TraverseState;
 import cc.redberry.core.transformations.*;
-import cc.redberry.core.utils.*;
-import java.util.regex.*;
+import cc.redberry.core.utils.ArraysUtils;
+import cc.redberry.core.utils.TensorUtils;
 import junit.framework.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
- *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-@Ignore
+//@Ignore
 public class OneLoopCountertermsTest {
 
     @Test
@@ -103,6 +105,27 @@ public class OneLoopCountertermsTest {
         //        + "+(1/24*Power[gamma,2]+1/12*gamma+1/6)*R*P"
         //        + "+(1/24*Power[gamma,2]+1/12*gamma-4/15)*R_\\mu\\nu*R^\\mu\\nu"
         //        + "+(1/48*Power[gamma,2]+1/12*gamma+7/60)*Power[R,2]");
+    }
+
+    @Test
+    public void exampleVF() {
+        Tensors.addSymmetry("P_\\mu\\nu", IndexType.GreekLower, false, 1, 0);
+
+        Expression KINV = Tensors.parseExpression("KINV_\\alpha^\\beta=d_\\alpha^\\beta+ga*n_\\alpha*n^\\beta");
+        Expression K = Tensors.parseExpression("K^{\\mu\\nu}_\\alpha^{\\beta}=g^{\\mu\\nu}*d_{\\alpha}^{\\beta}-ga/(2*(1+ga))*(g^{\\mu\\beta}*d_\\alpha^\\nu+g^{\\nu\\beta}*d_\\alpha^\\mu)");
+        Expression S = Tensors.parseExpression("S^\\rho^\\mu_\\nu=0");
+        Expression W = Tensors.parseExpression("W^{\\alpha}_{\\beta}=P^{\\alpha}_{\\beta}+ga/(2*(1+ga))*R^\\alpha_\\beta");
+        Expression F = Tensors.parseExpression("F_\\mu\\nu\\alpha\\beta=R_\\mu\\nu\\alpha\\beta");
+
+        OneLoopInput input = new OneLoopInput(2, KINV, K, S, W, null, null, F);
+
+//        OneLoopCounterterms action = OneLoopCounterterms.calculateOneLoopCounterterms(input);
+//        System.out.println(action.counterterms());
+        Tensor expected = Expand.expand(Tensors.parse("-5/144*R*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*P*Power[ga, 5]+47/180*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[R, 2]*Power[ga, 3]+1789/5760*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[R, 2]*Power[ga, 7]+929/5760*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[R, 2]*Power[ga, 6]+-19/120*ga*Power[ga+1, -1]*Power[R, 2]+167/3840*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[R, 2]*Power[ga, 4]+1/36*R*Power[ga+1, -1]*Power[ga+1, -1]*P*Power[ga, 3]+-5/72*R*Power[ga+1, -1]*P*Power[ga, 4]+-337/5760*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[R, 2]*Power[ga, 9]+7/60*Power[R, 2]+-1/24*R*Power[ga+1, -1]*P*Power[ga, 2]+1/12*ga*R*P+-109/5760*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[R, 2]*Power[ga, 6]+1439/5760*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[R, 2]*Power[ga, 8]+829/5760*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[R, 2]*Power[ga, 6]+-37/240*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[R, 2]*Power[ga, 8]+1453/1920*Power[ga+1, -1]*Power[ga+1, -1]*Power[R, 2]*Power[ga, 5]+-1409/2880*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[R, 2]*Power[ga, 7]+-1/72*R*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*P*Power[ga, 6]+(6851/5760*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 4]+11/20*Power[ga+1, -1]*Power[ga, 5]+-39/80*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 6]+-199/1440*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 7]+-107/720*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 2]+1333/960*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 6]+-23/120*Power[ga, 4]+-49/60*Power[ga, 2]+-67/120*Power[ga, 3]+1259/2880*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 6]+-133/144*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 3]+11/40*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 8]+31/64*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 8]+-41/60*ga+29/320*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 6]+3869/1440*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 5]+23/30*ga*Power[ga+1, -1]+811/360*Power[ga+1, -1]*Power[ga, 3]+329/960*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 7]+-4/15+-6631/2880*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 5]+97/320*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 9]+1277/720*Power[ga+1, -1]*Power[ga, 2]+-2489/5760*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 4]+1319/720*Power[ga+1, -1]*Power[ga, 4]+-2627/960*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 4]+1/120*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 7]+-3253/1920*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 5]+-965/576*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 6]+-9/40*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 9]+17/240*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 10]+-1511/2880*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 8]+-341/2880*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 7]+737/2880*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 5]+-11/180*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 3])*R^{\\mu \\nu }*R_{\\mu \\nu }+1/48*Power[P, 2]*Power[ga, 2]+(-5/36*Power[ga+1, -1]*Power[ga, 4]+-7/12*Power[ga+1, -1]*Power[ga, 2]+-37/72*Power[ga+1, -1]*Power[ga, 3]+1/6*Power[ga, 2]+1/18*Power[ga, 3]+1/6*ga+1/6*ga*Power[ga+1, -1]+73/72*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 3]+1/9*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 5]+2/3*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 2]+11/24*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 4]+1/36*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 3]+1/36*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 4]+-1/36*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 5]+-1/36*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga, 6])*P^{\\mu \\alpha }*R_{\\mu \\alpha }+1/6*R*P+-1391/1440*Power[ga+1, -1]*Power[R, 2]*Power[ga, 4]+319/1440*Power[ga+1, -1]*Power[ga+1, -1]*Power[R, 2]*Power[ga, 6]+-203/3840*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[R, 2]*Power[ga, 5]+1/18*R*Power[ga+1, -1]*Power[ga+1, -1]*P*Power[ga, 5]+29/1920*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[R, 2]*Power[ga, 5]+49/720*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[R, 2]*Power[ga, 9]+-271/480*Power[ga+1, -1]*Power[R, 2]*Power[ga, 2]+29/120*ga*Power[R, 2]+1/12*R*Power[ga+1, -1]*Power[ga+1, -1]*P*Power[ga, 4]+19/288*Power[ga+1, -1]*Power[ga+1, -1]*Power[R, 2]*Power[ga, 3]+-1/144*R*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*P*Power[ga, 3]+1/20*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[R, 2]*Power[ga, 5]+9/80*Power[R, 2]*Power[ga, 4]+17/40*Power[R, 2]*Power[ga, 2]+2761/11520*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[R, 2]*Power[ga, 4]+1/12*R*P*Power[ga, 2]+-37/120*Power[ga+1, -1]*Power[R, 2]*Power[ga, 5]+1/36*R*P*Power[ga, 3]+-497/1152*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[R, 2]*Power[ga, 6]+4669/5760*Power[ga+1, -1]*Power[ga+1, -1]*Power[R, 2]*Power[ga, 4]+83/240*Power[R, 2]*Power[ga, 3]+-43/40*Power[ga+1, -1]*Power[R, 2]*Power[ga, 3]+53/720*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[R, 2]*Power[ga, 7]+-1/36*R*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*P*Power[ga, 4]+-403/5760*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[R, 2]*Power[ga, 7]+-37/384*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[R, 2]*Power[ga, 8]+(1/24*Power[ga, 2]+1/4*ga+1/2)*P^{\\alpha }_{\\rho_5 }*P^{\\rho_5 }_{\\alpha }+1/480*Power[ga+1, -1]*Power[ga+1, -1]*Power[R, 2]*Power[ga, 2]+-13/144*R*Power[ga+1, -1]*P*Power[ga, 3]+-19/1440*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[R, 2]*Power[ga, 10]"));
+        System.out.println(Expand.expand(Together.together(expected)));
+        //counterterms = 4669/5760*Power[R, 2]*Power[ga, 4]*Power[ga+1, -1]*Power[ga+1, -1]+-497/1152*Power[R, 2]*Power[ga, 6]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-1409/2880*Power[R, 2]*Power[ga, 7]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+53/720*Power[R, 2]*Power[ga, 7]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-1391/1440*Power[R, 2]*Power[ga, 4]*Power[ga+1, -1]+1/480*Power[R, 2]*Power[ga, 2]*Power[ga+1, -1]*Power[ga+1, -1]+-1/36*P*Power[ga, 4]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*R+29/120*Power[R, 2]*ga+-19/120*Power[R, 2]*ga*Power[ga+1, -1]+829/5760*Power[R, 2]*Power[ga, 6]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+9/80*Power[R, 2]*Power[ga, 4]+17/40*Power[R, 2]*Power[ga, 2]+-271/480*Power[R, 2]*Power[ga, 2]*Power[ga+1, -1]+47/180*Power[R, 2]*Power[ga, 3]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+83/240*Power[R, 2]*Power[ga, 3]+49/720*Power[R, 2]*Power[ga, 9]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+1/18*P*Power[ga, 5]*Power[ga+1, -1]*Power[ga+1, -1]*R+-37/120*Power[R, 2]*Power[ga, 5]*Power[ga+1, -1]+929/5760*Power[R, 2]*Power[ga, 6]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-43/40*Power[R, 2]*Power[ga, 3]*Power[ga+1, -1]+-37/240*Power[R, 2]*Power[ga, 8]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+1/12*P*Power[ga, 4]*Power[ga+1, -1]*Power[ga+1, -1]*R+(1/4*ga+1/2+1/24*Power[ga, 2])*P^{\\alpha }_{\\rho_5 }*P^{\\rho_5 }_{\\alpha }+1439/5760*Power[R, 2]*Power[ga, 8]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+7/60*Power[R, 2]+-203/3840*Power[R, 2]*Power[ga, 5]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-1/72*P*Power[ga, 6]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*R+1/48*Power[ga, 2]*Power[P, 2]+-13/144*P*Power[ga, 3]*Power[ga+1, -1]*R+1/6*P*R+-403/5760*Power[R, 2]*Power[ga, 7]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+1453/1920*Power[R, 2]*Power[ga, 5]*Power[ga+1, -1]*Power[ga+1, -1]+(329/960*Power[ga, 7]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+1427/720*Power[ga, 4]*Power[ga+1, -1]+127/720*Power[ga, 3]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-125/576*Power[ga, 6]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-127/240*Power[ga, 6]*Power[ga+1, -1]*Power[ga+1, -1]+31/64*Power[ga, 8]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-169/576*Power[ga, 7]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+179/192*Power[ga, 6]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-287/720*Power[ga, 2]*Power[ga+1, -1]*Power[ga+1, -1]+-1289/576*Power[ga, 5]*Power[ga+1, -1]*Power[ga+1, -1]+-1*(101/240*Power[ga, 7]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+1/30*Power[ga, 7]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+15/8*Power[ga, 6]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-2/15*Power[ga, 5]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-73/240*Power[ga, 6]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-113/80*Power[ga, 4]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+3/20*Power[ga, 4]*Power[ga+1, -1]+11/20*Power[ga, 3]*Power[ga+1, -1]+23/60*Power[ga, 2]*Power[ga+1, -1]+1/5*Power[ga, 5]*Power[ga+1, -1]*Power[ga+1, -1]+-1/40*Power[ga, 4]*Power[ga+1, -1]*Power[ga+1, -1]+-9/20*Power[ga, 3]*Power[ga+1, -1]*Power[ga+1, -1]+-1/15*Power[ga, 8]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+187/240*Power[ga, 4]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-173/80*Power[ga, 5]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-3/40*Power[ga, 3]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+13/6*Power[ga, 5]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+7/240*Power[ga, 8]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-7/40*Power[ga, 7]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+1/30*Power[ga, 9]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-4/5*Power[ga, 6]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1])+17/240*Power[ga, 10]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-1427/2880*Power[ga, 8]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+11/20*Power[ga, 5]*Power[ga+1, -1]+-4/15*ga+11/15+107/1440*Power[ga, 7]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-3121/960*Power[ga, 4]*Power[ga+1, -1]*Power[ga+1, -1]+-817/360*Power[ga, 3]*Power[ga+1, -1]*Power[ga+1, -1]+1/60*ga*Power[ga+1, -1]+241/90*Power[ga, 3]*Power[ga+1, -1]+29/320*Power[ga, 6]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+1129/5760*Power[ga, 4]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+383/2880*Power[ga, 6]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-23/120*Power[ga, 9]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-17/30*Power[ga, 2]+-23/120*Power[ga, 4]+-67/120*Power[ga, 3]+-1*(-77/192*Power[ga, 5]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-43/48*Power[ga, 3]*Power[ga+1, -1]*Power[ga+1, -1]+-47/96*Power[ga, 4]*Power[ga+1, -1]*Power[ga+1, -1]+-29/192*Power[ga, 4]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+49/64*Power[ga, 4]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+5/16*Power[ga, 3]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-5/12*Power[ga, 6]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-1/3*Power[ga, 2]*Power[ga+1, -1]+-1/8*Power[ga, 3]*Power[ga+1, -1]+5/12*ga+1+-3/4*ga*Power[ga+1, -1]+-5/24*Power[ga, 7]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-1/24*Power[ga, 8]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+1/4*Power[ga, 2]+-1/4*Power[ga, 2]*Power[ga+1, -1]*Power[ga+1, -1]+-1/24*Power[ga, 6]*Power[ga+1, -1]*Power[ga+1, -1]+11/16*Power[ga, 5]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-13/96*Power[ga, 5]*Power[ga+1, -1]*Power[ga+1, -1]+11/32*Power[ga, 6]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+1/12*Power[ga, 7]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1])+353/2880*Power[ga, 5]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+625/1152*Power[ga, 4]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+349/288*Power[ga, 5]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+97/320*Power[ga, 9]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+1/8*Power[ga, 7]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+137/1920*Power[ga, 5]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+1/6*Power[ga, 8]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+1313/720*Power[ga, 2]*Power[ga+1, -1])*R_{\\delta \\zeta }*R^{\\zeta \\delta }+1789/5760*Power[R, 2]*Power[ga, 7]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-1/144*P*Power[ga, 3]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*R+167/3840*Power[R, 2]*Power[ga, 4]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+1/12*P*Power[ga, 2]*R+1/36*P*Power[ga, 3]*R+-337/5760*Power[R, 2]*Power[ga, 9]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-109/5760*Power[R, 2]*Power[ga, 6]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+319/1440*Power[R, 2]*Power[ga, 6]*Power[ga+1, -1]*Power[ga+1, -1]+-5/144*P*Power[ga, 5]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*R+1/12*P*ga*R+(1/36*Power[ga, 3]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+1/36*Power[ga, 4]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-1/36*Power[ga, 5]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-1/36*Power[ga, 6]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-5/36*Power[ga, 4]*Power[ga+1, -1]+-7/12*Power[ga, 2]*Power[ga+1, -1]+-37/72*Power[ga, 3]*Power[ga+1, -1]+73/72*Power[ga, 3]*Power[ga+1, -1]*Power[ga+1, -1]+1/6*ga+1/6*ga*Power[ga+1, -1]+1/6*Power[ga, 2]+1/18*Power[ga, 3]+1/9*Power[ga, 5]*Power[ga+1, -1]*Power[ga+1, -1]+2/3*Power[ga, 2]*Power[ga+1, -1]*Power[ga+1, -1]+11/24*Power[ga, 4]*Power[ga+1, -1]*Power[ga+1, -1])*P_{\\sigma }^{\\alpha }*R_{\\alpha }^{\\sigma }+-19/1440*Power[R, 2]*Power[ga, 10]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-5/72*P*Power[ga, 4]*Power[ga+1, -1]*R+29/1920*Power[R, 2]*Power[ga, 5]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-1/24*P*Power[ga, 2]*Power[ga+1, -1]*R+19/288*Power[R, 2]*Power[ga, 3]*Power[ga+1, -1]*Power[ga+1, -1]+1/36*P*Power[ga, 3]*Power[ga+1, -1]*Power[ga+1, -1]*R+2761/11520*Power[R, 2]*Power[ga, 4]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+1/20*Power[R, 2]*Power[ga, 5]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]+-37/384*Power[R, 2]*Power[ga, 8]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]*Power[ga+1, -1]
+//        Assert.assertTrue(TensorUtils.equals(Expand.expand(action.counterterms().get(1)), expected));
+        System.out.println((Together.together(Tensors.parse("(1+ga)**(-6)*(13/4*ga+1/2*ga**7+1/24*ga**8+14*ga**3+21/8*ga**6+91/12*ga**5+105/8*ga**4+217/24*ga**2+1/2)"))));
     }
 
     @Test
@@ -344,10 +367,10 @@ public class OneLoopCountertermsTest {
                 + "+1/2*(d^\\mu_\\gamma*R^\\nu_\\delta+d^\\nu_\\gamma*R_\\delta^\\mu+d^\\mu_\\delta*R^\\nu_\\gamma+d^\\nu_\\delta*R^\\mu_\\gamma)"
                 + "-1/2*(d^\\mu_\\gamma*d^\\nu_\\delta+d^\\nu_\\gamma*d^\\mu_\\delta)*(R-2*LA)+1/2*g_\\gamma\\delta*g^\\mu\\nu*R)");
         P = (Expression) Expand.expand(P,
-                                       ContractIndices.ContractIndices,
-                                       Tensors.parseExpression("R_{\\mu \\nu}^{\\mu}_{\\alpha} = R_{\\nu\\alpha}"),
-                                       Tensors.parseExpression("R_{\\mu\\nu}^{\\alpha}_{\\alpha}=0"),
-                                       Tensors.parseExpression("R_{\\mu}^{\\mu}= R"));
+                ContractIndices.ContractIndices,
+                Tensors.parseExpression("R_{\\mu \\nu}^{\\mu}_{\\alpha} = R_{\\nu\\alpha}"),
+                Tensors.parseExpression("R_{\\mu\\nu}^{\\alpha}_{\\alpha}=0"),
+                Tensors.parseExpression("R_{\\mu}^{\\mu}= R"));
         W = (Expression) P.transform(W);
         Expression F = Tensors.parseExpression("F_\\mu\\nu^\\lambda\\delta_\\rho\\tau = "
                 + "R^\\lambda_\\rho\\mu\\nu*d^\\delta_\\tau+R^\\delta_\\tau\\mu\\nu*d^\\lambda_\\rho");
@@ -475,13 +498,13 @@ public class OneLoopCountertermsTest {
         Tensors.addSymmetry("R_\\mu\\nu\\alpha\\beta", IndexType.GreekLower, true, new int[]{0, 1, 3, 2});
         Tensors.addSymmetry("R_\\mu\\nu\\alpha\\beta", IndexType.GreekLower, false, new int[]{2, 3, 0, 1});
         Expression[] riemansSubstitutions = new Expression[]{
-            Tensors.parseExpression("R_{\\mu \\nu}^{\\mu}_{\\alpha} = R_{\\nu\\alpha}"),
-            Tensors.parseExpression("R_{\\mu\\nu}^{\\alpha}_{\\alpha}=0"),
-            Tensors.parseExpression("F_{\\mu}^{\\mu}^{\\alpha}_{\\beta}=0"),
-            Tensors.parseExpression("R_{\\mu\\nu\\alpha\\beta}*R^{\\mu\\alpha\\nu\\beta}=(1/2)*R_{\\mu\\nu\\alpha\\beta}*R^{\\mu\\nu\\alpha\\beta}"),
-            Tensors.parseExpression("R_{\\mu\\nu\\alpha\\beta}*R^{\\mu\\nu\\alpha\\beta}=4*R_{\\mu\\nu}*R^{\\mu\\nu}-R*R"),
-            Tensors.parseExpression("R_{\\mu}^{\\mu}= R"),
-            Tensors.parseExpression("P_{\\mu}^{\\mu}= P")
+                Tensors.parseExpression("R_{\\mu \\nu}^{\\mu}_{\\alpha} = R_{\\nu\\alpha}"),
+                Tensors.parseExpression("R_{\\mu\\nu}^{\\alpha}_{\\alpha}=0"),
+                Tensors.parseExpression("F_{\\mu}^{\\mu}^{\\alpha}_{\\beta}=0"),
+                Tensors.parseExpression("R_{\\mu\\nu\\alpha\\beta}*R^{\\mu\\alpha\\nu\\beta}=(1/2)*R_{\\mu\\nu\\alpha\\beta}*R^{\\mu\\nu\\alpha\\beta}"),
+                Tensors.parseExpression("R_{\\mu\\nu\\alpha\\beta}*R^{\\mu\\nu\\alpha\\beta}=4*R_{\\mu\\nu}*R^{\\mu\\nu}-R*R"),
+                Tensors.parseExpression("R_{\\mu}^{\\mu}= R"),
+                Tensors.parseExpression("P_{\\mu}^{\\mu}= P")
         };
         Expression kronecker = (Expression) Tensors.parse("d_{\\mu}^{\\mu}=4");
         Transformation n2 = new SqrSubs(Tensors.parseSimple("n_\\mu")), n2Transformer = new Transformer(TraverseState.Leaving, new Transformation[]{n2});
@@ -500,12 +523,12 @@ public class OneLoopCountertermsTest {
         Expression Kn3 = Tensors.parseExpression("Kn^\\alpha\\beta\\gamma=1/3*(n^\\alpha*g^\\beta\\gamma+n^\\beta*g^\\alpha\\gamma+n^\\gamma*g^\\alpha\\beta)");
         Tensor delta = Tensors.parseExpression(
                 "DELTA^{\\mu\\nu\\alpha}="
-                + "-(1/6)*L*(L-1)*(L-2)*Kn^{\\mu\\nu\\alpha}"
-                + "+Power[L,2]*(L-1)*(1/3)*("
-                + "Kn^{\\mu \\nu }*Kn^{\\alpha }+"
-                + "Kn^{\\alpha \\nu }*Kn^{\\mu }+"
-                + "Kn^{\\mu \\alpha }*Kn^{\\nu })"
-                + "-Power[L,3]*Kn^{\\mu }*Kn^{\\nu }*Kn^{\\alpha }");
+                        + "-(1/6)*L*(L-1)*(L-2)*Kn^{\\mu\\nu\\alpha}"
+                        + "+Power[L,2]*(L-1)*(1/3)*("
+                        + "Kn^{\\mu \\nu }*Kn^{\\alpha }+"
+                        + "Kn^{\\alpha \\nu }*Kn^{\\mu }+"
+                        + "Kn^{\\mu \\alpha }*Kn^{\\nu })"
+                        + "-Power[L,3]*Kn^{\\mu }*Kn^{\\nu }*Kn^{\\alpha }");
         delta = Tensors.parseExpression("L=4").transform(delta);
         delta = Kn1.transform(delta);
         delta = Kn2.transform(delta);
@@ -516,12 +539,12 @@ public class OneLoopCountertermsTest {
         t = Tensors.parse(
                 //                "Power[L,2]*(L-1)"
                 "DELTA^\\alpha\\beta\\gamma"
-                + "*n^\\delta*n_\\sigma*n_\\rho"
-                + "*Kn^\\mu\\nu"
-                + "*("
-                + "-1/10*R^\\rho_\\mu\\gamma\\nu*R^\\sigma_\\alpha\\delta\\beta"
-                + "+1/15*R^\\rho_\\delta\\alpha\\nu*R^\\sigma_\\beta\\mu\\gamma"
-                + "+1/60*R^\\rho_\\beta\\delta\\nu*R^\\sigma_\\gamma\\mu\\alpha)");
+                        + "*n^\\delta*n_\\sigma*n_\\rho"
+                        + "*Kn^\\mu\\nu"
+                        + "*("
+                        + "-1/10*R^\\rho_\\mu\\gamma\\nu*R^\\sigma_\\alpha\\delta\\beta"
+                        + "+1/15*R^\\rho_\\delta\\alpha\\nu*R^\\sigma_\\beta\\mu\\gamma"
+                        + "+1/60*R^\\rho_\\beta\\delta\\nu*R^\\sigma_\\gamma\\mu\\alpha)");
         t = Tensors.parseExpression("L=4").transform(t);
         t = ((Expression) delta).transform(t);
         t = Kn2.transform(t);
@@ -551,23 +574,23 @@ public class OneLoopCountertermsTest {
         CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
         Expression KINV = Tensors.parseExpression(
                 "KINV^{\\alpha\\beta}_{\\mu\\nu} = P^{\\alpha\\beta}_{\\mu\\nu}-1/4*c*g_{\\mu\\nu}*g^{\\alpha\\beta}+"
-                + "(1/4)*b*(n_{\\mu}*n^{\\alpha}*d^{\\beta}_{\\nu}+n_{\\mu}*n^{\\beta}*d^{\\alpha}_{\\nu}+n_{\\nu}*n^{\\alpha}*d^{\\beta}_{\\mu}+n_{\\nu}*n^{\\beta}*d^{\\alpha}_{\\mu})+"
-                + "c*(n_{\\mu}*n_{\\nu}*g^{\\alpha\\beta}+n^{\\alpha}*n^{\\beta}*g_{\\mu\\nu})"
-                + "-c*b*n_{\\mu}*n_{\\nu}*n^{\\alpha}*n^{\\beta}");
+                        + "(1/4)*b*(n_{\\mu}*n^{\\alpha}*d^{\\beta}_{\\nu}+n_{\\mu}*n^{\\beta}*d^{\\alpha}_{\\nu}+n_{\\nu}*n^{\\alpha}*d^{\\beta}_{\\mu}+n_{\\nu}*n^{\\beta}*d^{\\alpha}_{\\mu})+"
+                        + "c*(n_{\\mu}*n_{\\nu}*g^{\\alpha\\beta}+n^{\\alpha}*n^{\\beta}*g_{\\mu\\nu})"
+                        + "-c*b*n_{\\mu}*n_{\\nu}*n^{\\alpha}*n^{\\beta}");
         Expression K = Tensors.parseExpression(
                 "K^{\\mu\\nu}^{\\alpha\\beta}_{\\gamma\\delta} = g^{\\mu\\nu}*P^{\\alpha\\beta}_{\\gamma\\delta}+"
-                + "(1+2*beta)*((1/4)*(d^{\\mu}_{\\gamma}*g^{\\alpha \\nu}*d^{\\beta}_{\\delta} + d^{\\mu}_{\\delta}*g^{\\alpha \\nu}*d^{\\beta}_{\\gamma}+d^{\\mu}_{\\gamma}*g^{\\beta \\nu}*d^{\\alpha}_{\\delta}+ d^{\\mu}_{\\delta}*g^{\\beta \\nu}*d^{\\alpha}_{\\gamma})+"
-                + "(1/4)*(d^{\\nu}_{\\gamma}*g^{\\alpha \\mu}*d^{\\beta}_{\\delta} + d^{\\nu}_{\\delta}*g^{\\alpha \\mu}*d^{\\beta}_{\\gamma}+d^{\\nu}_{\\gamma}*g^{\\beta \\mu}*d^{\\alpha}_{\\delta}+ d^{\\nu}_{\\delta}*g^{\\beta \\mu}*d^{\\alpha}_{\\gamma}) -"
-                + "(1/4)*(g_{\\gamma\\delta}*g^{\\mu \\alpha}*g^{\\nu \\beta}+g_{\\gamma\\delta}*g^{\\mu \\beta}*g^{\\nu \\alpha})-"
-                + "(1/4)*(g^{\\alpha\\beta}*d^{\\mu}_{\\gamma}*d^{\\nu}_{\\delta}+g^{\\alpha\\beta}*d^{\\mu}_{\\delta}*d^{\\nu}_{\\gamma})+(1/8)*g^{\\mu\\nu}*g_{\\gamma\\delta}*g^{\\alpha\\beta})");
+                        + "(1+2*beta)*((1/4)*(d^{\\mu}_{\\gamma}*g^{\\alpha \\nu}*d^{\\beta}_{\\delta} + d^{\\mu}_{\\delta}*g^{\\alpha \\nu}*d^{\\beta}_{\\gamma}+d^{\\mu}_{\\gamma}*g^{\\beta \\nu}*d^{\\alpha}_{\\delta}+ d^{\\mu}_{\\delta}*g^{\\beta \\nu}*d^{\\alpha}_{\\gamma})+"
+                        + "(1/4)*(d^{\\nu}_{\\gamma}*g^{\\alpha \\mu}*d^{\\beta}_{\\delta} + d^{\\nu}_{\\delta}*g^{\\alpha \\mu}*d^{\\beta}_{\\gamma}+d^{\\nu}_{\\gamma}*g^{\\beta \\mu}*d^{\\alpha}_{\\delta}+ d^{\\nu}_{\\delta}*g^{\\beta \\mu}*d^{\\alpha}_{\\gamma}) -"
+                        + "(1/4)*(g_{\\gamma\\delta}*g^{\\mu \\alpha}*g^{\\nu \\beta}+g_{\\gamma\\delta}*g^{\\mu \\beta}*g^{\\nu \\alpha})-"
+                        + "(1/4)*(g^{\\alpha\\beta}*d^{\\mu}_{\\gamma}*d^{\\nu}_{\\delta}+g^{\\alpha\\beta}*d^{\\mu}_{\\delta}*d^{\\nu}_{\\gamma})+(1/8)*g^{\\mu\\nu}*g_{\\gamma\\delta}*g^{\\alpha\\beta})");
         Expression P = Tensors.parseExpression(
                 "P^{\\alpha\\beta}_{\\mu\\nu} = (1/2)*(d^{\\alpha}_{\\mu}*d^{\\beta}_{\\nu}+d^{\\alpha}_{\\nu}*d^{\\beta}_{\\mu})-(1/4)*g_{\\mu\\nu}*g^{\\alpha\\beta}");
         KINV = (Expression) P.transform(KINV);
         K = (Expression) P.transform(K);
 
         Expression consts[] = {
-            Tensors.parseExpression("c=(1+2*beta)/(5+6*beta)"),
-            Tensors.parseExpression("b=-(1+2*beta)/(1+beta)")
+                Tensors.parseExpression("c=(1+2*beta)/(5+6*beta)"),
+                Tensors.parseExpression("b=-(1+2*beta)/(1+beta)")
         };
 //        for (Expression cons : consts) {
 //            KINV = (Expression) cons.transform(KINV);

@@ -41,10 +41,42 @@ import cc.redberry.core.utils.Indicator;
 
 /**
  * This class is a container of the calculated one-loop counterterms.
- * <p/>
  * It has no constructors and can be created using the static
  * method {@link #calculateOneLoopCounterterms(OneLoopInput)}, which
  * performs the whole calculation of the one-loop counterterms.
+ * <p>Here is the example of the calculation of one-loop counterterms
+ * of vector field: </p>
+ * <pre>
+ *      //setting symmetries to tensor P
+ *      Tensors.addSymmetry("P_\\mu\\nu", IndexType.GreekLower, false, 1, 0);
+ *
+ *      //input expressions
+ *      Expression KINV = Tensors.parseExpression("KINV_\\alpha^\\beta=d_\\alpha^\\beta+ga*n_\\alpha*n^\\beta");
+ *      Expression K = Tensors.parseExpression("K^{\\mu\\nu}_\\alpha^{\\beta}=g^{\\mu\\nu}*d_{\\alpha}^{\\beta}-ga/(2*(1+ga))*(g^{\\mu\\beta}*d_\\alpha^\\nu+g^{\\nu\\beta}*d_\\alpha^\\mu)");
+ *      Expression S = Tensors.parseExpression("S^\\rho^\\mu_\\nu=0");
+ *      Expression W = Tensors.parseExpression("W^{\\alpha}_{\\beta}=P^{\\alpha}_{\\beta}+ga/(2*(1+ga))*R^\\alpha_\\beta");
+ *      //F is equal to Riemann for vector field
+ *      Expression F = Tensors.parseExpression("F_\\mu\\nu\\alpha\\beta=R_\\mu\\nu\\alpha\\beta");
+ *
+ *      //tensors M and N are null, since operator order is 2
+ *      OneLoopInput input = new OneLoopInput(2, KINV, K, S, W, null, null, F);
+ *
+ *      //performing the main calculation
+ *      OneLoopCounterterms action = OneLoopCounterterms.calculateOneLoopCounterterms(input);
+ *      Tensor counterterms = action.counterterms();
+ *      //here some transformations can be performed to simplify counterterms
+ *      ...
+ *      System.out.println(counterterms);
+ * </pre>
+ * The above code will produce the counterterms, which after some
+ * simplifications can be written in form
+ * <pre>
+ *     (1/24*ga**2+1/4*ga+1/2)*P_\mu\nu*P^\mu\nu + 1/48*ga**2*P**2 + (1/12*ga**2+1/3*ga)*R_\mu\nu*P^\mu\nu +
+ *     +(1/24*ga**2+1/12*ga+1/6)*R*P + (1/24*ga**2+1/12*ga-4/15)*R_\mu\nu*R^\mu\nu + (1/48*ga**2+1/12*ga+7/60)*R**2
+ * </pre>
+ * The divergent part of the one-loop effective action can be obtained by
+ * multiplying the resulting counterterms on factor 1/(16*\pi**2*(d-4)) and
+ * integrating over the space volume.
  *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
@@ -52,27 +84,27 @@ import cc.redberry.core.utils.Indicator;
  */
 public final class OneLoopCounterterms {
 
-    public static final String Flat_ =
+    private static final String Flat_ =
             "Flat="
                     + "(1/4)*HATS*HATS*HATS*HATS-HATW*HATS*HATS+(1/2)*HATW*HATW+HATS*HATN-HATM+(L-2)*NABLAS_\\mu*HATW^\\mu"
                     + "-L*NABLAS_\\mu*HATW*HATK^\\mu+(1/3)*((L-1)*NABLAS_\\mu^\\mu*HATS*HATS-L*NABLAS_\\mu*HATK^\\mu*HATS*HATS"
                     + "-(L-1)*NABLAS_\\mu*HATS*HATS^\\mu+L*NABLAS_\\mu*HATS*HATS*HATK^\\mu)-(1/2)*NABLAS_\\mu*NABLAS_\\nu*DELTA^{\\mu\\nu}"
                     + "-(1/4)*(L-1)*(L-2)*NABLAS_\\mu*NABLAS_\\nu^{\\mu\\nu}+(1/2)*L*(L-1)*(1/2)*(NABLAS_\\mu*NABLAS_{\\nu }^{\\nu}"
                     + "+NABLAS_{\\nu }*NABLAS_{\\mu }^{\\nu})*HATK^\\mu";
-    public static final String WR_ =
+    private static final String WR_ =
             "WR="
                     + "-(1/2)*Power[L,2]*HATW*HATF_{\\mu\\nu}*Kn^\\mu*HATK^\\nu"
                     + "+(1/3)*L*HATW*HATK^\\alpha*DELTA^{\\mu\\nu}*n_\\sigma*R^\\sigma_{\\mu\\alpha\\nu}"
                     + "+(1/3)*Power[L,2]*(L-1)*HATW*HATK^{\\mu\\nu}*HATK^\\alpha*n_\\sigma*R^\\sigma_{\\mu\\alpha\\nu}"
                     + "-(1/6)*(L-2)*(L-3)*HATW^{\\mu\\nu}*R_{\\mu\\nu}";
-    public static final String SR_ = "SR=-(1/6)*Power[L,2]*(L-1)*HATS*NABLAF_{\\mu\\alpha\\nu}*Kn^{\\mu\\nu}*HATK^\\alpha"
+    private static final String SR_ = "SR=-(1/6)*Power[L,2]*(L-1)*HATS*NABLAF_{\\mu\\alpha\\nu}*Kn^{\\mu\\nu}*HATK^\\alpha"
             + "+(2/3)*L*HATS*NABLAF_{\\mu\\nu\\alpha}*Kn^\\alpha*DELTA^{\\mu\\nu}"
             + "-(1/12)*(L-1)*(L-2)*(L-3)*HATS^{\\alpha\\mu\\nu}*NABLAR_{\\alpha\\mu\\nu}"
             + "-(1/12)*Power[L,2]*(L-1)*(L-2)*HATS*HATK^{\\mu\\nu\\alpha}*HATK^\\beta*n_\\sigma*NABLAR_\\alpha^\\sigma_{\\mu\\beta\\nu}"
             + "+L*(L-1)*HATS*HATK^{\\mu\\nu}*DELTA^{\\alpha\\beta}*n_\\sigma*((5/12)*NABLAR_\\alpha^\\sigma_{\\nu\\beta\\mu}"
             + "-(1/12)*NABLAR_{\\mu}^\\sigma_{\\alpha\\nu\\beta})"
             + "-(1/2)*L*HATS*HATK^\\beta*DELTA^{\\mu\\nu\\alpha}*n_\\sigma*NABLAR_{\\alpha}^{\\sigma}_{\\mu\\beta\\nu}";
-    public static final String SSR_ = "SSR=-(1/2)*L*(L-1)*HATS*HATS^\\mu*HATF_{\\mu\\nu}*HATK^{\\nu}+(1/2)*Power[L,2]*HATS*HATS*HATF_{\\mu\\nu}*Kn^{\\mu}*HATK^\\nu"
+    private static final String SSR_ = "SSR=-(1/2)*L*(L-1)*HATS*HATS^\\mu*HATF_{\\mu\\nu}*HATK^{\\nu}+(1/2)*Power[L,2]*HATS*HATS*HATF_{\\mu\\nu}*Kn^{\\mu}*HATK^\\nu"
             + "+(1/12)*(L-1)*(L-2)*HATS*HATS^{\\mu\\nu}*R_{\\mu\\nu}+(1/3)*L*(L-1)*HATS*HATS^\\mu*HATK^\\nu*R_{\\mu\\nu}"
             + "+(1/6)*HATS*HATS*DELTA^{\\mu\\nu}*R_{\\mu\\nu}-(1/6)*L*(L-1)*(L-2)*HATS*HATS^{\\mu\\nu}*HATK^\\alpha*n_\\sigma*R^\\sigma_{\\mu\\alpha\\nu}"
             + "+(1/3)*(L-1)*HATS*HATS^\\alpha*DELTA^{\\mu\\nu}*n_\\sigma*R^\\sigma_{\\mu\\alpha\\nu}"
@@ -85,14 +117,14 @@ public final class OneLoopCounterterms {
 //            + "+(5/24)*L*L*HATK^\\mu*F_{\\beta\\mu}*DELTA^{\\alpha\\beta}*HATK^\\nu*F_{\\alpha\\nu}"
 //            + "-(1/48)*L*L*(L-1)*HATK^\\mu*F_{\\beta\\nu}*DELTA^\\nu*HATK^{\\alpha\\beta}*F_{\\alpha\\mu}"
 //            + "-(1/48)*L*L*(L-1)*HATK^\\mu*F_{\\beta\\mu}*DELTA^\\nu*HATK^{\\alpha\\beta}*F_{\\alpha\\nu}";
-    public static final String FF_ =
+    private static final String FF_ =
             "FF="
                     + "-(1/24)*L*L*(L-1)*(L-1)*HATK^{\\mu\\nu}*F_{\\mu\\alpha}*HATK^{\\alpha\\beta}*F_{\\nu\\beta}"
                     + "+(1/24)*L*L*HATK^\\mu*F_{\\beta\\nu}*DELTA^{\\alpha\\beta}*HATK^\\nu*F_{\\alpha\\mu}"
                     + "-(5/24)*L*L*HATK^\\mu*F_{\\beta\\mu}*DELTA^{\\alpha\\beta}*HATK^\\nu*F_{\\alpha\\nu}"
                     + "-(1/48)*L*L*(L-1)*HATK^\\mu*F_{\\beta\\nu}*DELTA^\\nu*HATK^{\\alpha\\beta}*F_{\\alpha\\mu}"
                     + "-(1/48)*L*L*(L-1)*HATK^\\mu*F_{\\beta\\mu}*DELTA^\\nu*HATK^{\\alpha\\beta}*F_{\\alpha\\nu}";
-    public static final String FR_ =
+    private static final String FR_ =
             "FR="
                     + "(1/40)*Power[L,2]*(L-1)*(L-2)*DELTA^\\mu*HATK^\\nu*HATK^{\\alpha\\beta\\gamma}*F_{\\mu\\alpha}*n_\\sigma*R^\\sigma_{\\gamma\\beta\\nu}"
                     + "-Power[L,2]*(L-1)*(L-2)*DELTA^\\nu*HATK^{\\alpha\\beta\\gamma}*HATK^\\mu*n_\\sigma*((1/60)*R^\\sigma_{\\beta\\gamma\\mu}*F_{\\alpha\\nu}"
@@ -113,7 +145,7 @@ public final class OneLoopCounterterms {
 //            + "((-1/10)*R^\\rho_{\\mu\\gamma\\nu}*R^\\sigma_{\\alpha\\delta\\beta}+(1/15)*R^\\rho_{\\delta\\alpha\\nu}*R^\\sigma_{\\beta\\mu\\gamma}+(1/60)*R^\\rho_{\\beta\\delta\\nu}*R^\\sigma_{\\gamma\\mu\\alpha})"
 //           
 //            ;
-    public static final String RR_ =
+    private static final String RR_ =
             "RR="
                     + "(1/10)*Power[L,2]*HATK^\\delta*DELTA^{\\mu\\nu\\alpha\\beta}*HATK^\\gamma*n_\\sigma*n_\\rho*R^\\sigma_{\\alpha\\beta\\gamma}*R^\\rho_{\\mu\\nu\\delta}"
                     + "+Power[L,2]*Power[(L-1),2]*(L-2)*HATK^{\\beta\\gamma\\delta}*DELTA^\\alpha*HATK^{\\mu\\nu}*n_\\sigma*n_\\rho*"
@@ -208,9 +240,9 @@ public final class OneLoopCounterterms {
 //            + "((1/180)*R_{\\mu\\nu}*R_{\\alpha\\beta}+(7/720)*R^\\sigma_{\\alpha\\beta\\rho}*R^\\rho_{\\mu\\nu\\sigma})";
     //From KV
     //public static final String RR_ = "RR=L**2/10 *(R^{\\sigma}_{\\alpha \\beta \\gamma }*R^{\\rho}_{\\mu \\nu \\delta } *n_{\\sigma}*n_{\\rho})*HATK^{\\delta  }*DELTA^{\\mu \\nu \\alpha \\beta  }*HATK^{\\gamma  } + L**2*(L-1)**2*(L-2)*n_{\\sigma}*n_{\\rho} *(2/45*R^{\\rho}_{\\alpha \\delta \\nu }*R^{\\sigma}_{\\beta \\mu \\gamma }-1/120*R^{\\rho}_{\\delta \\alpha \\nu }*R^{\\sigma}_{\\beta \\mu \\gamma }) *HATK^{\\beta \\gamma \\delta  }*DELTA^{\\alpha  }*HATK^{\\mu \\nu  } + L**2*(L-1)*n_{\\rho}*n_{\\sigma} *(-1/10*R^{\\sigma}_{\\mu \\gamma \\nu }*R^{\\rho}_{\\alpha \\delta \\beta }+1/15*R^{\\sigma}_{\\delta \\alpha \\nu }*R^{\\rho}_{\\beta \\mu \\gamma } +1/60*R^{\\sigma}_{\\beta \\delta \\nu }*R^{\\rho}_{\\gamma \\mu \\alpha }) *HATK^{\\delta  }*DELTA^{\\alpha \\beta \\gamma  }*HATK^{\\mu \\nu  } + L**2*(L-1)**2*n_{\\sigma}*n_{\\rho} *(-1/20*R^{\\rho}_{\\mu \\beta \\nu }*R^{\\sigma}_{\\delta \\alpha \\gamma }+1/180*R^{\\rho}_{\\alpha \\nu \\beta }*R^{\\sigma}_{\\gamma \\delta \\mu } -7/360*R^{\\rho}_{\\mu \\gamma \\nu }*R^{\\sigma}_{\\alpha \\delta \\beta }-1/240*R^{\\rho}_{\\delta \\beta \\nu }*R^{\\sigma}_{\\gamma \\alpha \\mu } -1/120*R^{\\rho}_{\\beta \\gamma \\nu }*R^{\\sigma}_{\\alpha \\delta \\mu }-1/30*R^{\\rho}_{\\delta \\beta \\nu }*R^{\\sigma}_{\\alpha \\gamma \\mu }) *HATK^{\\gamma \\delta  }*DELTA^{\\alpha \\beta  }*HATK^{\\mu \\nu  } + L**2*(L-1)*(L-2)*n_{\\sigma}*n_{\\rho} *(-1/30*R^{\\sigma}_{\\gamma \\nu \\beta }*R^{\\rho}_{\\alpha \\delta \\mu }-1/180*R^{\\sigma}_{\\mu \\gamma \\nu }*R^{\\rho}_{\\alpha \\beta \\delta } +1/180*R^{\\sigma}_{\\mu \\gamma \\delta }*R^{\\rho}_{\\alpha \\beta \\nu }) *HATK^{\\delta  }*DELTA^{\\mu \\nu  }*HATK^{\\alpha \\beta \\gamma  } + L**2*(L-1)**2*(L-2)*n_{\\sigma}*n_{\\rho} *(1/45*R^{\\rho}_{\\mu \\gamma \\nu }*R^{\\sigma}_{\\alpha \\beta \\delta }-1/80*R^{\\rho}_{\\beta \\nu \\gamma }*R^{\\sigma}_{\\mu \\alpha \\delta } +1/90*R^{\\rho}_{\\beta \\nu \\gamma }*R^{\\sigma}_{\\delta \\alpha \\mu }) *HATK^{\\mu \\nu  }*DELTA^{\\delta  }*HATK^{\\alpha \\beta \\gamma  } + L**2*(L-1)*n_{\\sigma}*n_{\\rho} *(7/120*R^{\\rho}_{\\beta \\gamma \\nu }*R^{\\sigma}_{\\mu \\alpha \\delta }-3/40*R^{\\rho}_{\\beta \\gamma \\delta }*R^{\\sigma}_{\\mu \\alpha \\nu } +1/120*R^{\\rho}_{\\delta \\gamma \\nu }*R^{\\sigma}_{\\alpha \\beta \\mu }) *HATK^{\\mu \\nu  }*DELTA^{\\alpha \\beta \\gamma  }*HATK^{\\delta  } + L**2*(L-1)*(L-2)*n_{\\sigma}*n_{\\rho} *(-1/24*R^{\\rho}_{\\mu \\gamma \\nu }*R^{\\sigma}_{\\alpha \\beta \\delta }-1/180*R^{\\rho}_{\\nu \\gamma \\delta }*R^{\\sigma}_{\\alpha \\beta \\mu } -1/360*R^{\\rho}_{\\delta \\gamma \\nu }*R^{\\sigma}_{\\alpha \\beta \\mu }) *HATK^{\\alpha \\beta \\gamma  }*DELTA^{\\mu \\nu  }*HATK^{\\delta  } - L**2*(L-1)*(L-2)*(L-3)*(n_{\\sigma}*n_{\\rho} *R^{\\sigma}_{\\alpha \\beta \\gamma }*R^{\\rho}_{\\mu \\nu \\delta }) *HATK^{\\delta  }*DELTA^{\\gamma  }*HATK^{\\mu \\nu \\alpha \\beta  } /120 - L**2*(L-1)**2*(L-2)*(L-3)*(n_{\\sigma}*n_{\\rho} *R^{\\rho}_{\\gamma \\beta \\mu }*R^{\\sigma}_{\\alpha \\delta \\nu }) *HATK^{\\alpha \\beta \\gamma \\delta  }*HATK^{\\mu \\nu  } /80 + L**2*n_{\\rho} *(-1/8*R_{\\beta \\gamma}*R^{\\rho}_{\\nu \\alpha \\mu }+3/20*R_{\\beta \\gamma}*R^{\\rho}_{\\mu \\alpha \\nu } +3/40*R_{\\alpha \\mu}*R^{\\rho}_{\\beta \\gamma \\nu }+1/40*R^{\\sigma}_{\\beta \\gamma \\mu }*R^{\\rho}_{\\nu \\alpha \\sigma } -3/20*R^{\\sigma}_{\\alpha \\beta \\mu }*R^{\\rho}_{\\gamma \\nu \\sigma }+1/10*R^{\\sigma}_{\\alpha \\beta \\nu }*R^{\\rho}_{\\gamma \\mu \\sigma }) *HATK^{\\mu  }*DELTA^{\\alpha \\beta \\gamma  }*HATK^{\\nu  } + L**2*(L-1)*n_{\\rho} *(1/20*R_{\\alpha \\nu}*R^{\\rho}_{\\gamma \\beta \\mu } +1/20*R_{\\alpha \\gamma}*R^{\\rho}_{\\mu \\beta \\nu }+1/10*R_{\\alpha \\beta}*R^{\\rho}_{\\mu \\gamma \\nu } +1/20*R^{\\sigma}_{\\alpha \\nu \\gamma }*R^{\\rho}_{\\sigma \\beta \\mu }-1/60*R^{\\sigma}_{\\mu \\alpha \\nu }*R^{\\rho}_{\\beta \\sigma \\gamma } +1/10*R^{\\sigma}_{\\alpha \\beta \\gamma }*R^{\\rho}_{\\mu \\sigma \\nu }-1/12*R^{\\sigma}_{\\alpha \\beta \\nu }*R^{\\rho}_{\\mu \\sigma \\gamma }) *HATK^{\\gamma  }*DELTA^{\\alpha \\beta  }*HATK^{\\mu \\nu  } + L**2*(L-1)**2*n_{\\rho} *(1/60*R_{\\alpha \\mu}*R^{\\rho}_{\\beta \\nu \\gamma }-1/20*R_{\\alpha \\mu}*R^{\\rho}_{\\gamma \\nu \\beta } +1/120*R_{\\alpha \\beta}*R^{\\rho}_{\\mu \\nu \\gamma }+3/40*R_{\\alpha \\gamma}*R^{\\rho}_{\\nu \\beta \\mu } +1/20*R^{\\sigma}_{\\gamma \\mu \\alpha }*R^{\\rho}_{\\nu \\sigma \\beta }+1/120*R^{\\sigma}_{\\alpha \\mu \\gamma }*R^{\\rho}_{\\beta \\nu \\sigma } -1/40*R^{\\sigma}_{\\alpha \\mu \\gamma }*R^{\\rho}_{\\sigma \\nu \\beta }+1/40*R^{\\sigma}_{\\alpha \\mu \\beta }*R^{\\rho}_{\\sigma \\nu \\gamma } -1/20*R^{\\sigma}_{\\alpha \\mu \\beta }*R^{\\rho}_{\\gamma \\nu \\sigma }-1/40*R^{\\sigma}_{\\mu \\beta \\nu }*R^{\\rho}_{\\gamma \\sigma \\alpha }) *HATK^{\\alpha \\beta  }*DELTA^{\\gamma  }*HATK^{\\mu \\nu  } + L**2*(L-1)*n_{\\rho} *(1/20*R^{\\sigma}_{\\mu \\nu \\beta }*R^{\\rho}_{\\gamma \\sigma \\alpha }-7/60*R^{\\sigma}_{\\beta \\mu \\alpha }*R^{\\rho}_{\\gamma \\nu \\sigma } +1/20*R^{\\sigma}_{\\beta \\mu \\alpha }*R^{\\rho}_{\\sigma \\nu \\gamma }+1/10*R^{\\sigma}_{\\mu \\beta \\gamma }*R^{\\rho}_{\\nu \\alpha \\sigma } +1/60*R^{\\sigma}_{\\beta \\mu \\gamma }*R^{\\rho}_{\\alpha \\nu \\sigma }+7/120*R_{\\alpha \\beta}*R^{\\rho}_{\\nu \\gamma \\mu } +11/60*R_{\\beta \\mu}*R^{\\rho}_{\\nu \\alpha \\gamma }) *HATK^{\\alpha \\beta  }*DELTA^{\\mu \\nu  }*HATK^{\\gamma  } + L**2*(L-1)*(L-2)*n_{\\rho} *(7/240*R_{\\alpha \\beta}*R^{\\rho}_{\\gamma \\mu \\nu }+7/240*R_{\\alpha \\nu}*R^{\\rho}_{\\beta \\gamma \\mu } -1/60*R_{\\alpha \\mu}*R^{\\rho}_{\\beta \\gamma \\nu }-1/24*R^{\\sigma}_{\\alpha \\beta \\nu }*R^{\\rho}_{\\sigma \\gamma \\mu } +1/15*R^{\\sigma}_{\\alpha \\beta \\nu }*R^{\\rho}_{\\mu \\gamma \\sigma }+1/40*R^{\\sigma}_{\\alpha \\beta \\mu }*R^{\\rho}_{\\sigma \\gamma \\nu } +1/40*R_{\\beta \\gamma}*R^{\\rho}_{\\nu \\mu \\alpha }+1/48*R^{\\sigma}_{\\beta \\gamma \\mu }*R^{\\rho}_{\\nu \\alpha \\sigma }) *HATK^{\\alpha \\beta \\gamma  }*DELTA^{\\mu  }*HATK^{\\nu  } + L**2*(L-1)**2*(L-2) *n_{\\rho}*(-7/240*R^{\\rho}_{\\beta \\gamma \\nu }*R_{\\mu \\alpha}+1/240*R^{\\rho}_{\\mu \\alpha \\nu }*R_{\\beta \\gamma} -1/40*R^{\\rho}_{\\nu \\gamma \\sigma }*R^{\\sigma}_{\\alpha \\mu \\beta }) *HATK^{\\mu \\nu  }*HATK^{\\alpha \\beta \\gamma  } + L*(L-1)*(L-2)*(L-3) *(1/180*R_{\\mu \\nu}*R_{\\alpha \\beta}+7/720*R^{\\sigma}_{\\alpha \\beta \\rho }*R^{\\rho}_{\\mu \\nu \\sigma }) *HATK^{\\mu \\nu \\alpha \\beta  }";
-    public static final String DELTA_1_ = "DELTA^\\mu=-L*HATK^\\mu";
-    public static final String DELTA_2_ = "DELTA^{\\mu\\nu}=-(1/2)*L*(L-1)*HATK^{\\mu\\nu}+Power[L,2]*(1/2)*(HATK^{\\mu }*HATK^{\\nu }+HATK^{\\nu }*HATK^{\\mu })";
-    public static final String DELTA_3_ =
+    private static final String DELTA_1_ = "DELTA^\\mu=-L*HATK^\\mu";
+    private static final String DELTA_2_ = "DELTA^{\\mu\\nu}=-(1/2)*L*(L-1)*HATK^{\\mu\\nu}+Power[L,2]*(1/2)*(HATK^{\\mu }*HATK^{\\nu }+HATK^{\\nu }*HATK^{\\mu })";
+    private static final String DELTA_3_ =
             "DELTA^{\\mu\\nu\\alpha}="
                     + "-(1/6)*L*(L-1)*(L-2)*HATK^{\\mu\\nu\\alpha}"
                     + "+(1/2)*Power[L,2]*(L-1)*(1/3)*("
@@ -228,7 +260,7 @@ public final class OneLoopCounterterms {
                     + "HATK^{\\nu }*HATK^{\\mu }*HATK^{\\alpha }+"
                     + "HATK^{\\alpha }*HATK^{\\mu }*HATK^{\\nu }+"
                     + "HATK^{\\alpha }*HATK^{\\nu }*HATK^{\\mu })";
-    public static final String DELTA_4_ =
+    private static final String DELTA_4_ =
             "DELTA^{\\mu\\nu\\alpha\\beta}="
                     + "-(1/24)*L*(L-1)*(L-2)*(L-3)*HATK^{\\mu\\nu\\alpha\\beta}"
                     + "+(1/6)*Power[L,2]*(L-1)*(L-2)*(1/4)*("
@@ -312,7 +344,7 @@ public final class OneLoopCounterterms {
                     + "HATK^{\\mu}*HATK^{\\alpha}*HATK^{\\nu}*HATK^{\\beta}+"
                     + "HATK^{\\alpha}*HATK^{\\beta}*HATK^{\\nu}*HATK^{\\mu}+"
                     + "HATK^{\\beta}*HATK^{\\alpha}*HATK^{\\nu}*HATK^{\\mu})";
-    public static final String ACTION_ = "counterterms = Flat + WR + SR + SSR + FF + FR + RR";
+    private static final String ACTION_ = "counterterms = Flat + WR + SR + SSR + FF + FR + RR";
     private final Expression Flat, WR, SR, SSR, FF, FR, RR, DELTA_1, DELTA_2, DELTA_3, DELTA_4, ACTION;
 
     private OneLoopCounterterms(Expression Flat, Expression WR, Expression SR, Expression SSR, Expression FF, Expression FR, Expression RR, Expression DELTA_1, Expression DELTA_2, Expression DELTA_3, Expression DELTA_4, Expression ACTION) {
@@ -411,7 +443,7 @@ public final class OneLoopCounterterms {
      * In order to obtain the divergent part of the one loop effective action, one should
      * integrate counterterms over space volume and multiply on 1/(16*\pi^2*(d-4)) factor.
      *
-     * @return
+     * @return  resulting counterterms
      */
     public Expression counterterms() {
         return ACTION;
@@ -455,17 +487,12 @@ public final class OneLoopCounterterms {
 
     /**
      * This method performs the calculation of the one-loop counterterms.
-     * During the calculation, it also prints the interim results to
-     * standard output.
+     * It also prints the interim results to standard output, during the calculation.
      *
      * @param input input parameters container.
      * @return resulting counterterms container.
      */
     public static OneLoopCounterterms calculateOneLoopCounterterms(OneLoopInput input) {
-        Tensors.addSymmetry("R_\\mu\\nu", IndexType.GreekLower, false, new int[]{1, 0});
-        Tensors.addSymmetry("R_\\mu\\nu\\alpha\\beta", IndexType.GreekLower, true, new int[]{0, 1, 3, 2});
-        Tensors.addSymmetry("R_\\mu\\nu\\alpha\\beta", IndexType.GreekLower, false, new int[]{2, 3, 0, 1});
-
         //Parsing input strings
 
         //matrices names

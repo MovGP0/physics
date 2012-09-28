@@ -35,6 +35,8 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
+
 /**
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
@@ -102,6 +104,17 @@ public class InverseTensorTest {
         Tensor expected = Tensors.parse("K^ac=-a*g^ac*(k_i*k^i)**(-1)+a**2/(a-1)*k^a*k^c*(k_i*k^i)**(-2)");
         Tensor actual = InverseTensor.findInverseWithMaple(toInverse, equation, samples, false, new Transformation[0], mapleBinDir, temporaryDir);
         Assert.assertTrue(TensorUtils.equals(expected, actual));
+    }
+
+    @Test
+    public void example1() {
+        Expression toInverse = Tensors.parseExpression("D_mn = k_m*k_n-(1/a)*k_i*k^i*g_mn");
+        Expression equation = Tensors.parseExpression("D_ab*K^ac=d_b^c");
+        Tensor[] samples = {Tensors.parse("g_mn"), Tensors.parse("g^mn"), Tensors.parse("d_m^n"), Tensors.parse("k_m"), Tensors.parse("k^b")};
+        InverseTensor inverseTensor = new InverseTensor(toInverse, equation, samples);
+        System.out.println(inverseTensor.getGeneralInverseForm());
+        System.out.println(Arrays.toString(inverseTensor.getEquations()));
+
     }
 
     @Test

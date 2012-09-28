@@ -22,9 +22,12 @@
  * calculating the one-loop counterterms of an arbitrary Lagrangian. The
  * technique of the one-loop background calculations in the general field theory
  * was developed by Konstantin Stepanyantz and can be found in published papers
- * [1-3]. A number of examples are placed in {@code OneLoopCountertermsTest}.
- * Performance benchmarks are placed in {@link  cc.redberry.physics.oneloopdiv.Benchmarks}.
- * The detailed description of the package usage is published in [4].
+ * [1-3]. The base classes which implements this algorithm are
+ * {@link cc.redberry.physics.oneloopdiv.OneLoopInput} and
+ * {@link cc.redberry.physics.oneloopdiv.OneLoopCounterterms}. A number of examples
+ * collected in {@code OneLoopCountertermsTest}. Performance benchmarks are
+ * placed in  {@link  cc.redberry.physics.oneloopdiv.Benchmarks}. The detailed
+ * description of the package usage is published in [4].
  *
  *
  * <h3>Literature</h3>

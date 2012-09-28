@@ -61,14 +61,18 @@ import java.util.Arrays;
  * <li>Each l.h.s tensor should have string name defind by the following rules:
  * tensor KINV - "KINV", tensor K - "K", tensor S - "S", tensor W - "W",
  * tensor N - "N", tensor F - "F". </li>
- * <li>The first {@code L - k} indices of each l.h.s. of expression are specified
+ * <li>The first {@code (L - k)} indices of each l.h.s. of expression are specified
  * to be 'covariant' indices, i.e. indices which are contracted with derivatives in
  * operator expansion. The rest {@code 2n} indices are the 'matrix' indices, i.e.
  * indices which are contracted with fields in the Lagrangian.</li>
  * <li>Each of the input tensors, except {@code F} and {@code KINV} must be
  * symmetric on their 'covariant' indices.</li>
+ * <li>The Riemann and Ricci tensors identified as {@code R_{\mu\nu\alpha\beta}} and
+ * {@code R_{\mu\nu}} respectively.</li>
  * </ul>
- * <p/>
+ * If the symmetries of the Riemann or Ricci tensors are not set up, it will be done
+ * automatically.
+ * <p>Look the {@link OneLoopCounterterms} description for the example of usage. </p>
  * <p><b>Note</b>: Currently supported are not all arbitrary Lagrangians. There
  * is a full support of {@code L = 2} and {@code L = 4} theories with no odd on
  * the number of derivatives terms in the operator, so input tensors {@code S^{...}_{...}}
@@ -176,6 +180,7 @@ public final class OneLoopInput {
      * @throws IllegalArgumentException if indices number of some of the input tensors
      *                                  does not corresponds to the actual {@code operatorOrder}
      * @throws IllegalArgumentException if indices of l.h.s. of input expressions contains non Greek lowercase indices.
+     * @see cc.redberry.physics.oneloopdiv.OneLoopUtils#antiDeSitterBackground()
      */
     public OneLoopInput(int operatorOrder,
                         Expression KINV,
@@ -199,6 +204,11 @@ public final class OneLoopInput {
         inputValues[5] = M;
 
         checkConsistency();
+        Tensors.addSymmetry("R_\\mu\\nu", IndexType.GreekLower, false, new int[]{1, 0});
+        Tensors.addSymmetry("R_\\mu\\nu\\alpha\\beta", IndexType.GreekLower, true, new int[]{0, 1, 3, 2});
+        Tensors.addSymmetry("R_\\mu\\nu\\alpha\\beta", IndexType.GreekLower, false, new int[]{2, 3, 0, 1});
+
+
         this.L = Tensors.expression(Tensors.parse("L"), new Complex(operatorOrder));
         this.hatQuantities = new Expression[HAT_QUANTITIES_GENERAL_COUNT][];
         this.matrixIndicesCount = inputValues[1].get(0).getIndices().size() - operatorOrder;
