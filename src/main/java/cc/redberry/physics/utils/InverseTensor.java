@@ -97,7 +97,8 @@ public final class InverseTensor {
      * Creates the {@code InverseTensor} instance from the equation.
      *
      * @param toInverse expression specifies tensor, which need to inverse
-     * @param equation  linear equation on the unknown tensor
+     * @param equation  linear equation on the unknown tensor in the form
+     *                  T^{..}_{...}*Tinv^{...}_{...} = ...
      * @param samples   samples from which inverse should be formed
      *                  into account when forming a system of linear equations
      */
@@ -109,7 +110,8 @@ public final class InverseTensor {
      * Creates the {@code InverseTensor} instance from the equation.
      *
      * @param toInverse       expression specifies tensor, which need to inverse
-     * @param equation        linear equation on the unknown tensor
+     * @param equation        linear equation on the unknown tensor in the form
+     *                        T^{..}_{...}*Tinv^{...}_{...} = ...
      * @param samples         samples from which inverse should be formed
      * @param symmetricForm   specifies whether inverse tensor should be symmetric
      * @param transformations additional simplification rules, which can be taken
@@ -259,7 +261,8 @@ public final class InverseTensor {
      * <p/>
      *
      * @param toInverse       expression specifies tensor, which need to inverse
-     * @param equation        linear equation on the unknown tensor
+     * @param equation        linear equation on the unknown tensor in the form
+     *                        T^{..}_{...}*Tinv^{...}_{...} = ...
      * @param samples         samples from which inverse should be formed
      * @param symmetricForm   specifies whether inverse tensor should be symmetric
      * @param transformations additional simplification rules, which can be taken
@@ -313,7 +316,8 @@ public final class InverseTensor {
      * zeroed.
      *
      * @param toInverse          expression specifies tensor, which need to inverse
-     * @param equation           linear equation on the unknown tensor
+     * @param equation           linear equation on the unknown tensor in the form
+     *                           T^{..}_{...}*Tinv^{...}_{...} = ...
      * @param samples            samples from which inverse should be formed
      * @param symmetricForm      specifies whether inverse tensor should be symmetric
      * @param transformations    additional simplification rules, which can be taken

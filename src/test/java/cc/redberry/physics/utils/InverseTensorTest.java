@@ -162,6 +162,32 @@ public class InverseTensorTest {
         System.out.println(actual);
         //TODO check answer
         Assert.assertTrue(actual != null);
+    }
 
+    @Test
+    public void testDirac1() {
+        Expression t = Tensors.parseExpression("K^i_j = p_\\mu*G^{\\mu i}_j - m* d^i_j");
+        Expression eq = Tensors.parseExpression("K^i_j * D^j_k = d^i_k");
+        Tensor[] samples = new Tensor[]{
+                Tensors.parse("d^i_j"),
+                Tensors.parse("p_\\mu*G^{\\mu i}_j")};
+        Transformation[] tr = new Transformation[]{Tensors.parseExpression("p_\\mu*p_\\nu*G^{\\mu i}_j*G^{\\nu j}_k = p_\\mu*p^\\mu*d^i_k")};
+        Tensor r = InverseTensor.findInverseWithMaple(t, eq, samples, false, tr, mapleBinDir, temporaryDir);
+        Tensor expected = Tensors.parse("D^{j}_{k} = -m*(m**2-p_{\\mu }*p^{\\mu })**(-1)*d^{j}_{k}-(m**2-p_{\\mu }*p^{\\mu })**(-1)*G^{j}_{k}^{\\mu }*p_{\\mu }");
+        Assert.assertTrue(TensorUtils.equals(r, expected));
+    }
+
+    @Test
+    public void testDirac2() {
+        Expression t = Tensors.parseExpression("K^i_j = p_\\mu*G^{\\mu i}_j - m* d^i_j");
+        Expression eq = Tensors.parseExpression("K^i_j * D^j_k = I * d^i_k");
+        Tensor[] samples = new Tensor[]{
+                Tensors.parse("d^i_j"),
+                Tensors.parse("p_\\mu*G^{\\mu i}_j")};
+        Transformation[] tr = new Transformation[]{Tensors.parseExpression("p_\\mu*p_\\nu*G^{\\mu i}_j*G^{\\nu j}_k = p_\\mu*p^\\mu*d^i_k")};
+        Tensor r = InverseTensor.findInverseWithMaple(t, eq, samples, false, tr, mapleBinDir, temporaryDir);
+        System.out.println(r);
+        Tensor expected = Tensors.parse("D^{j}_{k} = -I*m*(m**2-p_{\\mu }*p^{\\mu })**(-1)*d^{j}_{k}-I*(m**2-p_{\\mu }*p^{\\mu })**(-1)*G^{j}_{k}^{\\mu }*p_{\\mu }");
+        Assert.assertTrue(TensorUtils.equals(r, expected));
     }
 }
