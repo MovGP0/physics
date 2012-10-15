@@ -23,12 +23,13 @@
 package cc.redberry.physics.oneloopdiv;
 
 import cc.redberry.core.context.CC;
-import cc.redberry.core.context.ToStringMode;
+import cc.redberry.core.context.OutputFormat;
 import cc.redberry.core.indices.IndexType;
 import cc.redberry.core.tensor.Expression;
 import cc.redberry.core.tensor.Tensors;
 import cc.redberry.core.transformations.ContractIndices;
 import cc.redberry.core.transformations.Expand;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -36,8 +37,8 @@ import java.io.PrintStream;
 /**
  * This class contains several performance benchmarks of one-loop divergences
  * calculation. Here is the summary:
- *
- *
+ * <p/>
+ * <p/>
  * <pre>
  * Machine:
  *  Processor family: Intel(R) Core(TM) i5 CPU M 430  @ 2.27GHz.
@@ -71,13 +72,13 @@ import java.io.PrintStream;
  *  Spin 3 ghosts : 627 s.
  * </pre>
  *
- *
  * @author Stanislav Poslavsky
  */
 public final class Benchmarks {
 
     private Benchmarks() {
     }
+
     private static final OutputStream dummyOutputStream = new OutputStream() {
 
         @Override
@@ -186,7 +187,7 @@ public final class Benchmarks {
      * non-minimal gauge.
      */
     public static void testVectorField() {
-        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
+        CC.setDefaultOutputFormat(OutputFormat.RedberryConsole);
         Tensors.addSymmetry("P_\\mu\\nu", IndexType.GreekLower, false, 1, 0);
 
         Expression KINV = Tensors.parseExpression("KINV_\\alpha^\\beta=d_\\alpha^\\beta+\\gamma*n_\\alpha*n^\\beta");
@@ -213,7 +214,7 @@ public final class Benchmarks {
      * in the non-minimal gauge.
      */
     public static void testSquaredVectorField() {
-        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
+        CC.setDefaultOutputFormat(OutputFormat.RedberryConsole);
         Tensors.addSymmetry("P_\\mu\\nu", IndexType.GreekLower, false, 1, 0);
 
         Expression KINV = Tensors.parseExpression("KINV_\\alpha^\\beta=d_\\alpha^\\beta+(2*\\gamma+Power[\\gamma,2])*n_\\alpha*n^\\beta");
@@ -280,10 +281,9 @@ public final class Benchmarks {
      *  where
      *  &nbsp;&nbsp;&nbsp;&nbsp; \chi^\mu = 1/\sqrt{1+\lambda} (g^{\mu\alpha} \nabla^\beta h_{\alpha\beta}-1/2 g^{\alpha\beta} \nabla^\mu h_{\alpha\beta})
      * </pre>
-     *
      */
     public static void testGravityGhosts() {
-        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
+        CC.setDefaultOutputFormat(OutputFormat.RedberryConsole);
         Tensors.addSymmetry("P_\\mu\\nu", IndexType.GreekLower, false, 1, 0);
 
         Expression KINV = Tensors.parseExpression("KINV_\\alpha^\\beta=d_\\alpha^\\beta+gamma*n_\\alpha*n^\\beta");
@@ -315,7 +315,7 @@ public final class Benchmarks {
      * </pre>
      */
     public static void testLambdaGaugeGravity() {
-        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
+        CC.setDefaultOutputFormat(OutputFormat.RedberryConsole);
 
         Expression KINV = Tensors.parseExpression("KINV_\\alpha\\beta^\\gamma\\delta = "
                 + "(d_\\alpha^\\gamma*d_\\beta^\\delta+d_\\beta^\\gamma*d_\\alpha^\\delta)/2+"
@@ -370,7 +370,7 @@ public final class Benchmarks {
      */
     public static void testMinimalSecondOrderOperator() {
         //TIME = 6.1 s
-        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
+        CC.setDefaultOutputFormat(OutputFormat.RedberryConsole);
 
         Expression KINV = Tensors.parseExpression("KINV_\\alpha^\\beta=d_\\alpha^\\beta");
         Expression K = Tensors.parseExpression("K^\\mu\\nu_\\alpha^\\beta=d_\\alpha^\\beta*g^{\\mu\\nu}");
@@ -390,7 +390,7 @@ public final class Benchmarks {
      */
     public static void testMinimalSecondOrderOperatorBarvinskyVilkovisky() {
         //TIME = 4.5 s
-        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
+        CC.setDefaultOutputFormat(OutputFormat.RedberryConsole);
 
         //Phys. Rep. 119 ( 1985) 1-74 
         Expression KINV = Tensors.parseExpression("KINV_\\alpha^\\beta=d_\\alpha^\\beta");
@@ -411,7 +411,7 @@ public final class Benchmarks {
      */
     public static void testMinimalFourthOrderOperator() {
         //TIME = 6.2 s
-        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
+        CC.setDefaultOutputFormat(OutputFormat.RedberryConsole);
         Tensors.addSymmetry("P_\\mu\\nu", IndexType.GreekLower, false, 1, 0);
 
         Expression KINV = Tensors.parseExpression("KINV_\\alpha^\\beta=d_\\alpha^\\beta");
@@ -433,26 +433,26 @@ public final class Benchmarks {
      */
     public static void testSpin3Ghosts() {
         //TIME = 990 s
-        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
+        CC.setDefaultOutputFormat(OutputFormat.RedberryConsole);
         Expression KINV = Tensors.parseExpression(
                 "KINV^{\\alpha\\beta}_{\\mu\\nu} = P^{\\alpha\\beta}_{\\mu\\nu}-1/4*c*g_{\\mu\\nu}*g^{\\alpha\\beta}+"
-                + "(1/4)*b*(n_{\\mu}*n^{\\alpha}*d^{\\beta}_{\\nu}+n_{\\mu}*n^{\\beta}*d^{\\alpha}_{\\nu}+n_{\\nu}*n^{\\alpha}*d^{\\beta}_{\\mu}+n_{\\nu}*n^{\\beta}*d^{\\alpha}_{\\mu})+"
-                + "c*(n_{\\mu}*n_{\\nu}*g^{\\alpha\\beta}+n^{\\alpha}*n^{\\beta}*g_{\\mu\\nu})"
-                + "-c*b*n_{\\mu}*n_{\\nu}*n^{\\alpha}*n^{\\beta}");
+                        + "(1/4)*b*(n_{\\mu}*n^{\\alpha}*d^{\\beta}_{\\nu}+n_{\\mu}*n^{\\beta}*d^{\\alpha}_{\\nu}+n_{\\nu}*n^{\\alpha}*d^{\\beta}_{\\mu}+n_{\\nu}*n^{\\beta}*d^{\\alpha}_{\\mu})+"
+                        + "c*(n_{\\mu}*n_{\\nu}*g^{\\alpha\\beta}+n^{\\alpha}*n^{\\beta}*g_{\\mu\\nu})"
+                        + "-c*b*n_{\\mu}*n_{\\nu}*n^{\\alpha}*n^{\\beta}");
         Expression K = Tensors.parseExpression(
                 "K^{\\mu\\nu}^{\\alpha\\beta}_{\\gamma\\delta} = g^{\\mu\\nu}*P^{\\alpha\\beta}_{\\gamma\\delta}+"
-                + "(1+2*beta)*((1/4)*(d^{\\mu}_{\\gamma}*g^{\\alpha \\nu}*d^{\\beta}_{\\delta} + d^{\\mu}_{\\delta}*g^{\\alpha \\nu}*d^{\\beta}_{\\gamma}+d^{\\mu}_{\\gamma}*g^{\\beta \\nu}*d^{\\alpha}_{\\delta}+ d^{\\mu}_{\\delta}*g^{\\beta \\nu}*d^{\\alpha}_{\\gamma})+"
-                + "(1/4)*(d^{\\nu}_{\\gamma}*g^{\\alpha \\mu}*d^{\\beta}_{\\delta} + d^{\\nu}_{\\delta}*g^{\\alpha \\mu}*d^{\\beta}_{\\gamma}+d^{\\nu}_{\\gamma}*g^{\\beta \\mu}*d^{\\alpha}_{\\delta}+ d^{\\nu}_{\\delta}*g^{\\beta \\mu}*d^{\\alpha}_{\\gamma}) -"
-                + "(1/4)*(g_{\\gamma\\delta}*g^{\\mu \\alpha}*g^{\\nu \\beta}+g_{\\gamma\\delta}*g^{\\mu \\beta}*g^{\\nu \\alpha})-"
-                + "(1/4)*(g^{\\alpha\\beta}*d^{\\mu}_{\\gamma}*d^{\\nu}_{\\delta}+g^{\\alpha\\beta}*d^{\\mu}_{\\delta}*d^{\\nu}_{\\gamma})+(1/8)*g^{\\mu\\nu}*g_{\\gamma\\delta}*g^{\\alpha\\beta})");
+                        + "(1+2*beta)*((1/4)*(d^{\\mu}_{\\gamma}*g^{\\alpha \\nu}*d^{\\beta}_{\\delta} + d^{\\mu}_{\\delta}*g^{\\alpha \\nu}*d^{\\beta}_{\\gamma}+d^{\\mu}_{\\gamma}*g^{\\beta \\nu}*d^{\\alpha}_{\\delta}+ d^{\\mu}_{\\delta}*g^{\\beta \\nu}*d^{\\alpha}_{\\gamma})+"
+                        + "(1/4)*(d^{\\nu}_{\\gamma}*g^{\\alpha \\mu}*d^{\\beta}_{\\delta} + d^{\\nu}_{\\delta}*g^{\\alpha \\mu}*d^{\\beta}_{\\gamma}+d^{\\nu}_{\\gamma}*g^{\\beta \\mu}*d^{\\alpha}_{\\delta}+ d^{\\nu}_{\\delta}*g^{\\beta \\mu}*d^{\\alpha}_{\\gamma}) -"
+                        + "(1/4)*(g_{\\gamma\\delta}*g^{\\mu \\alpha}*g^{\\nu \\beta}+g_{\\gamma\\delta}*g^{\\mu \\beta}*g^{\\nu \\alpha})-"
+                        + "(1/4)*(g^{\\alpha\\beta}*d^{\\mu}_{\\gamma}*d^{\\nu}_{\\delta}+g^{\\alpha\\beta}*d^{\\mu}_{\\delta}*d^{\\nu}_{\\gamma})+(1/8)*g^{\\mu\\nu}*g_{\\gamma\\delta}*g^{\\alpha\\beta})");
         Expression P = Tensors.parseExpression(
                 "P^{\\alpha\\beta}_{\\mu\\nu} = (1/2)*(d^{\\alpha}_{\\mu}*d^{\\beta}_{\\nu}+d^{\\alpha}_{\\nu}*d^{\\beta}_{\\mu})-(1/4)*g_{\\mu\\nu}*g^{\\alpha\\beta}");
         KINV = (Expression) P.transform(KINV);
         K = (Expression) P.transform(K);
 
         Expression consts[] = {
-            Tensors.parseExpression("c=(1+2*beta)/(5+6*beta)"),
-            Tensors.parseExpression("b=-(1+2*beta)/(1+beta)")
+                Tensors.parseExpression("c=(1+2*beta)/(5+6*beta)"),
+                Tensors.parseExpression("b=-(1+2*beta)/(1+beta)")
         };
 //        for (Expression cons : consts) {
 //            KINV = (Expression) cons.transform(KINV);
@@ -480,7 +480,7 @@ public final class Benchmarks {
      */
     public static void testNonMinimalGaugeGravity() {
         //FIXME works more than hour
-        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
+        CC.setDefaultOutputFormat(OutputFormat.RedberryConsole);
         Tensors.addSymmetry("R_\\mu\\nu", IndexType.GreekLower, false, new int[]{1, 0});
         Tensors.addSymmetry("R_\\mu\\nu\\alpha\\beta", IndexType.GreekLower, true, new int[]{0, 1, 3, 2});
         Tensors.addSymmetry("R_\\mu\\nu\\alpha\\beta", IndexType.GreekLower, false, new int[]{2, 3, 0, 1});
@@ -524,10 +524,10 @@ public final class Benchmarks {
                 + "+1/2*(d^\\mu_\\gamma*R^\\nu_\\delta+d^\\nu_\\gamma*R_\\delta^\\mu+d^\\mu_\\delta*R^\\nu_\\gamma+d^\\nu_\\delta*R^\\mu_\\gamma)"
                 + "-1/2*(d^\\mu_\\gamma*d^\\nu_\\delta+d^\\nu_\\gamma*d^\\mu_\\delta)*(R-2*LA)+1/2*g_\\gamma\\delta*g^\\mu\\nu*R)");
         P = (Expression) Expand.expand(P,
-                                       ContractIndices.ContractIndices,
-                                       Tensors.parseExpression("R_{\\mu \\nu}^{\\mu}_{\\alpha} = R_{\\nu\\alpha}"),
-                                       Tensors.parseExpression("R_{\\mu\\nu}^{\\alpha}_{\\alpha}=0"),
-                                       Tensors.parseExpression("R_{\\mu}^{\\mu}= R"));
+                ContractIndices.ContractIndices,
+                Tensors.parseExpression("R_{\\mu \\nu}^{\\mu}_{\\alpha} = R_{\\nu\\alpha}"),
+                Tensors.parseExpression("R_{\\mu\\nu}^{\\alpha}_{\\alpha}=0"),
+                Tensors.parseExpression("R_{\\mu}^{\\mu}= R"));
         W = (Expression) P.transform(W);
         Expression F = Tensors.parseExpression("F_\\mu\\nu^\\lambda\\delta_\\rho\\tau = "
                 + "R^\\lambda_\\rho\\mu\\nu*d^\\delta_\\tau+R^\\delta_\\tau\\mu\\nu*d^\\lambda_\\rho");

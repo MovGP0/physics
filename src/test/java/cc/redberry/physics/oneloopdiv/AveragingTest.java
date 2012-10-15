@@ -23,14 +23,16 @@
 
 package cc.redberry.physics.oneloopdiv;
 
-import cc.redberry.core.context.*;
+import cc.redberry.core.context.CC;
+import cc.redberry.core.context.OutputFormat;
 import cc.redberry.core.indices.IndexType;
 import cc.redberry.core.tensor.Expression;
 import cc.redberry.core.tensor.Tensor;
 import cc.redberry.core.tensor.Tensors;
-import cc.redberry.core.transformations.*;
-import cc.redberry.core.utils.*;
-import junit.framework.*;
+import cc.redberry.core.transformations.ContractIndices;
+import cc.redberry.core.transformations.Expand;
+import cc.redberry.core.utils.TensorUtils;
+import junit.framework.Assert;
 import org.junit.Test;
 
 public class AveragingTest {
@@ -55,7 +57,7 @@ public class AveragingTest {
 
     @Test
     public void test4_0() {
-        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
+        CC.setDefaultOutputFormat(OutputFormat.RedberryConsole);
         for (int i = 0; i < 100; ++i) {
             CC.resetTensorNames();
             Tensor t = Tensors.parse("n^\\mu*n_\\mu*n_\\alpha*n^\\alpha*n_\\nu*n^\\nu");
@@ -132,5 +134,39 @@ public class AveragingTest {
     public void test10() {
         Tensor t = Tensors.parse("n_\\mu*n_\\nu*n^\\alpha*n^\\beta*n^\\gamma*n^\\lambda*n^\\sigma*n^\\rho*n^\\theta*n^\\zeta");
         new Averaging(Tensors.parseSimple("n_\\mu")).transform(t);
+    }
+
+    @Test
+    public void test11() {
+        Tensor t = Tensors.parse("(n_{\\sigma}*n^{\\alpha}*R_{\\alpha}^{\\sigma})**2");
+        t = new Averaging(Tensors.parseSimple("n_\\alpha")).transform(t);
+        t = ContractIndices.contract(t);
+        Assert.assertTrue(TensorUtils.equals(t, Tensors.parse("(1/16)*R_{\\sigma}^{\\sigma}**2")));
+    }
+
+    @Test
+    public void test12() {
+        Tensor t = Tensors.parse("2+(n_{\\sigma}*n^{\\alpha}*R_{\\alpha}^{\\sigma})**2");
+        t = new Averaging(Tensors.parseSimple("n_\\alpha")).transform(t);
+        t = ContractIndices.contract(t);
+        Assert.assertTrue(TensorUtils.equals(t, Tensors.parse("2+(1/16)*R_{\\sigma}^{\\sigma}**2")));
+    }
+
+    @Test
+    public void test13() {
+        Tensor t = Tensors.parse("n_\\mu*n^\\mu+(n_{\\sigma}*n^{\\alpha}*R_{\\alpha}^{\\sigma})**2");
+        t = new Averaging(Tensors.parseSimple("n_\\alpha")).transform(t);
+        t = ContractIndices.contract(t);
+        t = Tensors.parseExpression("d_\\mu^\\mu = 4").transform(t);
+        Assert.assertTrue(TensorUtils.equals(t, Tensors.parse("1+(1/16)*R_{\\sigma}^{\\sigma}**2")));
+    }
+    @Test
+    public void test14(){
+        Tensor t = Tensors.parse("(128/5)*(R^{\\sigma}_{\\alpha\\beta\\gamma}*n^{\\gamma}*n_{\\sigma}*n^{\\alpha}*n^{\\beta})**2-(1/6)*R**2+(24/5)*(R_{\\gamma}^{\\sigma}*n_{\\sigma}*n^{\\gamma})**2-(1/3)*R_{\\mu\\nu}*R^{\\mu\\nu}");
+        t = new Averaging(Tensors.parseSimple("n_\\alpha")).transform(t);
+        t = Expand.expand(t);
+        t = ContractIndices.contract(t);
+        t = Tensors.parseExpression("d_\\mu^\\mu = 4").transform(t);
+        System.out.println(t);
     }
 }

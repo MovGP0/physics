@@ -363,128 +363,91 @@ public final class OneLoopCounterterms {
         this.ACTION = ACTION;
     }
 
-//    public Expression Flat(){return Flat;}
-//    public Expression WR(){return WR;}
-//    public Expression SR(){return SR;}
-//    public Expression SSR(){return SSR;}
-//    public Expression FF(){return FF;}
-//    public Expression FR(){return FR;}
-//    public Expression RR(){return RR;}
-//    public Expression counterterms(){return counterterms;}
-//    public Expression DELTA_1(){return DELTA_1;}
-//    public Expression DELTA_2(){return DELTA_2;}
-//    public Expression DELTA_3(){return DELTA_3;}
-//    public Expression DELTA_4(){return DELTA_4;}
-
     /**
      * Returns the Flat counterterms part
      *
      * @return Flat counterterms part
      */
-    public Expression Flat() {
-        return Flat;
-    }
+    public Expression Flat() { return Flat; }
 
     /**
      * Returns the WR counterterms part
      *
      * @return WR counterterms part
      */
-    public Expression WR() {
-        return WR;
-    }
+    public Expression WR() { return WR; }
 
     /**
      * Returns the SR counterterms part
      *
      * @return SR counterterms part
      */
-    public Expression SR() {
-        return SR;
-    }
+    public Expression SR() { return SR; }
 
     /**
      * Returns the SSR counterterms part
      *
      * @return SSR counterterms part
      */
-    public Expression SSR() {
-        return SSR;
-    }
+    public Expression SSR() { return SSR; }
 
     /**
      * Returns the FF counterterms part
      *
      * @return FF counterterms part
      */
-    public Expression FF() {
-        return FF;
-    }
+    public Expression FF() { return FF; }
 
     /**
      * Returns the FR counterterms part
      *
      * @return FR counterterms part
      */
-    public Expression FR() {
-        return FR;
-    }
+    public Expression FR() { return FR; }
 
     /**
      * Returns the RR counterterms part
      *
      * @return RR counterterms part
      */
-    public Expression RR() {
-        return RR;
-    }
+    public Expression RR() { return RR; }
 
     /**
      * Return resulting counterterms, i.e. the Flat + WR + SR + SSR + FF + FR + RR.
      * In order to obtain the divergent part of the one loop effective action, one should
      * integrate counterterms over space volume and multiply on 1/(16*\pi^2*(d-4)) factor.
      *
-     * @return  resulting counterterms
+     * @return resulting counterterms
      */
-    public Expression counterterms() {
-        return ACTION;
-    }
+    public Expression counterterms() { return ACTION; }
 
     /**
      * Returns \Delta^{\mu ...} tensor, where dots mean 'matrix' indices.
      *
      * @return \Delta^{\mu ...} tensor, where dots mean 'matrix' indices.
      */
-    public Expression DELTA_1() {
-        return DELTA_1;
-    }
+    public Expression DELTA_1() { return DELTA_1; }
 
     /**
      * Returns \Delta^{\mu\nu ...} tensor, where dots mean 'matrix' indices.
      *
      * @return \Delta^{\mu\nu ...} tensor, where dots mean 'matrix' indices.
      */
-    public Expression DELTA_2() {
-        return DELTA_2;
-    }
+    public Expression DELTA_2() { return DELTA_2; }
 
     /**
      * Returns \Delta^{\mu\nu\alpha ...} tensor, where dots mean 'matrix' indices.
      *
      * @return \Delta^{\mu\nu\alpha ...} tensor, where dots mean 'matrix' indices.
      */
-    public Expression DELTA_3() {
-        return DELTA_3;
-    }
+    public Expression DELTA_3() { return DELTA_3; }
 
     /**
      * Returns \Delta^{\mu\nu\alpha\beta ...} tensor, where dots mean 'matrix' indices.
      *
      * @return \Delta^{\mu\nu\alpha\beta ...} tensor, where dots mean 'matrix' indices.
      */
-    public Expression DELTA_4() {
-        return DELTA_4;
-    }
+    public Expression DELTA_4() { return DELTA_4; }
 
     /**
      * This method performs the calculation of the one-loop counterterms.

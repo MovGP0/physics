@@ -25,7 +25,7 @@ package cc.redberry.physics.oneloopdiv;
 
 import cc.redberry.core.context.CC;
 import cc.redberry.core.context.NameDescriptor;
-import cc.redberry.core.context.ToStringMode;
+import cc.redberry.core.context.OutputFormat;
 import cc.redberry.core.indices.*;
 import cc.redberry.core.number.Complex;
 import cc.redberry.core.parser.ParseNodeSimpleTensor;
@@ -260,16 +260,16 @@ public final class OneLoopInput {
         Transformation[] transformations = ArraysUtils.addAll(new Transformation[]{ContractIndices.ContractIndices, n2Transformer}, riemannBackground);
         for (i = 0; i < actualHatQuantities; ++i) {
             hatQuantities[i] = new Expression[operatorOrder + 1 - i];
-            covariantIndicesString = IndicesUtils.toString(Arrays.copyOfRange(covariantIndices, 0, covariantIndices.length - i), ToStringMode.Redberry);
+            covariantIndicesString = IndicesUtils.toString(Arrays.copyOfRange(covariantIndices, 0, covariantIndices.length - i), OutputFormat.Redberry);
             for (j = 0; j < operatorOrder + 1 - i; ++j) {
                 sb = new StringBuilder();
                 sb.append(getStringHatQuantitieName(i)).
-                        append(IndicesUtils.toString(Arrays.copyOfRange(covariantIndices, j, covariantIndices.length - i), ToStringMode.Redberry)).
+                        append(IndicesUtils.toString(Arrays.copyOfRange(covariantIndices, j, covariantIndices.length - i), OutputFormat.Redberry)).
                         append("=KINV*").
                         append(getStringInputName(1 + i)).
                         append(covariantIndicesString);
                 for (k = 0; k < j; ++k)
-                    sb.append("*n").append(IndicesUtils.toString(IndicesUtils.inverseIndexState(covariantIndices[k]), ToStringMode.Redberry));
+                    sb.append("*n").append(IndicesUtils.toString(IndicesUtils.inverseIndexState(covariantIndices[k]), OutputFormat.Redberry));
 
                 temp = Tensors.parse(sb.toString(), insertion);
                 temp = inputValues[0].transform(temp);
@@ -287,17 +287,17 @@ public final class OneLoopInput {
             hatQuantities[i][0] = (Expression) Tensors.parse(sb.toString(), insertion);
         }
         kn = new Expression[operatorOrder + 1];
-        covariantIndicesString = IndicesUtils.toString(covariantIndices, ToStringMode.Redberry);
-        String matricIndices = IndicesUtils.toString(ArraysUtils.addAll(upper, lower), ToStringMode.Redberry);
+        covariantIndicesString = IndicesUtils.toString(covariantIndices, OutputFormat.Redberry);
+        String matricIndices = IndicesUtils.toString(ArraysUtils.addAll(upper, lower), OutputFormat.Redberry);
         for (i = 0; i < operatorOrder + 1; ++i) {
             sb = new StringBuilder();
-            sb.append("Kn").append(IndicesUtils.toString(Arrays.copyOfRange(covariantIndices, i, covariantIndices.length), ToStringMode.Redberry)).
+            sb.append("Kn").append(IndicesUtils.toString(Arrays.copyOfRange(covariantIndices, i, covariantIndices.length), OutputFormat.Redberry)).
                     append(matricIndices).
                     append("=K").
                     append(covariantIndicesString).
                     append(matricIndices);
             for (k = 0; k < i; ++k)
-                sb.append("*n").append(IndicesUtils.toString(IndicesUtils.inverseIndexState(covariantIndices[k]), ToStringMode.Redberry));
+                sb.append("*n").append(IndicesUtils.toString(IndicesUtils.inverseIndexState(covariantIndices[k]), OutputFormat.Redberry));
             temp = Tensors.parse(sb.toString());
             temp = inputValues[0].transform(temp);
             temp = inputValues[1].transform(temp);
@@ -315,7 +315,7 @@ public final class OneLoopInput {
         Tensors.addSymmetry((SimpleTensor) F.get(0), IndexType.GreekLower, true, symmetry);
         this.F = F;
 
-        covariantIndicesString = IndicesUtils.toString(Arrays.copyOfRange(covariantIndices, 0, 2), ToStringMode.Redberry);
+        covariantIndicesString = IndicesUtils.toString(Arrays.copyOfRange(covariantIndices, 0, 2), OutputFormat.Redberry);
         sb = new StringBuilder();
         sb.append("HATF").
                 append(covariantIndicesString).
@@ -451,7 +451,7 @@ public final class OneLoopInput {
         Expression[] nablaS = new Expression[getHatQuantities(1).length];
         StringBuilder sb;
         for (int i = 0; i < nablaS.length; ++i) {
-            sb = new StringBuilder().append("NABLAS_{\\mu_{9}}").append(getHatQuantities(1)[i].get(0).getIndices().toString(ToStringMode.Redberry)).append("=0");
+            sb = new StringBuilder().append("NABLAS_{\\mu_{9}}").append(getHatQuantities(1)[i].get(0).getIndices().toString(OutputFormat.Redberry)).append("=0");
             nablaS[i] = (Expression) Tensors.parse(sb.toString());
         }
         return nablaS;

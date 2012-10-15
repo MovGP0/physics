@@ -69,12 +69,6 @@ public class InverseTensorTest {
     }
 
     @Test
-    public void tesasy() {
-        char c = 'a';
-        System.out.println((int) c);
-    }
-
-    @Test
     public void testVectorField1() {
         Transformation[] transformations = new Transformation[]{Tensors.parseExpression("k_a*k^a=1")};
         Expression toInverse = Tensors.parseExpression("D_mn = k_m*k_n-(1/a)*k_i*k^i*g_mn");

@@ -27,12 +27,12 @@ import cc.redberry.core.number.Complex;
 import cc.redberry.core.tensor.*;
 import cc.redberry.core.transformations.Expand;
 import cc.redberry.core.transformations.Transformation;
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.commons.math3.util.ArithmeticUtils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
@@ -45,6 +45,8 @@ public final class Averaging implements Transformation {
     }
 
     private static Tensor average(final int[] indices) {
+        if (indices.length == 0)
+            return Complex.ONE;
         if (indices.length == 2)
             return Tensors.createMetricOrKronecker(indices[0], indices[1]);
         SumBuilder sb = new SumBuilder();
@@ -80,30 +82,43 @@ public final class Averaging implements Transformation {
         if (tensor instanceof Product) {
             int i;
             int count = 0;
-            Tensor current;
+            Tensor current, old;
             IndicesBuilder ib = new IndicesBuilder();
             List<Tensor> newProductElements = new ArrayList<>();
+            boolean averaged = false;
             for (i = tensor.size() - 1; i >= 0; --i) {
                 current = tensor.get(i);
                 if (current instanceof SimpleTensor && ((SimpleTensor) current).getName() == const_n.getName()) {
                     ib.append(current);
                     ++count;
-                } else
+                } else {
+                    old = current;
+                    current = transform(current);
+                    if (old != current)
+                        averaged = true;
                     newProductElements.add(current);
+                }
             }
-            if (count == 0)
+            if (count == 0 && !averaged)
                 return tensor;
             if (count % 2 != 0)
                 return Complex.ZERO;
 //            System.out.println(count);
             count = count / 2;
-            Tensor averaged = average(ib.getIndices().getAllIndices().copy());
+            Tensor result = average(ib.getIndices().getAllIndices().copy());
             long factor = ArithmeticUtils.pow((long) 2, count) * ArithmeticUtils.factorial(count + 1);//may be BigInteger?
             Complex number = new Complex((long) factor).reciprocal();
-            averaged = Expand.expand(averaged);
+            result = Expand.expand(result);
             newProductElements.add(number);
-            newProductElements.add(averaged);
+            newProductElements.add(result);
             return Tensors.multiply(newProductElements.toArray(new Tensor[newProductElements.size()]));
+        }
+
+        if (tensor instanceof Power) {
+            Tensor nBase = transform(tensor.get(0));
+            if (nBase == tensor.get(0))
+                return tensor;
+            return Tensors.pow(nBase, tensor.get(1));
         }
         return tensor;
     }

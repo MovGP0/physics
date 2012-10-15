@@ -23,8 +23,6 @@
 
 package cc.redberry.physics.oneloopdiv;
 
-import cc.redberry.core.context.CC;
-import cc.redberry.core.context.ToStringMode;
 import cc.redberry.core.indices.IndexType;
 import cc.redberry.core.tensor.*;
 import cc.redberry.core.tensor.iterator.TraverseState;
@@ -42,7 +40,7 @@ import java.util.regex.Pattern;
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-@Ignore
+//@Ignore
 public class OneLoopCountertermsTest {
 
     @Test
@@ -69,9 +67,9 @@ public class OneLoopCountertermsTest {
         Assert.assertTrue(TensorUtils.equals(A, expected));
     }
 
+    @Ignore
     @Test
     public void testVectorField() {
-        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
         Tensors.addSymmetry("P_\\mu\\nu", IndexType.GreekLower, false, 1, 0);
 
         Expression KINV = Tensors.parseExpression("KINV_\\alpha^\\beta=d_\\alpha^\\beta+\\gamma*n_\\alpha*n^\\beta");
@@ -108,6 +106,7 @@ public class OneLoopCountertermsTest {
         //        + "+(1/48*Power[gamma,2]+1/12*gamma+7/60)*Power[R,2]");
     }
 
+    @Ignore
     @Test
     public void exampleVF() {
         Tensors.addSymmetry("P_\\mu\\nu", IndexType.GreekLower, false, 1, 0);
@@ -129,9 +128,9 @@ public class OneLoopCountertermsTest {
         System.out.println((Together.together(Tensors.parse("(1+ga)**(-6)*(13/4*ga+1/2*ga**7+1/24*ga**8+14*ga**3+21/8*ga**6+91/12*ga**5+105/8*ga**4+217/24*ga**2+1/2)"))));
     }
 
+    @Ignore
     @Test
     public void testSquaredVectorField() {
-        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
         Tensors.addSymmetry("P_\\mu\\nu", IndexType.GreekLower, false, 1, 0);
 
         Expression KINV = Tensors.parseExpression("KINV_\\alpha^\\beta=d_\\alpha^\\beta+(2*\\gamma+Power[\\gamma,2])*n_\\alpha*n^\\beta");
@@ -203,7 +202,6 @@ public class OneLoopCountertermsTest {
 
     @Test
     public void testGravityGhosts0() {
-        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
         Tensors.addSymmetry("P_\\mu\\nu", IndexType.GreekLower, false, 1, 0);
 
         Expression KINV = Tensors.parseExpression("KINV_\\alpha^\\beta=d_\\alpha^\\beta+gamma*n_\\alpha*n^\\beta");
@@ -229,9 +227,9 @@ public class OneLoopCountertermsTest {
         Assert.assertTrue(TensorUtils.equals(Expand.expand(A), expected));
     }
 
+    @Ignore
     @Test
     public void testGravityGhosts() {
-        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
         Tensors.addSymmetry("P_\\mu\\nu", IndexType.GreekLower, false, 1, 0);
 
         Expression KINV = Tensors.parseExpression("KINV_\\alpha^\\beta=d_\\alpha^\\beta+gamma*n_\\alpha*n^\\beta");
@@ -258,12 +256,12 @@ public class OneLoopCountertermsTest {
         Assert.assertTrue(TensorUtils.equals(Expand.expand(A), expected));
 
         //simplified result
-        //Tensor expected = Tensors.parse("(7/30+2/3*gamma+1/6*gamma^2)*R_\\mu\\nu*R^\\mu\\nu + (17/60+1/6*gamma+5/60*gamma**2)*R**2");
+        //Tensor expected = Tensors.parse("(7/30+2/3*gamma+1/6*gamma**2)*R_\\mu\\nu*R^\\mu\\nu + (17/60+1/6*gamma+5/60*gamma**2)*R**2");
     }
 
+    @Ignore
     @Test
     public void testLambdaGaugeGravity() {
-        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
 
         Expression KINV = Tensors.parseExpression("KINV_\\alpha\\beta^\\gamma\\delta = "
                 + "(d_\\alpha^\\gamma*d_\\beta^\\delta+d_\\beta^\\gamma*d_\\alpha^\\delta)/2+"
@@ -321,10 +319,10 @@ public class OneLoopCountertermsTest {
         //Tensor expected = Tensors.parse("1/6*(4*la**2+4*la+7)*R_\\mu\\nu*R^\\mu\\nu+1/12*(4*la**2+7)*R**2");
     }
 
+    @Ignore
     @Test
     public void testNonMinimalGaugeGravity() {
         //FIXME works more than hour
-        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
         Tensors.addSymmetry("R_\\mu\\nu", IndexType.GreekLower, false, new int[]{1, 0});
         Tensors.addSymmetry("R_\\mu\\nu\\alpha\\beta", IndexType.GreekLower, true, new int[]{0, 1, 3, 2});
         Tensors.addSymmetry("R_\\mu\\nu\\alpha\\beta", IndexType.GreekLower, false, new int[]{2, 3, 0, 1});
@@ -410,7 +408,7 @@ public class OneLoopCountertermsTest {
 //        Assert.assertTrue(TensorUtils.equals(A, expected));
 
         //simplified result
-        //Tensor expected = Tensors.parse("1/12*(c1*R_\\mu\\nu*R^\\mu\\nu+c2*R**2+c3*R*LA+c4*LA**2");
+        //Tensor expected = Tensors.parse("1/12*(c1*R_\\mu\\nu*R^\\mu\\nu+c2*R**2+c3*R*LA+c4*LA**2)");
         //where
         //Expression c1 = Tensors.parseExpression("c1 = la**2*(2*ga**4+8*ga**3+12*ga**2+8*ga+8)+la*(-8*ga**4-16*ga**3-4*ga**2+8*ga+8)+(8*ga**4-8*ga**2+14)");
         //Expression c2 = Tensors.parseExpression("c2 = la**2*(ga**4+4*ga**3+6*ga**2+4*ga+4)+la*(-4*ga**4-8*ga**3-6*ga**2-4*ga)+(4*ga**4+4*ga**2+7)");
@@ -425,8 +423,6 @@ public class OneLoopCountertermsTest {
     @Test
     public void testMinimalSecondOrderOperator() {
         //TIME = 6.1 s
-        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
-
         Expression KINV = Tensors.parseExpression("KINV_\\alpha^\\beta=d_\\alpha^\\beta");
         Expression K = Tensors.parseExpression("K^\\mu\\nu_\\alpha^\\beta=d_\\alpha^\\beta*g^{\\mu\\nu}");
         Expression S = Tensors.parseExpression("S^\\mu\\alpha\\beta=0");
@@ -441,6 +437,8 @@ public class OneLoopCountertermsTest {
 
         //this is the exact K.V. result with corrections that 1/12*F_..*F^.. and oth are not under tr operation and that tr of 1 is 4
         Tensor expected = Tensors.parse("1/30*Power[R, 2]+1/12*F_{\\nu \\beta }^{\\epsilon }_{\\rho_5 }*F^{\\nu \\beta \\rho_5 }_{\\epsilon }+1/15*R_{\\delta \\nu }*R^{\\delta \\nu }+1/2*W^{\\alpha }_{\\rho_5 }*W^{\\rho_5 }_{\\alpha }+1/6*R*W^{\\beta }_{\\beta }");
+        System.out.println(A);
+        System.out.println(expected);
         Assert.assertTrue(TensorUtils.equals(A, expected));
 
     }
@@ -448,9 +446,7 @@ public class OneLoopCountertermsTest {
     @Test
     public void testMinimalSecondOrderOperatorBarvinskyVilkovisky() {
         //TIME = 4.5 s
-        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
-
-        //Phys. Rep. 119 ( 1985) 1-74 
+        //Phys. Rep. 119 ( 1985) 1-74
         Expression KINV = Tensors.parseExpression("KINV_\\alpha^\\beta=d_\\alpha^\\beta");
         Expression K = Tensors.parseExpression("K^\\mu\\nu_\\alpha^\\beta=d_\\alpha^\\beta*g^{\\mu\\nu}");
         Expression S = Tensors.parseExpression("S^\\mu\\alpha\\beta=0");
@@ -471,7 +467,6 @@ public class OneLoopCountertermsTest {
     @Test
     public void testMinimalFourthOrderOperator() {
         //TIME = 6.2 s
-        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
         Tensors.addSymmetry("P_\\mu\\nu", IndexType.GreekLower, false, 1, 0);
 
         Expression KINV = Tensors.parseExpression("KINV_\\alpha^\\beta=d_\\alpha^\\beta");
@@ -517,7 +512,7 @@ public class OneLoopCountertermsTest {
 //        t = Tensors.parse("-64*n^\\delta*n_\\sigma*n_\\rho*("
 //                + "n^\\beta*g^\\alpha\\gamma*g^\\mu\\nu*(-1/30)*R^\\rho_{\\gamma\\nu\\beta}*R^\\sigma_{\\alpha\\delta\\mu}"
 //                + "+n^\\gamma*g^\\alpha\\beta*g^\\mu\\nu*(-1/180)*R^\\rho_{\\mu\\gamma\\nu}*R^\\sigma_{\\alpha\\beta\\delta}"
-//                + "+n^\\beta*g^\\alpha\\gamma*g^\\mu\\nu*(1/180)*R^\\rho_{\\mu\\gamma\\delta}*R^\\sigma_{\\alpha\\beta\\nu})");//+
+//                + "+n^\\beta*g^\\alpha\\gamma*g^\\mu\\nu*(1/180)*R^\\rho_{\\mu\\gamma\\delta}*R^\\sigma_{\\alpha\\beta\\nu})");
 //        t = Tensors.parse("4**2*3*12*1/3*(n^\\alpha*g^\\beta\\gamma+n^\\beta*g^\\alpha\\gamma+n^\\gamma*g^\\alpha\\beta)*n^\\delta*n_\\sigma*n_\\rho/3*g^\\mu\\nu*(-1/10*R^\\rho_\\mu\\gamma\\nu*R^\\sigma_\\alpha\\delta\\beta+1/15*R^\\rho_\\delta\\alpha\\nu*R^\\sigma_\\beta\\mu\\gamma+1/60*R^\\rho_\\beta\\delta\\nu*R^\\sigma_\\gamma\\mu\\alpha)");
         Expression Kn1 = Tensors.parseExpression("Kn^\\alpha=n^\\alpha");
         Expression Kn2 = Tensors.parseExpression("Kn^\\alpha\\beta=1/3*(2*n^\\alpha*n^\\beta+g^\\alpha\\beta)");
@@ -569,10 +564,10 @@ public class OneLoopCountertermsTest {
         Assert.assertTrue(TensorUtils.equals(temp, Tensors.parse("-19/360*R^\\mu\\nu*R_\\mu\\nu-1/80*R**2")));
     }
 
+    @Ignore
     @Test
     public void testSpin3Ghosts() {
         //TIME = 990 s
-        CC.setDefaultToStringFormat(ToStringMode.RedberryConsole);
         Expression KINV = Tensors.parseExpression(
                 "KINV^{\\alpha\\beta}_{\\mu\\nu} = P^{\\alpha\\beta}_{\\mu\\nu}-1/4*c*g_{\\mu\\nu}*g^{\\alpha\\beta}+"
                         + "(1/4)*b*(n_{\\mu}*n^{\\alpha}*d^{\\beta}_{\\nu}+n_{\\mu}*n^{\\beta}*d^{\\alpha}_{\\nu}+n_{\\nu}*n^{\\alpha}*d^{\\beta}_{\\mu}+n_{\\nu}*n^{\\beta}*d^{\\alpha}_{\\mu})+"
@@ -668,6 +663,7 @@ public class OneLoopCountertermsTest {
         System.out.println(reduce2Redberry(exrpession));
     }
 
+    @Ignore
     @Test
     public void reduce2redberryFF() {
         String exrpession = "- L**2*(L-1)**2*(R(mu,al,j2,j3)*R(nu,be,j4,j1)) &hk(mu,nu,j1,j2)&hk(al,be,j3,j4)/24 +L**2*(R(be,nu,j2,j3)*R(al,mu,j5,j1) - 5*R(be,mu,j2,j3)*R(al,nu,j5,j1)) &hk(mu,j1,j2)&d(al,be,j3,j4)&hk(nu,j4,j5)/24 - L**2*(L-1) *(1/48*R(be,nu,j2,j3)*R(al,mu,j5,j1)+1/48*R(be,mu,j2,j3)*R(al,nu,j5,j1)) &hk(mu,j1,j2)&d(nu,j3,j4)&hk(al,be,j4,j5)";
