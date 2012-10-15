@@ -54,4 +54,6 @@ public class SqrSubsTest {
         t = tr.transform(t);
         Assert.assertTrue(TensorUtils.equals(t, Tensors.parse("3")));
     }
+
+
 }

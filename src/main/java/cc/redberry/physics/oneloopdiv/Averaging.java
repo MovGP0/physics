@@ -25,8 +25,11 @@ package cc.redberry.physics.oneloopdiv;
 import cc.redberry.core.indices.IndicesBuilder;
 import cc.redberry.core.number.Complex;
 import cc.redberry.core.tensor.*;
+import cc.redberry.core.tensor.iterator.TensorLastIterator;
+import cc.redberry.core.transformations.ApplyIndexMapping;
 import cc.redberry.core.transformations.Expand;
 import cc.redberry.core.transformations.Transformation;
+import cc.redberry.core.utils.TensorUtils;
 import org.apache.commons.math3.util.ArithmeticUtils;
 
 import java.util.ArrayList;
@@ -85,21 +88,49 @@ public final class Averaging implements Transformation {
             Tensor current, old;
             IndicesBuilder ib = new IndicesBuilder();
             List<Tensor> newProductElements = new ArrayList<>();
-            boolean averaged = false;
             for (i = tensor.size() - 1; i >= 0; --i) {
                 current = tensor.get(i);
-                if (current instanceof SimpleTensor && ((SimpleTensor) current).getName() == const_n.getName()) {
+                if (isN(current)) {
                     ib.append(current);
                     ++count;
                 } else {
-                    old = current;
-                    current = transform(current);
-                    if (old != current)
-                        averaged = true;
-                    newProductElements.add(current);
+                    if (TensorUtils.isScalar(current)) {
+                        TensorLastIterator iterator = new TensorLastIterator(current);
+                        Tensor temp;
+                        boolean flag = false;
+                        while ((temp = iterator.next()) != null) {
+                            if (isN(temp)) {
+                                flag = true;
+                                break;
+                            }
+                        }
+                        if (!flag) {
+                            newProductElements.add(current);
+                            continue;
+                        }
+                        if (!(current instanceof Power) || !TensorUtils.isInteger(current.get(1)) || ((Complex) current.get(1)).intValue() != 2)
+                            throw new IllegalArgumentException();
+
+                        Tensor[] bases = {current.get(0), current.get(0)};
+                        bases[1] = ApplyIndexMapping.renameDummyFromClonedSource(bases[1], TensorUtils.getAllIndicesNamesT(tensor).toArray());
+                        flag = false;
+                        for (Tensor base : bases) {
+                            for (Tensor t : base) {
+                                if (isN(t)) {
+                                    ib.append(t);
+                                    ++count;
+                                    flag = true;
+                                } else
+                                    newProductElements.add(t);
+                            }
+                        }
+                        if (!flag)
+                            throw new IllegalArgumentException("Expand first");
+                    } else
+                        newProductElements.add(current);
                 }
             }
-            if (count == 0 && !averaged)
+            if (count == 0)
                 return tensor;
             if (count % 2 != 0)
                 return Complex.ZERO;
@@ -121,5 +152,9 @@ public final class Averaging implements Transformation {
             return Tensors.pow(nBase, tensor.get(1));
         }
         return tensor;
+    }
+
+    private boolean isN(Tensor t) {
+        return t instanceof SimpleTensor && ((SimpleTensor) t).getName() == const_n.getName();
     }
 }

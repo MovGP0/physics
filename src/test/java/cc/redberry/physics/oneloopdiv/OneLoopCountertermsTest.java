@@ -23,6 +23,7 @@
 
 package cc.redberry.physics.oneloopdiv;
 
+import cc.redberry.core.TAssert;
 import cc.redberry.core.indices.IndexType;
 import cc.redberry.core.tensor.*;
 import cc.redberry.core.tensor.iterator.TraverseState;
@@ -432,6 +433,7 @@ public class OneLoopCountertermsTest {
         OneLoopInput input = new OneLoopInput(2, KINV, K, S, W, null, null, F);
 
         OneLoopCounterterms action = OneLoopCounterterms.calculateOneLoopCounterterms(input);
+
         Tensor A = action.counterterms().get(1);
         A = RemoveDueToSymmetry.INSANCE.transform(A);
 
@@ -462,6 +464,39 @@ public class OneLoopCountertermsTest {
         //this is the exact Barvinsky and Vilkovisky
         Tensor expected = Tensors.parse("1/12*F_{\\nu \\beta }^{\\epsilon }_{\\rho_5 }*F^{\\nu \\beta \\rho_5 }_{\\epsilon }+1/2*W^{\\rho_5 }_{\\alpha }*W^{\\alpha }_{\\rho_5 }+-1/45*Power[R, 2]+1/15*R^{\\mu \\nu }*R_{\\mu \\nu }");
         Assert.assertTrue(TensorUtils.equals(A, expected));
+    }
+
+    @Test
+    public void testMin_1() {
+        Tensors.addSymmetry("R_\\mu\\nu", IndexType.GreekLower, false, new int[]{1, 0});
+        Tensors.addSymmetry("F_\\mu\\nu", IndexType.GreekLower, true, new int[]{1, 0});
+        Tensors.addSymmetry("R_\\mu\\nu\\alpha\\beta", IndexType.GreekLower, true, new int[]{0, 1, 3, 2});
+        Tensors.addSymmetry("R_\\mu\\nu\\alpha\\beta", IndexType.GreekLower, false, new int[]{2, 3, 0, 1});
+
+        String FR_ =
+                "FR= Power[L,2]*Power[(L-1),2]*(-2*n^\\alpha)*g^{\\beta\\gamma}*g^{\\mu\\nu}*n_\\sigma*((1/60)*R^\\sigma_{\\beta\\mu\\gamma}*F_{\\alpha\\nu}"
+                        + "+(1/20)*R^\\sigma_{\\alpha\\mu\\gamma}*F_{\\nu\\beta}+(1/15)*R^\\sigma_{\\gamma\\mu\\alpha}*F_{\\nu\\beta}"
+                        + "+(1/60)*R^\\sigma_{\\mu\\nu\\gamma}*F_{\\alpha\\beta})";
+        Tensor FR = Tensors.parse(FR_);
+
+        FR = Tensors.parseExpression("L = 2").transform(FR);
+        FR = Expand.expand(FR);
+        FR = new Averaging(Tensors.parseSimple("n_\\mu")).transform(FR);
+        FR = Expand.expand(FR);
+        FR = ContractIndices.contract(FR);
+        Expression[] riemansSubstitutions = new Expression[]{
+                Tensors.parseExpression("R_{\\mu \\nu}^{\\mu}_{\\alpha} = R_{\\nu\\alpha}"),
+                Tensors.parseExpression("R_{\\mu\\nu}^{\\alpha}_{\\alpha}=0"),
+                Tensors.parseExpression("F_{\\mu}^{\\mu}^{\\alpha}_{\\beta}=0"),
+                Tensors.parseExpression("R_{\\mu\\nu\\alpha\\beta}*R^{\\mu\\alpha\\nu\\beta}=(1/2)*R_{\\mu\\nu\\alpha\\beta}*R^{\\mu\\nu\\alpha\\beta}"),
+                Tensors.parseExpression("R_{\\mu\\nu\\alpha\\beta}*R^{\\mu\\nu\\alpha\\beta}=4*R_{\\mu\\nu}*R^{\\mu\\nu}-R*R"),
+                Tensors.parseExpression("R_{\\mu}^{\\mu}= R"),
+                Tensors.parseExpression("P_{\\mu}^{\\mu}= P")
+        };
+        for (Expression expression : riemansSubstitutions)
+            FR = expression.transform(FR);
+        System.out.println(FR);
+
     }
 
     @Test

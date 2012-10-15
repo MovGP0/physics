@@ -29,10 +29,9 @@ import cc.redberry.core.indices.IndicesTypeStructure;
 import cc.redberry.core.indices.IndicesUtils;
 import cc.redberry.core.parser.ParseNodeSimpleTensor;
 import cc.redberry.core.parser.preprocessor.IndicesInsertion;
-import cc.redberry.core.tensor.Expression;
-import cc.redberry.core.tensor.Tensor;
-import cc.redberry.core.tensor.Tensors;
+import cc.redberry.core.tensor.*;
 import cc.redberry.core.tensor.iterator.TraverseState;
+import cc.redberry.core.tensor.iterator.TreeTraverseIterator;
 import cc.redberry.core.transformations.ContractIndices;
 import cc.redberry.core.transformations.Expand;
 import cc.redberry.core.transformations.Transformation;
@@ -648,8 +647,14 @@ public final class OneLoopCounterterms {
                 temp = delta.transform(temp);
 
             temp = Expand.expand(temp, all);
+            assertAllBracketsExpanded(temp);
             for (Transformation tr : all)
                 temp = tr.transform(temp);
+
+            //todo remove this line after fixing Redberry #42
+            temp = Expand.expand(temp);
+
+            assertAllBracketsExpanded(temp);
 
             temp = new Averaging(Tensors.parseSimple("n_\\mu")).transform(temp);
             temp = Expand.expand(temp, all);
@@ -661,6 +666,7 @@ public final class OneLoopCounterterms {
             System.out.println(temp);
         }
 
+
         for (Expression term : terms)
             ACTION = (Expression) term.transform(ACTION);
 
@@ -668,4 +674,33 @@ public final class OneLoopCounterterms {
 
         return new OneLoopCounterterms(Flat, WR, SR, SSR, FF, FR, RR, deltaExpressions[0], deltaExpressions[1], deltaExpressions[2], deltaExpressions[3], ACTION);
     }
+
+    public static void assertAllBracketsExpanded(Tensor tensor) {
+        TreeTraverseIterator iterator = new TreeTraverseIterator(tensor);
+        TraverseState state;
+        while ((state = iterator.next()) != null) {
+            if (state != TraverseState.Leaving)
+                continue;
+            Tensor current = iterator.current();
+            if (current instanceof Product) {
+                int indexlessSums = 0, indexedSums = 0;
+                int otherIndexless = 0;
+                for (Tensor t : current)
+                    if (t instanceof Sum)
+                        if (t.getIndices().size() == 0)
+                            ++indexlessSums;
+                        else
+                            ++indexedSums;
+                    else if (t.getIndices().size() == 0)
+                        ++otherIndexless;
+
+                assert (indexedSums == 0);
+                if (otherIndexless != 0)
+                    assert (indexlessSums == 0);
+                else
+                    assert (indexlessSums < 2);
+            }
+        }
+    }
+
 }
