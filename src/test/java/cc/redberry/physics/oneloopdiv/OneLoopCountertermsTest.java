@@ -68,7 +68,7 @@ public class OneLoopCountertermsTest {
         Assert.assertTrue(TensorUtils.equals(A, expected));
     }
 
-    @Ignore
+//    @Ignore
     @Test
     public void testVectorField() {
         Tensors.addSymmetry("P_\\mu\\nu", IndexType.GreekLower, false, 1, 0);
@@ -320,7 +320,7 @@ public class OneLoopCountertermsTest {
         //Tensor expected = Tensors.parse("1/6*(4*la**2+4*la+7)*R_\\mu\\nu*R^\\mu\\nu+1/12*(4*la**2+7)*R**2");
     }
 
-    @Ignore
+//    @Ignore
     @Test
     public void testNonMinimalGaugeGravity() {
         //FIXME works more than hour
