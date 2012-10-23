@@ -142,6 +142,7 @@ public class AveragingTest {
         Tensor t = Tensors.parse("(n_{\\sigma}*n^{\\alpha}*R_{\\alpha}^{\\sigma})**2");
         t = new Averaging(Tensors.parseSimple("n_\\alpha")).transform(t);
         t = ContractIndices.contract(t);
+        System.out.println(t);
         Assert.assertTrue(TensorUtils.equals(t, Tensors.parse("(1/16)*R_{\\sigma}^{\\sigma}**2")));
     }
 

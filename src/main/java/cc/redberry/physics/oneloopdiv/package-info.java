@@ -41,7 +41,7 @@
  * href="http://arxiv.org/abs/hep-th/9707008">hep-th/9707008</a><br/>
  *
  * [2] P.I. Pronin, K. Stepanyantz, <i>One loop counterterms for higher
- * derivative regularized Lagrangians</i>, Nucl. Phys. B485 (1997) 517-544, <a
+ * differentiate regularized Lagrangians</i>, Nucl. Phys. B485 (1997) 517-544, <a
  * href="http://arxiv.org/abs/hep-th/9605206">hep-th/9605206</a><br/>
  *
  *
