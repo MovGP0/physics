@@ -26,7 +26,7 @@ import cc.redberry.core.indices.IndicesBuilder;
 import cc.redberry.core.number.Complex;
 import cc.redberry.core.tensor.*;
 import cc.redberry.core.tensor.iterator.TensorLastIterator;
-import cc.redberry.core.transformations.ApplyIndexMapping;
+import cc.redberry.core.tensor.ApplyIndexMapping;
 import cc.redberry.core.transformations.Expand;
 import cc.redberry.core.transformations.Transformation;
 import cc.redberry.core.utils.TensorUtils;
@@ -112,7 +112,7 @@ public final class Averaging implements Transformation {
                             throw new IllegalArgumentException();
 
                         Tensor[] bases = {current.get(0), current.get(0)};
-                        bases[1] = ApplyIndexMapping.renameDummyFromClonedSource(bases[1], TensorUtils.getAllIndicesNamesT(tensor).toArray());
+                        bases[1] = ApplyIndexMapping.renameDummy(bases[1], TensorUtils.getAllIndicesNamesT(tensor).toArray());
                         flag = false;
                         for (Tensor base : bases) {
                             for (Tensor t : base) {

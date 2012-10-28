@@ -28,7 +28,7 @@ import cc.redberry.core.indexmapping.IndexMappings;
 import cc.redberry.core.tensor.Tensor;
 import cc.redberry.core.tensor.iterator.TraverseState;
 import cc.redberry.core.tensor.iterator.TreeTraverseIterator;
-import cc.redberry.core.transformations.ApplyIndexMapping;
+import cc.redberry.core.tensor.ApplyIndexMapping;
 import cc.redberry.core.transformations.Transformation;
 
 /**
