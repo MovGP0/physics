@@ -123,7 +123,7 @@ public final class Benchmarks {
         //suppressing output
         System.setOut(new PrintStream(dummyOutputStream));
         //burning JVM
-//        burnJVM();
+        burnJVM();
         Timer timer = new Timer();
         timer.start();
         testMinimalSecondOrderOperator();
