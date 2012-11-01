@@ -274,7 +274,7 @@ public final class OneLoopInput {
                 temp = Tensors.parse(sb.toString(), insertion);
                 temp = inputValues[0].transform(temp);
                 temp = inputValues[i + 1].transform(temp);
-                temp = Expand.expand(temp, Indicator.TRUE_INDICATOR, transformations);
+                temp = Expand.expand(temp, transformations);
                 for (Transformation t : transformations)
                     temp = t.transform(temp);
                 hatQuantities[i][j] = (Expression) temp;
@@ -301,7 +301,7 @@ public final class OneLoopInput {
             temp = Tensors.parse(sb.toString());
             temp = inputValues[0].transform(temp);
             temp = inputValues[1].transform(temp);
-            temp = Expand.expand(temp, Indicator.TRUE_INDICATOR, transformations);
+            temp = Expand.expand(temp, transformations);
             for (Transformation t : transformations)
                 temp = t.transform(temp);
             kn[i] = (Expression) temp;

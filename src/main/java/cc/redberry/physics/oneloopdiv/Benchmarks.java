@@ -122,7 +122,7 @@ public final class Benchmarks {
 
         //suppressing output
         System.setOut(new PrintStream(dummyOutputStream));
-        //burning JVM
+//        burning JVM
         burnJVM();
         Timer timer = new Timer();
         timer.start();
