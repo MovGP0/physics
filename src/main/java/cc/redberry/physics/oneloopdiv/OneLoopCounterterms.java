@@ -672,7 +672,7 @@ public final class OneLoopCounterterms {
 //            System.out.println("expand " + temp.get(0));
 
             //todo remove this line after fixing Redberry #42
-//            temp = Expand.expand(temp);
+            temp = Expand.expand(temp);
 
             temp = new Averaging(Tensors.parseSimple("n_\\mu")).transform(temp);
 

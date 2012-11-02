@@ -24,6 +24,7 @@
 package cc.redberry.physics.oneloopdiv;
 
 import cc.redberry.core.indices.IndexType;
+import cc.redberry.core.tensor.ApplyIndexMapping;
 import cc.redberry.core.tensor.Expression;
 import cc.redberry.core.tensor.Tensor;
 import cc.redberry.core.tensor.Tensors;
@@ -37,6 +38,7 @@ import junit.framework.Assert;
 import org.junit.*;
 import org.junit.rules.TestName;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -440,8 +442,8 @@ public class OneLoopCountertermsTest {
         OneLoopInput input = new OneLoopInput(4, KINV, K, S, W, N, M, F);
         OneLoopCounterterms action = OneLoopCounterterms.calculateOneLoopCounterterms(input);
         //some simplify
-        Tensor A = Expand.expand(Together.together(action.counterterms().get(1)));
-        Tensor expected = Tensors.parse("299/60*(gamma+1)**(-12)*gamma**12*R**2+1/12*(gamma+1)**(-12)*R*P*gamma**14+1/3*(gamma+1)**(-12)*R*P+14729/40*(gamma+1)**(-12)*gamma**6*R**2+2189/6*(gamma+1)**(-12)*R*P*gamma**5+7/30*(gamma+1)**(-12)*R**2+55/6*(gamma+1)**(-12)*gamma**5*P**2+55/6*(gamma+1)**(-12)*gamma**11*P**2+47/6*(gamma+1)**(-12)*R*P*gamma**12+(gamma+1)**(-12)*(2/3*gamma+1/6*gamma**14+8/3*gamma**13+19*gamma**12+46*gamma**3+49/6*gamma**2+242/3*gamma**11+462*gamma**9+473/3*gamma**4+682*gamma**8+748*gamma**7+1100/3*gamma**5+1221/2*gamma**6+1375/6*gamma**10)*P^{\\mu \\nu }*R_{\\mu \\nu }+7/6*(gamma+1)**(-12)*R*P*gamma**13+(gamma+1)**(-12)*(25/2*gamma+1+1/12*gamma**14+3/2*gamma**13+25/2*gamma**12+190/3*gamma**11+254*gamma**3+865/12*gamma**2+869/4*gamma**10+968*gamma**8+1067/2*gamma**9+1221/2*gamma**4+1320*gamma**7+5445/4*gamma**6+6347/6*gamma**5)*P^{\\rho_5 }_{\\alpha }*P^{\\alpha }_{\\rho_5 }+256/3*(gamma+1)**(-12)*R*P*gamma**3+1331/6*(gamma+1)**(-12)*R*P*gamma**9+1925/4*(gamma+1)**(-12)*R*P*gamma**6+1243/6*(gamma+1)**(-12)*R*P*gamma**4+374*(gamma+1)**(-12)*R*P*gamma**8+1/24*(gamma+1)**(-12)*gamma**14*R**2+2/3*(gamma+1)**(-12)*gamma**13*R**2+4147/15*(gamma+1)**(-12)*gamma**5*R**2+77/2*(gamma+1)**(-12)*gamma**8*P**2+89/30*(gamma+1)**(-12)*gamma*R**2+1001/6*(gamma+1)**(-12)*gamma**9*R**2+165/8*(gamma+1)**(-12)*gamma**6*P**2+165/8*(gamma+1)**(-12)*gamma**10*P**2+1/2*(gamma+1)**(-12)*gamma**3*P**2+1/2*(gamma+1)**(-12)*gamma**13*P**2+1/24*(gamma+1)**(-12)*gamma**2*P**2+1/24*(gamma+1)**(-12)*gamma**14*P**2+484*(gamma+1)**(-12)*R*P*gamma**7+(-187/30*gamma-8/15+1/12*gamma**14+7/6*gamma**13-55*gamma**8+187/6*gamma**9+209/30*gamma**12-316/3*gamma**3+344/15*gamma**11-1012/5*gamma**7-1331/6*gamma**4-1987/60*gamma**2+2563/60*gamma**10-6391/20*gamma**6-9647/30*gamma**5)*(gamma+1)**(-12)*R_{\\gamma \\sigma }*R^{\\gamma \\sigma }+11/4*(gamma+1)**(-12)*gamma**4*P**2+11/4*(gamma+1)**(-12)*gamma**12*P**2+8723/120*(gamma+1)**(-12)*gamma**10*R**2+2093/120*(gamma+1)**(-12)*gamma**2*R**2+689/30*(gamma+1)**(-12)*gamma**11*R**2+289/12*(gamma+1)**(-12)*R*P*gamma**2+1859/5*(gamma+1)**(-12)*gamma**7*R**2+1859/12*(gamma+1)**(-12)*gamma**4*R**2+25/6*(gamma+1)**(-12)*R*P*gamma+286*(gamma+1)**(-12)*gamma**8*R**2+33*(gamma+1)**(-12)*gamma**7*P**2+33*(gamma+1)**(-12)*gamma**9*P**2+377/6*(gamma+1)**(-12)*gamma**3*R**2+100/3*(gamma+1)**(-12)*R*P*gamma**11+1199/12*(gamma+1)**(-12)*R*P*gamma**10");
+        Tensor A = Expand.expand(Together.together(Expand.expand(Together.together(action.counterterms().get(1)))));
+        Tensor expected = Tensors.parse("(8723/120)*(1+gamma)**(-12)*R**2*gamma**10+(2093/120)*(1+gamma)**(-12)*R**2*gamma**2+(689/30)*(1+gamma)**(-12)*R**2*gamma**11+(289/12)*(1+gamma)**(-12)*R*gamma**2*P+(7/30)*(1+gamma)**(-12)*R**2+(1859/5)*(1+gamma)**(-12)*R**2*gamma**7+(1859/12)*(1+gamma)**(-12)*R**2*gamma**4+33*(1+gamma)**(-12)*P**2*gamma**7+33*(1+gamma)**(-12)*P**2*gamma**9+286*(1+gamma)**(-12)*R**2*gamma**8+((1+gamma)**(-12)+(1/12)*(1+gamma)**(-12)*gamma**14+(3/2)*(1+gamma)**(-12)*gamma**13+(25/2)*(1+gamma)**(-12)*gamma**12+(25/2)*(1+gamma)**(-12)*gamma+(190/3)*(1+gamma)**(-12)*gamma**11+254*(1+gamma)**(-12)*gamma**3+(5445/4)*(1+gamma)**(-12)*gamma**6+(865/12)*(1+gamma)**(-12)*gamma**2+(869/4)*(1+gamma)**(-12)*gamma**10+968*(1+gamma)**(-12)*gamma**8+(1067/2)*(1+gamma)**(-12)*gamma**9+(6347/6)*(1+gamma)**(-12)*gamma**5+(1221/2)*(1+gamma)**(-12)*gamma**4+1320*(1+gamma)**(-12)*gamma**7)*P^{\\mu}_{\\rho_{5}}*P^{\\rho_{5}}_{\\mu}+(377/6)*(1+gamma)**(-12)*R**2*gamma**3+(100/3)*(1+gamma)**(-12)*R*gamma**11*P+(299/60)*(1+gamma)**(-12)*R**2*gamma**12+(1199/12)*(1+gamma)**(-12)*R*gamma**10*P+(14729/40)*(1+gamma)**(-12)*R**2*gamma**6+(1/12)*(1+gamma)**(-12)*R*gamma**14*P+(55/6)*(1+gamma)**(-12)*P**2*gamma**5+(55/6)*(1+gamma)**(-12)*P**2*gamma**11+(2189/6)*(1+gamma)**(-12)*R*gamma**5*P+(47/6)*(1+gamma)**(-12)*R*gamma**12*P+(-(9647/30)*(1+gamma)**(-12)*gamma**5-(1987/60)*(1+gamma)**(-12)*gamma**2+(2563/60)*(1+gamma)**(-12)*gamma**10+(1/12)*(1+gamma)**(-12)*gamma**14+(7/6)*(1+gamma)**(-12)*gamma**13-55*(1+gamma)**(-12)*gamma**8+(187/6)*(1+gamma)**(-12)*gamma**9+(209/30)*(1+gamma)**(-12)*gamma**12-(187/30)*(1+gamma)**(-12)*gamma-(316/3)*(1+gamma)**(-12)*gamma**3+(344/15)*(1+gamma)**(-12)*gamma**11-(8/15)*(1+gamma)**(-12)-(1012/5)*(1+gamma)**(-12)*gamma**7-(6391/20)*(1+gamma)**(-12)*gamma**6-(1331/6)*(1+gamma)**(-12)*gamma**4)*R_{\\mu\\nu}*R^{\\mu\\nu}+(25/6)*(1+gamma)**(-12)*R*gamma*P+(7/6)*(1+gamma)**(-12)*R*gamma**13*P+(256/3)*(1+gamma)**(-12)*R*gamma**3*P+(1331/6)*(1+gamma)**(-12)*R*gamma**9*P+(77/2)*(1+gamma)**(-12)*P**2*gamma**8+((1/6)*(1+gamma)**(-12)*gamma**14+(8/3)*(1+gamma)**(-12)*gamma**13+19*(1+gamma)**(-12)*gamma**12+46*(1+gamma)**(-12)*gamma**3+(49/6)*(1+gamma)**(-12)*gamma**2+(2/3)*(1+gamma)**(-12)*gamma+(242/3)*(1+gamma)**(-12)*gamma**11+462*(1+gamma)**(-12)*gamma**9+(473/3)*(1+gamma)**(-12)*gamma**4+682*(1+gamma)**(-12)*gamma**8+748*(1+gamma)**(-12)*gamma**7+(1100/3)*(1+gamma)**(-12)*gamma**5+(1221/2)*(1+gamma)**(-12)*gamma**6+(1375/6)*(1+gamma)**(-12)*gamma**10)*P^{\\rho_{5}}_{\\alpha}*R_{\\rho_{5}}^{\\alpha}+(1/24)*(1+gamma)**(-12)*R**2*gamma**14+(2/3)*(1+gamma)**(-12)*R**2*gamma**13+(4147/15)*(1+gamma)**(-12)*R**2*gamma**5+(165/8)*(1+gamma)**(-12)*P**2*gamma**6+(165/8)*(1+gamma)**(-12)*P**2*gamma**10+(1925/4)*(1+gamma)**(-12)*R*gamma**6*P+(1243/6)*(1+gamma)**(-12)*R*gamma**4*P+374*(1+gamma)**(-12)*R*gamma**8*P+(1/2)*(1+gamma)**(-12)*P**2*gamma**3+(1/2)*(1+gamma)**(-12)*P**2*gamma**13+(1/24)*(1+gamma)**(-12)*P**2*gamma**2+(1/24)*(1+gamma)**(-12)*P**2*gamma**14+(1001/6)*(1+gamma)**(-12)*R**2*gamma**9+(1/3)*(1+gamma)**(-12)*R*P+(89/30)*(1+gamma)**(-12)*R**2*gamma+(11/4)*(1+gamma)**(-12)*P**2*gamma**4+(11/4)*(1+gamma)**(-12)*P**2*gamma**12+484*(1+gamma)**(-12)*R*gamma**7*P");
         Assert.assertTrue(TensorUtils.equals(A, expected));
         //simplified result
         //Tensor expected =
@@ -503,10 +505,11 @@ public class OneLoopCountertermsTest {
 
         OneLoopCounterterms action = OneLoopCounterterms.calculateOneLoopCounterterms(input);
         Tensor A = action.counterterms().get(1);
+
         A = Expand.expand(Together.together(Expand.expand(A)));
         //TODO simplify result
         //non simplified result
-        Tensor expected = Tensors.parse("(7/12)*R**2*(1+la)**(-6)+(109/12)*la**2*R**2*(1+la)**(-6)+(7/2)*R**2*(1+la)**(-6)*la+(41/3)*la**3*R**2*(1+la)**(-6)+((23/3)*la+(2/3)*la**8+(14/3)*la**7+(91/3)*la**5+(91/6)*la**6+(112/3)*la**3+(133/6)*la**2+(245/6)*la**4+7/6)*(1+la)**(-6)*R_{\\mu\\nu}*R^{\\mu\\nu}+(55/4)*la**4*R**2*(1+la)**(-6)+(61/6)*la**5*R**2*(1+la)**(-6)+(67/12)*la**6*R**2*(1+la)**(-6)+(1/3)*la**8*R**2*(1+la)**(-6)+2*la**7*R**2*(1+la)**(-6)");
+        Tensor expected = Tensors.parse("((7/6)*(1+la)**(-6)+(23/3)*la*(1+la)**(-6)+(2/3)*la**8*(1+la)**(-6)+(14/3)*la**7*(1+la)**(-6)+(91/3)*la**5*(1+la)**(-6)+(91/6)*la**6*(1+la)**(-6)+(112/3)*la**3*(1+la)**(-6)+(133/6)*la**2*(1+la)**(-6)+(245/6)*la**4*(1+la)**(-6))*R_{\\mu\\nu}*R^{\\mu\\nu}+(1/3)*la**8*R**2*(1+la)**(-6)+2*la**7*R**2*(1+la)**(-6)+(7/2)*R**2*la*(1+la)**(-6)+(109/12)*la**2*R**2*(1+la)**(-6)+(7/12)*R**2*(1+la)**(-6)+(41/3)*la**3*R**2*(1+la)**(-6)+(55/4)*la**4*R**2*(1+la)**(-6)+(61/6)*la**5*R**2*(1+la)**(-6)+(67/12)*la**6*R**2*(1+la)**(-6)");
         Assert.assertTrue(TensorUtils.equals(A, expected));
 
         //simplified result
@@ -540,7 +543,6 @@ public class OneLoopCountertermsTest {
 //            KINV = (Expression) cons.transform(KINV);
 //            K = (Expression) cons.transform(K);
 //        }
-
         Expression S = (Expression) Tensors.parse("S^\\rho^{\\alpha\\beta}_{\\mu\\nu}=0");
         Expression W = (Expression) Tensors.parse("W^{\\alpha\\beta}_{\\mu\\nu}=0");
         Expression F = Tensors.parseExpression("F_\\mu\\nu\\alpha\\beta\\gamma\\delta=0");
