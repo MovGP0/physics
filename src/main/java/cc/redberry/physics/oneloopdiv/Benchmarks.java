@@ -28,7 +28,7 @@ import cc.redberry.core.indices.IndexType;
 import cc.redberry.core.tensor.Expression;
 import cc.redberry.core.tensor.Tensors;
 import cc.redberry.core.transformations.ContractIndices;
-import cc.redberry.core.transformations.Expand;
+import cc.redberry.core.transformations.expand.Expand;
 
 import java.io.IOException;
 import java.io.OutputStream;

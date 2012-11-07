@@ -24,21 +24,19 @@
 package cc.redberry.physics.oneloopdiv;
 
 import cc.redberry.core.indices.IndexType;
-import cc.redberry.core.tensor.ApplyIndexMapping;
 import cc.redberry.core.tensor.Expression;
 import cc.redberry.core.tensor.Tensor;
 import cc.redberry.core.tensor.Tensors;
 import cc.redberry.core.transformations.ContractIndices;
-import cc.redberry.core.transformations.Expand;
+import cc.redberry.core.transformations.expand.Expand;
 import cc.redberry.core.transformations.RemoveDueToSymmetry;
-import cc.redberry.core.transformations.Together;
+import cc.redberry.core.transformations.fractions.Together;
 import cc.redberry.core.utils.ArraysUtils;
 import cc.redberry.core.utils.TensorUtils;
 import junit.framework.Assert;
 import org.junit.*;
 import org.junit.rules.TestName;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

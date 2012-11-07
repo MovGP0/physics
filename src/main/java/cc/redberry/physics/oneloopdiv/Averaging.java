@@ -27,7 +27,7 @@ import cc.redberry.core.number.Complex;
 import cc.redberry.core.tensor.*;
 import cc.redberry.core.tensor.iterator.TensorLastIterator;
 import cc.redberry.core.tensor.ApplyIndexMapping;
-import cc.redberry.core.transformations.Expand;
+import cc.redberry.core.transformations.expand.Expand;
 import cc.redberry.core.transformations.Transformation;
 import cc.redberry.core.utils.TensorUtils;
 import org.apache.commons.math3.util.ArithmeticUtils;

@@ -36,9 +36,9 @@ import cc.redberry.core.tensor.Tensor;
 import cc.redberry.core.tensor.Tensors;
 import cc.redberry.core.tensor.iterator.TraverseState;
 import cc.redberry.core.transformations.ContractIndices;
-import cc.redberry.core.transformations.Expand;
 import cc.redberry.core.transformations.Transformation;
 import cc.redberry.core.transformations.Transformer;
+import cc.redberry.core.transformations.expand.Expand;
 import cc.redberry.core.utils.ArraysUtils;
 import cc.redberry.core.utils.Indicator;
 

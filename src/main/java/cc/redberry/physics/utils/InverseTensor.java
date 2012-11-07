@@ -33,7 +33,7 @@ import cc.redberry.core.tensorgenerator.SymbolsGenerator;
 import cc.redberry.core.tensorgenerator.TensorGenerator;
 import cc.redberry.core.transformations.CollectNonScalars;
 import cc.redberry.core.transformations.ContractIndices;
-import cc.redberry.core.transformations.Expand;
+import cc.redberry.core.transformations.expand.Expand;
 import cc.redberry.core.transformations.Transformation;
 import cc.redberry.core.utils.ArraysUtils;
 import cc.redberry.core.utils.THashMap;
