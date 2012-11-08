@@ -33,17 +33,17 @@ public final class FeynCalcUtils {
 
         //-2(k1, k3) = t - k1^2 - k3^2
         //-2(k2, k4) = t - k2^2 - k4^2
-        result[i++] = expression(multiply(Complex.MINUSE_TWO, contract((SimpleTensor) momentums[0][0], (SimpleTensor) momentums[2][0])),
+        result[i++] = expression(multiply(Complex.MINUS_TWO, contract((SimpleTensor) momentums[0][0], (SimpleTensor) momentums[2][0])),
                 sum(t, negate(sum(pow(momentums[0][1], 2), pow(momentums[2][1], 2)))));
-        result[i++] = expression(multiply(Complex.MINUSE_TWO, contract((SimpleTensor) momentums[1][0], (SimpleTensor) momentums[3][0])),
+        result[i++] = expression(multiply(Complex.MINUS_TWO, contract((SimpleTensor) momentums[1][0], (SimpleTensor) momentums[3][0])),
                 sum(t, negate(sum(pow(momentums[1][1], 2), pow(momentums[3][1], 2)))));
 
 
         //-2(k1, k4) = u - k1^2 - k4^2
         //-2(k2, k3) = u - k2^2 - k3^2
-        result[i++] = expression(multiply(Complex.MINUSE_TWO, contract((SimpleTensor) momentums[0][0], (SimpleTensor) momentums[3][0])),
+        result[i++] = expression(multiply(Complex.MINUS_TWO, contract((SimpleTensor) momentums[0][0], (SimpleTensor) momentums[3][0])),
                 sum(u, negate(sum(pow(momentums[0][1], 2), pow(momentums[3][1], 2)))));
-        result[i++] = expression(multiply(Complex.MINUSE_TWO, contract((SimpleTensor) momentums[1][0], (SimpleTensor) momentums[2][0])),
+        result[i++] = expression(multiply(Complex.MINUS_TWO, contract((SimpleTensor) momentums[1][0], (SimpleTensor) momentums[2][0])),
                 sum(u, negate(sum(pow(momentums[1][1], 2), pow(momentums[2][1], 2)))));
 
         return result;

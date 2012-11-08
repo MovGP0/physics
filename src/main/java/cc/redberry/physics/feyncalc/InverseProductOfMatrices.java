@@ -3,16 +3,18 @@ package cc.redberry.physics.feyncalc;
 import cc.redberry.core.indexmapping.IndexMapping;
 import cc.redberry.core.indices.IndexType;
 import cc.redberry.core.indices.Indices;
-import cc.redberry.core.indices.IndicesUtils;
 import cc.redberry.core.tensor.*;
 import cc.redberry.core.tensor.iterator.TensorLastIterator;
 import cc.redberry.core.transformations.Transformation;
 import cc.redberry.core.utils.ArraysUtils;
+import cc.redberry.physics.feyncalc.context.FCC;
 
 import java.util.Arrays;
 
 import static cc.redberry.core.indices.IndicesUtils.inverseIndexState;
+import static cc.redberry.core.tensor.FullContractionsStructure.getFromIndexId;
 import static cc.redberry.core.tensor.FullContractionsStructure.getToTensorIndex;
+import static cc.redberry.physics.feyncalc.MatrixUtils.*;
 
 /**
  * @author Dmitry Bolotin
@@ -41,21 +43,35 @@ public final class InverseProductOfMatrices implements Transformation {
     }
 
 
-    private static boolean isMatrix(Tensor t, IndexType matrixType) {
-        return t instanceof SimpleTensor && t.getIndices().size(matrixType) == 2;
-    }
+    public static Product inverseProductOfMatrices(Product p, IndexType matrixType) {
+        boolean needToTransform = false, containsVectors = false;
 
-    private static Product inverseProductOfMatrices(Product p, IndexType matrixType) {
-        Indices matrixIndices = p.getIndices().getFree().getOfType(matrixType);
-        if (matrixIndices.size() == 0)
+        for (Tensor m : p)
+            if (isMatrix(m, matrixType)) {
+                needToTransform = true;
+                break;
+            } else if (isVectorOrCovector(m, matrixType))
+                containsVectors = true;
+
+        if (!needToTransform)
             return p;
-
-        if (matrixIndices.size() != 2)
-            throw new IllegalArgumentException();
-
+        Indices freeIndices = p.getIndices().getFree().getOfType(matrixType);
+        if (!containsVectors && freeIndices.size() == 0)
+            return p;
+        int[] matrixIndices;
+        if (!containsVectors)
+            matrixIndices = freeIndices.getAllIndices().copy();
+        else {
+            matrixIndices = new int[2];
+            for (Tensor m : p) {
+                if (isCovector(m, matrixType))
+                    matrixIndices[0] = inverseIndexState(m.getIndices().get(matrixType, 0));
+                if (isVector(m, matrixType))
+                    matrixIndices[1] = inverseIndexState(m.getIndices().get(matrixType, 0));
+            }
+        }
         //indices are sorted, so first is upper
-        int firstUpper = matrixIndices.get(0);
-        assert IndicesUtils.getState(firstUpper);
+        int firstUpper = matrixIndices[0];
 
         ProductContent content = p.getContent();
         FullContractionsStructure fs = content.getFullContractionsStructure();
@@ -88,6 +104,8 @@ public final class InverseProductOfMatrices implements Transformation {
             nextMatrix = null;
             fromContractions = fs.contractions[currentIndex];
             for (long from : fromContractions) {
+                if (getFromIndexId(from) != FCC.getGammaMatricesIndicesIds().get(1))
+                    continue;
                 nextIndex = getToTensorIndex(from);
                 if (nextIndex == -1)
                     continue;
@@ -103,13 +121,13 @@ public final class InverseProductOfMatrices implements Transformation {
                 fromTo[1] = renameMatrixIndices(
                         currentMatrix,
                         matrixType,
-                        new int[]{inverseIndexState(fromTo[0][1]), matrixIndices.get(1)});
+                        new int[]{inverseIndexState(fromTo[0][1]), matrixIndices[1]});
             else if (nextMatrix == null)
                 //rewriting the last matrix
                 fromTo[1] = renameMatrixIndices(
                         currentMatrix,
                         matrixType,
-                        new int[]{matrixIndices.get(0), inverseIndexState(fromTo[0][0])});
+                        new int[]{matrixIndices[0], inverseIndexState(fromTo[0][0])});
             else
                 //rewriting current matrix
                 fromTo[1] = renameMatrixIndices(

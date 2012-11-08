@@ -76,4 +76,13 @@ public class InverseProductOfMatricesTest {
                 parseMatrices("a*A_i*B^ip*C_p - Sin[x]*D*E"));
     }
 
+    @Test
+    public void test5() {
+        Tensor t = Tensors.parse("cv_{a'}*A_i^{a'}_{c'}*B_j^{c'}_{b'}*v^{b'}");
+        TAssert.assertEquals(inverseProductsOfMatrices(t, IndexType.LatinLower1),
+                Tensors.parse("cv_{a'}*B_j^{a'}_{c'}*A_i^{c'}_{b'}*v^{b'}"));
+        TAssert.assertNotEquals(inverseProductsOfMatrices(t, IndexType.LatinLower1),
+                t);
+    }
+
 }
