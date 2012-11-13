@@ -97,6 +97,7 @@ public class DiracTrace implements Transformation {
 
                 next = content.get(nextIndex = getToTensorIndex(contraction));
                 if (next == result[0])
+
                     break out;
                 result[position++] = next;
                 currentIndex = nextIndex;

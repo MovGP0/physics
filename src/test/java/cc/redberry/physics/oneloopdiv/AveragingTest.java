@@ -170,7 +170,7 @@ public class AveragingTest {
         t = Expand.expand(t);
         t = ContractIndices.contract(t);
         t = Tensors.parseExpression("d_\\mu^\\mu = 4").transform(t);
-        t = RemoveDueToSymmetry.INSANCE.transform(t);
+        t = RemoveDueToSymmetry.INSTANCE.transform(t);
     }
 
     @Test

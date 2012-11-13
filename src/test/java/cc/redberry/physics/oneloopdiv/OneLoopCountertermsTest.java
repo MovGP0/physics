@@ -196,7 +196,7 @@ public class OneLoopCountertermsTest {
         OneLoopCounterterms action = OneLoopCounterterms.calculateOneLoopCounterterms(input);
 
         Tensor A = action.counterterms().get(1);
-        A = RemoveDueToSymmetry.INSANCE.transform(A);
+        A = RemoveDueToSymmetry.INSTANCE.transform(A);
 
         //this is the exact K.V. result with corrections that 1/12*F_..*F^.. and oth are not under tr operation and that tr of 1 is 4
         Tensor expected = Tensors.parse("1/30*Power[R, 2]+1/12*F_{\\nu \\beta }^{\\epsilon }_{\\rho_5 }*F^{\\nu \\beta \\rho_5 }_{\\epsilon }+1/15*R_{\\delta \\nu }*R^{\\delta \\nu }+1/2*W^{\\alpha }_{\\rho_5 }*W^{\\rho_5 }_{\\alpha }+1/6*R*W^{\\beta }_{\\beta }");
@@ -221,7 +221,7 @@ public class OneLoopCountertermsTest {
 
         OneLoopCounterterms action = OneLoopCounterterms.calculateOneLoopCounterterms(input);
         Tensor A = action.counterterms().get(1);
-        A = RemoveDueToSymmetry.INSANCE.transform(A);
+        A = RemoveDueToSymmetry.INSTANCE.transform(A);
         //this is the exact Barvinsky and Vilkovisky
         Tensor expected = Tensors.parse("1/12*F_{\\nu \\beta }^{\\epsilon }_{\\rho_5 }*F^{\\nu \\beta \\rho_5 }_{\\epsilon }+1/2*W^{\\rho_5 }_{\\alpha }*W^{\\alpha }_{\\rho_5 }+-1/45*Power[R, 2]+1/15*R^{\\mu \\nu }*R_{\\mu \\nu }");
         Assert.assertTrue(TensorUtils.equals(A, expected));
@@ -245,7 +245,7 @@ public class OneLoopCountertermsTest {
         OneLoopCounterterms action = OneLoopCounterterms.calculateOneLoopCounterterms(input);
         Tensor A = action.counterterms().get(1);
 
-        A = RemoveDueToSymmetry.INSANCE.transform(A);
+        A = RemoveDueToSymmetry.INSTANCE.transform(A);
         Tensor expected = Tensors.parse("44/135*R**2-32/135*R_\\mu\\nu*R^\\mu\\nu+2/3*F_\\mu\\nu\\alpha\\beta*F^\\mu\\nu\\beta\\alpha");
         Assert.assertTrue(TensorUtils.equals(A, expected));
     }
