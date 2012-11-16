@@ -1,17 +1,20 @@
 package cc.redberry.physics.feyncalc;
 
+import cc.redberry.core.context.CC;
+import cc.redberry.core.context.NameDescriptor;
+import cc.redberry.core.indexgenerator.IndexGenerator;
+import cc.redberry.core.indices.IndexType;
+import cc.redberry.core.indices.IndicesFactory;
+import cc.redberry.core.indices.IndicesTypeStructure;
 import cc.redberry.core.number.Complex;
 import cc.redberry.core.tensor.*;
+import cc.redberry.core.tensor.iterator.TensorLastIterator;
 import cc.redberry.core.transformations.ContractIndices;
 import cc.redberry.core.transformations.Transformation;
 import cc.redberry.core.transformations.expand.Expand;
 import cc.redberry.core.transformations.expand.ExpandAll;
-import cc.redberry.physics.feyncalc.context.FCC;
+import cc.redberry.core.transformations.substitutions.Substitution;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static cc.redberry.core.tensor.FullContractionsStructure.*;
 import static cc.redberry.core.tensor.Tensors.*;
 
 /**
@@ -19,108 +22,116 @@ import static cc.redberry.core.tensor.Tensors.*;
  * @author Stanislav Poslavsky
  */
 public class DiracTrace implements Transformation {
-    public static final DiracTrace DIRAC_TRACE = new DiracTrace();
+    private final SimpleTensor gammaMatrix;
 
-    private DiracTrace() {
+    public DiracTrace(SimpleTensor gammaMatrix) {
+        this.gammaMatrix = gammaMatrix;
     }
 
     @Override
     public Tensor transform(Tensor t) {
-        return trace(t);
+        return trace(t, gammaMatrix);
     }
 
     public static Tensor trace(Tensor tensor) {
-        tensor = ExpandAll.expandAll(tensor);
-        if (!(tensor instanceof Sum))
-            return traceOfProduct(tensor);
-        SumBuilder sb = new SumBuilder();
-        for (Tensor summand : tensor) {
-            sb.put(Expand.expand(traceOfProduct(summand), ContractIndices.ContractIndices));
-        }
-        return sb.build();
+        return trace(tensor, Tensors.parseSimple("G^a'_b'a"));
     }
 
-    private static Tensor traceOfProduct(Tensor tensor) {
-        if (!(tensor instanceof Product))
-            return multiply(Complex.FOUR, tensor);
-
-        List<Tensor> gammaMatrices = new ArrayList<>();
-        Tensor temp = tensor, current;
-        for (int i = tensor.size() - 1; i >= 0; --i) {
-            current = tensor.get(i);
-            if (!(current instanceof SimpleTensor))
-                continue;
-            if (FCC.isGammaMatrix(current)) {
-                gammaMatrices.add(current);
-                if (temp instanceof Product)
-                    temp = ((Product) temp).remove(i);
-                else
-                    temp = Complex.ONE;
-            }
-        }
-        if (gammaMatrices.isEmpty())
-            return multiply(Complex.FOUR, tensor);
-        if (gammaMatrices.size() % 2 != 0)
-            return Complex.ZERO;
-
-        Product gammas = (Product) multiply(gammaMatrices.toArray(new Tensor[gammaMatrices.size()]));
-        if (gammas.getIndices().getFree().getOfType(FCC.getDiracMatrixIndexType()).size() != 0)
-            return tensor;
-
-        return Tensors.multiply(temp, traceOfProductOfGammas(gammas));
-    }
-
-    private static Tensor traceOfProductOfGammas(Tensor tensor) {
-        if (tensor instanceof SimpleTensor)
-            return Complex.ZERO;
-        return traceOfArray(sortProductOfMatrices((Product) tensor));
-    }
-
-    private static Tensor[] sortProductOfMatrices(Product gammas) {
-
-        ProductContent content = gammas.getContent();
-        FullContractionsStructure fs = content.getFullContractionsStructure();
-        Tensor[] result = new Tensor[gammas.size()];
-        result[0] = content.get(0);
-
-        Tensor next;
-        int position = 0, currentIndex = 0, nextIndex;
-        long[] fromContractions;
-        out:
-        while (true) {
-            fromContractions = fs.contractions[currentIndex];
-            for (long contraction : fromContractions) {
-                if (getFromIndexId(contraction) != FCC.getGammaMatricesIndicesIds().get(1))
+    public static Tensor trace(Tensor tensor, SimpleTensor gammaMatrix) {
+        IndexType[] types = extractTypes(gammaMatrix);
+        //todo check for contains gammas
+        tensor = ExpandAll.expandAll(tensor, ContractIndices.ContractIndices);
+        tensor = ContractIndices.contract(tensor);
+        TensorLastIterator iterator = new TensorLastIterator(tensor);
+        Tensor current;
+        while ((current = iterator.next()) != null) {
+            if (current instanceof SimpleTensor && ((SimpleTensor) current).getName() == gammaMatrix.getName() && current.getIndices().getFree().size(types[1]) == 0) {
+                iterator.set(Complex.ZERO);
+            } else if (current instanceof Product) {
+                if (current.getIndices().getFree().size(types[1]) != 0)
                     continue;
 
-                assert getToIndexId(contraction) == FCC.getGammaMatricesIndicesIds().get(0);
+                int gammasCount = 0;
+                for (Tensor t : current) {
+                    if (t instanceof SimpleTensor && ((SimpleTensor) t).getName() == gammaMatrix.getName())
+                        ++gammasCount;
+                }
+                if (gammasCount == 0)
+                    continue;
 
-                next = content.get(nextIndex = getToTensorIndex(contraction));
-                if (next == result[0])
+                if (gammasCount % 2 == 1)
+                    iterator.set(Complex.ZERO);
 
-                    break out;
-                result[position++] = next;
-                currentIndex = nextIndex;
-                break;
+                current = createSubstitution(gammaMatrix.getName(),
+                        gammasCount, types[0], types[1]).transform(current);
+                current = Expand.expand(current, ContractIndices.ContractIndices);
+                current = ContractIndices.contract(current);
+                iterator.set(current);
             }
         }
-        return result;
+        return iterator.result();
     }
 
+    private static IndexType[] extractTypes(SimpleTensor gammaMatrix) {
+        if (gammaMatrix.getIndices().size() != 3)
+            throw new IllegalArgumentException("Not a gamma matrix: " + gammaMatrix + ".");
+        NameDescriptor descriptor = CC.getNameDescriptor(gammaMatrix.getName());
+        IndicesTypeStructure typeStructure = descriptor.getIndicesTypeStructure();
+        byte metricType = -1, matrixType = -1;
+        int typeCount;
+        for (byte type = 0; type < IndexType.TYPES_COUNT; ++type) {
+            typeCount = typeStructure.typeCount(type);
+            if (typeCount == 0)
+                continue;
+            else if (typeCount == 2) {
+                if (matrixType != -1)
+                    throw new IllegalArgumentException("Not a gamma matrix: " + gammaMatrix + ".");
+                matrixType = type;
+                if (CC.isMetric(matrixType))
+                    throw new IllegalArgumentException("Not a gamma matrix: " + gammaMatrix + ".");
+            } else if (typeCount == 1) {
+                if (metricType != -1)
+                    throw new IllegalArgumentException("Not a gamma matrix: " + gammaMatrix + ".");
+                metricType = type;
+                if (!CC.isMetric(metricType))
+                    throw new IllegalArgumentException("Not a gamma matrix: " + gammaMatrix + ".");
+            } else
+                throw new IllegalArgumentException("Not a gamma matrix: " + gammaMatrix + ".");
+        }
+        return new IndexType[]{IndexType.getType(metricType), IndexType.getType(matrixType)};
+    }
 
-    public static Tensor traceOfArray(Tensor[] product) {
+    private static Substitution createSubstitution(int gammaName, int gammasCount, IndexType metricType, IndexType matrixType) {
+        Tensor[] gammas = new Tensor[gammasCount];
+        IndexGenerator generator = new IndexGenerator();
+        int firstUpper, u = firstUpper = generator.generate(matrixType), i;
+        for (i = 0; i < gammasCount; ++i) {
+            gammas[i] = Tensors.simpleTensor(gammaName,
+                    IndicesFactory.createSimple(null,
+                            u | 0x80000000,
+                            i == gammasCount - 1 ? firstUpper : (u = generator.generate(matrixType)),
+                            generator.generate(metricType)));
+
+        }
+        return new Substitution(Tensors.multiply(gammas), traceOfArray(gammas, metricType));
+    }
+
+    static Tensor traceOfArray(Tensor[] product, IndexType metricType) {
+        if (product.length == 1)
+            return Complex.ZERO;
         if (product.length == 2)
             return multiply(Complex.FOUR,
-                    createMetricOrKronecker(product[0].getIndices().get(FCC.getLorentzIndexType(), 0),
-                            product[1].getIndices().get(FCC.getLorentzIndexType(), 0)));
+                    createMetricOrKronecker(product[0].getIndices().get(metricType, 0),
+                            product[1].getIndices().get(metricType, 0)));
         if (product.length % 2 != 0)
             return Complex.ZERO;
         SumBuilder sb = new SumBuilder();
         Tensor temp;
         for (int i = 0; i < product.length - 1; ++i) {
             temp = multiply(Complex.TWO,
-                    createMetricOrKronecker(product[i].getIndices().get(0), product[i + 1].getIndices().get(0)),
-                    traceOfArray(subArray(product, i, i + 1)));
+                    createMetricOrKronecker(product[i].getIndices().get(metricType, 0),
+                            product[i + 1].getIndices().get(metricType, 0)),
+                    traceOfArray(subArray(product, i, i + 1), metricType));
             if (i % 2 != 0)
                 temp = negate(temp);
             sb.put(temp);
@@ -145,9 +156,4 @@ public class DiracTrace implements Transformation {
         array[a] = array[b];
         array[b] = temp;
     }
-
-    private static boolean isGamma(Tensor tensor, SimpleTensor gamma) {
-        return tensor.getClass() == SimpleTensor.class && ((SimpleTensor) tensor).getName() == gamma.getName();
-    }
-
 }
