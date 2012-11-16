@@ -9,7 +9,9 @@ import cc.redberry.core.indices.IndicesTypeStructure;
 import cc.redberry.core.number.Complex;
 import cc.redberry.core.tensor.*;
 import cc.redberry.core.tensor.iterator.TensorLastIterator;
+import cc.redberry.core.transformations.ContractIndices;
 import cc.redberry.core.transformations.Transformation;
+import cc.redberry.core.transformations.expand.Expand;
 import cc.redberry.core.transformations.expand.ExpandAll;
 import cc.redberry.core.transformations.substitutions.Substitution;
 
@@ -37,7 +39,9 @@ public class DiracTrace implements Transformation {
 
     public static Tensor trace(Tensor tensor, SimpleTensor gammaMatrix) {
         IndexType[] types = extractTypes(gammaMatrix);
-        tensor = ExpandAll.expandAll(tensor);
+        //todo check for contains gammas
+        tensor = ExpandAll.expandAll(tensor, ContractIndices.ContractIndices);
+        tensor = ContractIndices.contract(tensor);
         TensorLastIterator iterator = new TensorLastIterator(tensor);
         Tensor current;
         while ((current = iterator.next()) != null) {
@@ -52,12 +56,16 @@ public class DiracTrace implements Transformation {
                     if (t instanceof SimpleTensor && ((SimpleTensor) t).getName() == gammaMatrix.getName())
                         ++gammasCount;
                 }
+                if (gammasCount == 0)
+                    continue;
 
                 if (gammasCount % 2 == 1)
                     iterator.set(Complex.ZERO);
 
                 current = createSubstitution(gammaMatrix.getName(),
                         gammasCount, types[0], types[1]).transform(current);
+                current = Expand.expand(current, ContractIndices.ContractIndices);
+                current = ContractIndices.contract(current);
                 iterator.set(current);
             }
         }

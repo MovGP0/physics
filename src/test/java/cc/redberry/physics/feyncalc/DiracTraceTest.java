@@ -4,13 +4,14 @@ import cc.redberry.core.TAssert;
 import cc.redberry.core.context.CC;
 import cc.redberry.core.indices.IndexType;
 import cc.redberry.core.parser.preprocessor.GeneralIndicesInsertion;
+import cc.redberry.core.tensor.SimpleTensor;
 import cc.redberry.core.tensor.Tensor;
+import cc.redberry.core.tensor.iterator.TensorLastIterator;
 import cc.redberry.core.transformations.expand.Expand;
 import junit.framework.Assert;
 import org.junit.Test;
 
-import static cc.redberry.core.tensor.Tensors.parse;
-import static cc.redberry.core.tensor.Tensors.parseSimple;
+import static cc.redberry.core.tensor.Tensors.*;
 
 /**
  * @author Dmitry Bolotin
@@ -67,6 +68,44 @@ public class DiracTraceTest {
         Tensor t = parse("Tr[G^a*G^b*G^c*G^d*G^e*G^f*G^g*G^h*G^i*G^j]");
         t = Expand.expand(DiracTrace.trace(t));
         Assert.assertEquals(t.size(), 945);
+    }
+
+    @Test
+    public void test6() {
+        GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
+        CC.current().getParseManager().defaultParserPreprocessors.add(indicesInsertion);
+        indicesInsertion.addInsertionRule(parseSimple("G^a'_b'a"), IndexType.LatinLower1);
+
+        Tensor t = parse("Tr[G_a*G_b*G^b*G_d] + Tr[G_a*G_d]");
+        t = Expand.expand(DiracTrace.trace(t));
+        t = parseExpression("d^a_a = 4").transform(t);
+        Tensor expected = parse("20*g_ad");
+        TAssert.assertEquals(t, expected);
+    }
+
+    @Test
+    public void test7() {
+        Tensor t = parse("(4*M**(-4)*N*m+M**(-3)*N+(1/8)*((1/16)*M**4+m**4+(1/2)*M**2*m**2)**(-1)*M*N)*G^{ge'}_{a'}*G_{a}^{b'}_{d'}*G_{c}^{d'}_{e'}*G^{fh'}_{i'}*G_{m}^{i'}_{b'}*G_{n}^{a'}_{h'}*k2_{f}*k2^{a}*k2^{c}*k2_{g}*g_{AB}*k1^{m}");
+        t = DiracTrace.trace(t);
+        assertContainsGamma(t);
+    }
+
+    @Test
+    public void test8(){
+        Tensor t = parse("g_{AB}*d^{A'}_{A'}*k2_{b}*k2_{f}*P^{b}*P^{a}*P_{g}*P_{d}*G^{fh'}_{i'}*G^{db'}_{c'}*G_{a}^{c'}_{d'}*G^{ge'}_{a'}*G_{m}^{i'}_{b'}*G_{n}^{a'}_{h'}*d^{d'}_{e'}");
+        t = DiracTrace.trace(t);
+        assertContainsGamma(t);
+    }
+
+    private static final SimpleTensor defaultGamma = parseSimple("G^a'_b'a");
+
+    private static void assertContainsGamma(Tensor t) {
+        TensorLastIterator iterator = new TensorLastIterator(t);
+        Tensor c;
+        while ((c = iterator.next()) != null) {
+            if (c instanceof SimpleTensor && ((SimpleTensor) c).getName() == defaultGamma.getName())
+                throw new AssertionError();
+        }
     }
 
 }

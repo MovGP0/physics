@@ -14,6 +14,17 @@ import static cc.redberry.core.tensor.Tensors.*;
  */
 public final class FeynCalcUtils {
 
+    public static Expression[] setMandelstam(String[][] momentums) {
+        final Tensor[][] tt = new Tensor[momentums.length][];
+        int j;
+        for (int i = 0; i < tt.length; ++i) {
+            tt[i] = new Tensor[momentums[i].length];
+            for (j = 0; j < tt[i].length; ++j)
+                tt[i][j] = parse(momentums[i][j]);
+        }
+        return setMandelstam(tt);
+    }
+
     public static Expression[] setMandelstam(Tensor[][] momentums) {
         checkMandelstamInput(momentums);
         SimpleTensor s = parseSimple("s"), t = parseSimple("t"), u = parseSimple("u");
