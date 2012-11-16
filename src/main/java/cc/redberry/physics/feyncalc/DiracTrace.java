@@ -38,7 +38,7 @@ public class DiracTrace implements Transformation {
     }
 
     public static Tensor trace(Tensor tensor, SimpleTensor gammaMatrix) {
-        IndexType[] types = extractTypes(gammaMatrix);
+        IndexType[] types = TraceUtils.extractTypesFromMatrix(gammaMatrix);
         //todo check for contains gammas
         tensor = ExpandAll.expandAll(tensor, ContractIndices.ContractIndices);
         tensor = ContractIndices.contract(tensor);
@@ -70,35 +70,6 @@ public class DiracTrace implements Transformation {
             }
         }
         return iterator.result();
-    }
-
-    private static IndexType[] extractTypes(SimpleTensor gammaMatrix) {
-        if (gammaMatrix.getIndices().size() != 3)
-            throw new IllegalArgumentException("Not a gamma matrix: " + gammaMatrix + ".");
-        NameDescriptor descriptor = CC.getNameDescriptor(gammaMatrix.getName());
-        IndicesTypeStructure typeStructure = descriptor.getIndicesTypeStructure();
-        byte metricType = -1, matrixType = -1;
-        int typeCount;
-        for (byte type = 0; type < IndexType.TYPES_COUNT; ++type) {
-            typeCount = typeStructure.typeCount(type);
-            if (typeCount == 0)
-                continue;
-            else if (typeCount == 2) {
-                if (matrixType != -1)
-                    throw new IllegalArgumentException("Not a gamma matrix: " + gammaMatrix + ".");
-                matrixType = type;
-                if (CC.isMetric(matrixType))
-                    throw new IllegalArgumentException("Not a gamma matrix: " + gammaMatrix + ".");
-            } else if (typeCount == 1) {
-                if (metricType != -1)
-                    throw new IllegalArgumentException("Not a gamma matrix: " + gammaMatrix + ".");
-                metricType = type;
-                if (!CC.isMetric(metricType))
-                    throw new IllegalArgumentException("Not a gamma matrix: " + gammaMatrix + ".");
-            } else
-                throw new IllegalArgumentException("Not a gamma matrix: " + gammaMatrix + ".");
-        }
-        return new IndexType[]{IndexType.getType(metricType), IndexType.getType(matrixType)};
     }
 
     private static Substitution createSubstitution(int gammaName, int gammasCount, IndexType metricType, IndexType matrixType) {
