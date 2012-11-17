@@ -11,6 +11,7 @@ import cc.redberry.core.transformations.ContractIndices;
 import cc.redberry.core.transformations.Transformation;
 import cc.redberry.core.transformations.expand.Expand;
 import cc.redberry.core.utils.ArraysUtils;
+import cc.redberry.core.utils.TensorUtils;
 
 import java.util.*;
 
@@ -20,10 +21,11 @@ import static cc.redberry.core.tensor.Tensors.*;
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public class UnitaryTrace implements Transformation {
-    private final SimpleTensor SuN, f, d, N;
+public final class UnitaryTrace implements Transformation {
+    private final SimpleTensor SuN, f, d;
+    private final Tensor N;
 
-    public UnitaryTrace(SimpleTensor suN, SimpleTensor f, SimpleTensor d, SimpleTensor n) {
+    public UnitaryTrace(SimpleTensor suN, SimpleTensor f, SimpleTensor d, Tensor n) {
         SuN = suN;
         this.f = f;
         this.d = d;
@@ -39,7 +41,7 @@ public class UnitaryTrace implements Transformation {
         return unitaryTrace(t, parseSimple("T^a'_b'a"), parseSimple("f_abc"), parseSimple("d_abc"), parseSimple("N"));
     }
 
-    public static final Tensor unitaryTrace(Tensor tensor, SimpleTensor SuN, SimpleTensor f, SimpleTensor d, SimpleTensor N) {
+    public static final Tensor unitaryTrace(Tensor tensor, SimpleTensor SuN, SimpleTensor f, SimpleTensor d, Tensor N) {
         IndexType[] types = TraceUtils.extractTypesFromMatrix(SuN);
         TensorLastIterator iterator = new TensorLastIterator(tensor);
         Tensor c;
@@ -74,7 +76,7 @@ public class UnitaryTrace implements Transformation {
     }
 
     private static Tensor traceOfProduct(Tensor tensor,
-                                         int sunName, int fName, int dName, SimpleTensor N,
+                                         int sunName, int fName, int dName, Tensor N,
                                          IndexType metricType, IndexType matrixType) {
         Expression[] subs = getSubstitutions(sunName, fName, dName, N, metricType, matrixType);
         Transformation[] transformations = new Transformation[]{ContractIndices.ContractIndices};
@@ -100,9 +102,9 @@ public class UnitaryTrace implements Transformation {
 
     private static final class CacheContainer {
         final int sunName, fName, dName;
-        final SimpleTensor N;
+        final Tensor N;
 
-        private CacheContainer(int sunName, int fName, int dName, SimpleTensor n) {
+        private CacheContainer(int sunName, int fName, int dName, Tensor n) {
             this.sunName = sunName;
             this.fName = fName;
             this.dName = dName;
@@ -115,7 +117,7 @@ public class UnitaryTrace implements Transformation {
             return sunName == that.sunName &&
                     fName == that.sunName &&
                     dName == that.dName &&
-                    N.getName() == that.N.getName();
+                    TensorUtils.equals(N, that.N);
         }
 
         @Override
@@ -123,7 +125,7 @@ public class UnitaryTrace implements Transformation {
             int result = sunName;
             result = 31 * result + fName;
             result = 31 * result + dName;
-            result = 31 * result + N.getName();
+            result = 31 * result + N.hashCode();
             return result;
         }
 
@@ -132,7 +134,7 @@ public class UnitaryTrace implements Transformation {
     //todo static expression vs CC.resetTensorNames
     private static final Map<CacheContainer, Expression[]> cachedSubstitutions = new HashMap<>();
 
-    private static Expression[] getSubstitutions(int sunName, int fName, int dName, SimpleTensor N,
+    private static Expression[] getSubstitutions(int sunName, int fName, int dName, Tensor N,
                                                  IndexType metricType, IndexType matrixType) {
         CacheContainer cacheContainer = new CacheContainer(sunName, fName, dName, N);
         Expression[] expressions = cachedSubstitutions.get(cacheContainer);
