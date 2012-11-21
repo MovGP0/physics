@@ -3,9 +3,7 @@ package cc.redberry.physics.feyncalc;
 import cc.redberry.core.context.CC;
 import cc.redberry.core.context.NameDescriptor;
 import cc.redberry.core.indexgenerator.IndexGenerator;
-import cc.redberry.core.indices.IndexType;
-import cc.redberry.core.indices.IndicesFactory;
-import cc.redberry.core.indices.IndicesTypeStructure;
+import cc.redberry.core.indices.*;
 import cc.redberry.core.number.Complex;
 import cc.redberry.core.tensor.*;
 import cc.redberry.core.tensor.iterator.TensorLastIterator;
@@ -15,6 +13,7 @@ import cc.redberry.core.transformations.expand.Expand;
 import cc.redberry.core.transformations.expand.ExpandAll;
 import cc.redberry.core.transformations.substitutions.Substitution;
 
+import static cc.redberry.core.indices.IndicesUtils.setType;
 import static cc.redberry.core.tensor.Tensors.*;
 
 /**
@@ -38,7 +37,7 @@ public class DiracTrace implements Transformation {
     }
 
     public static Tensor trace(Tensor tensor, SimpleTensor gammaMatrix) {
-        IndexType[] types = extractTypes(gammaMatrix);
+        IndexType[] types = TraceUtils.extractTypesFromMatrix(gammaMatrix);
         //todo check for contains gammas
         tensor = ExpandAll.expandAll(tensor, ContractIndices.ContractIndices);
         tensor = ContractIndices.contract(tensor);
@@ -72,35 +71,6 @@ public class DiracTrace implements Transformation {
         return iterator.result();
     }
 
-    private static IndexType[] extractTypes(SimpleTensor gammaMatrix) {
-        if (gammaMatrix.getIndices().size() != 3)
-            throw new IllegalArgumentException("Not a gamma matrix: " + gammaMatrix + ".");
-        NameDescriptor descriptor = CC.getNameDescriptor(gammaMatrix.getName());
-        IndicesTypeStructure typeStructure = descriptor.getIndicesTypeStructure();
-        byte metricType = -1, matrixType = -1;
-        int typeCount;
-        for (byte type = 0; type < IndexType.TYPES_COUNT; ++type) {
-            typeCount = typeStructure.typeCount(type);
-            if (typeCount == 0)
-                continue;
-            else if (typeCount == 2) {
-                if (matrixType != -1)
-                    throw new IllegalArgumentException("Not a gamma matrix: " + gammaMatrix + ".");
-                matrixType = type;
-                if (CC.isMetric(matrixType))
-                    throw new IllegalArgumentException("Not a gamma matrix: " + gammaMatrix + ".");
-            } else if (typeCount == 1) {
-                if (metricType != -1)
-                    throw new IllegalArgumentException("Not a gamma matrix: " + gammaMatrix + ".");
-                metricType = type;
-                if (!CC.isMetric(metricType))
-                    throw new IllegalArgumentException("Not a gamma matrix: " + gammaMatrix + ".");
-            } else
-                throw new IllegalArgumentException("Not a gamma matrix: " + gammaMatrix + ".");
-        }
-        return new IndexType[]{IndexType.getType(metricType), IndexType.getType(matrixType)};
-    }
-
     private static Substitution createSubstitution(int gammaName, int gammasCount, IndexType metricType, IndexType matrixType) {
         Tensor[] gammas = new Tensor[gammasCount];
         IndexGenerator generator = new IndexGenerator();
@@ -114,6 +84,40 @@ public class DiracTrace implements Transformation {
 
         }
         return new Substitution(Tensors.multiply(gammas), traceOfArray(gammas, metricType));
+    }
+
+    private static Substitution gamma5(int gammaName, int gamma5Name, byte metricType, byte matrixType) {
+        Expression[] gamma5 = new Expression[3];
+
+        //G5*G_m = -G_m*G5
+        SimpleTensor a, b;
+        Tensor[] lrhs = new Tensor[2];
+        int[] gammaNames = {gamma5Name, gammaName};
+        SimpleIndices aIndices = IndicesFactory.createSimple(null,
+                0x80000000 | setType(matrixType, 0),
+                setType(matrixType, 1),
+                setType(metricType, 0)),
+                bIndices = IndicesFactory.createSimple(null,
+                        0x80000000 | setType(matrixType, 1),
+                        setType(matrixType, 2),
+                        setType(metricType, 1));
+        for (int i = 0; i < 2; ++i) {
+            a = simpleTensor(gammaNames[i], aIndices);
+            b = simpleTensor(gammaNames[1 - i], bIndices);
+            lrhs[i] = multiply(a, b);
+        }
+        gamma5[0] = expression(lrhs[0], lrhs[1]);
+
+        //G5*G5 = 1
+        lrhs[0] = multiply(simpleTensor(gamma5Name, aIndices), simpleTensor(gamma5Name, bIndices));
+        lrhs[1] = createKronecker(0x80000000 | setType(matrixType, 0), 0x80000000 | setType(matrixType, 2));
+        gamma5[1] = expression(lrhs[0], lrhs[1]);
+
+        //Tr[G5] = 0
+        gamma5[2] = expression(simpleTensor(gamma5Name,
+                IndicesFactory.createSimple(null, 0x80000000 | setType(matrixType, 0), 0)), Complex.ZERO);
+
+        return new Substitution(gamma5);
     }
 
     static Tensor traceOfArray(Tensor[] product, IndexType metricType) {
@@ -138,6 +142,18 @@ public class DiracTrace implements Transformation {
             swap(product, i, i + 1);
         }
         return multiply(Complex.ONE_HALF, sb.build());
+    }
+
+    static Tensor traceOfArray5(Tensor[] product, IndexType metricType, int epsilonName) {
+        if (product.length < 5 || product.length % 2 == 0)
+            return Complex.ZERO;
+        if (product.length == 5) {
+            int[] indices = new int[4];
+            for (int i = 0; i < 4; ++i)
+                indices[i] = product[i].getIndices().get(metricType, 0);
+            return multiply(Complex.FOUR.negate(), Complex.IMAGE_ONE, simpleTensor(epsilonName, IndicesFactory.createSimple(null, indices)));
+        }
+        return null;
     }
 
     private static Tensor[] subArray(Tensor[] array, int a, int b) {
