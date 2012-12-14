@@ -7,6 +7,7 @@ import cc.redberry.core.parser.preprocessor.GeneralIndicesInsertion;
 import cc.redberry.core.tensor.SimpleTensor;
 import cc.redberry.core.tensor.Tensor;
 import cc.redberry.core.tensor.iterator.TensorLastIterator;
+import cc.redberry.core.transformations.ContractIndices;
 import cc.redberry.core.transformations.expand.Expand;
 import junit.framework.Assert;
 import org.junit.Test;
@@ -91,10 +92,59 @@ public class DiracTraceTest {
     }
 
     @Test
-    public void test8(){
+    public void test8() {
         Tensor t = parse("g_{AB}*d^{A'}_{A'}*k2_{b}*k2_{f}*P^{b}*P^{a}*P_{g}*P_{d}*G^{fh'}_{i'}*G^{db'}_{c'}*G_{a}^{c'}_{d'}*G^{ge'}_{a'}*G_{m}^{i'}_{b'}*G_{n}^{a'}_{h'}*d^{d'}_{e'}");
         t = DiracTrace.trace(t);
         assertContainsGamma(t);
+    }
+
+    @Test
+    public void test9() {
+        GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
+        CC.current().getParseManager().defaultParserPreprocessors.add(indicesInsertion);
+        indicesInsertion.addInsertionRule(parseSimple("G^a'_b'a"), IndexType.LatinLower1);
+        Tensor t;
+        t = parse("Tr[p2_a*G^a*e2_b*G^b*p1_c*G^c*e1_d*G^d*p1_e*G^e*e2_f*G^f*p1_g*G^g*e1_h*G^h]");
+        TAssert.assertEquals(tr(t), "-32*p1_{g}*p1^{g}*p1^{a}*p2_{a}");
+        t = parse("Tr[p2_a*G^a*e2_b*G^b*p1_c*G^c*e1_d*G^d*p1_e*G^e*e2_f*G^f*k1_g*G^g*e1_h*G^h]");
+        TAssert.assertEquals(tr(t), "-32*p1_{g}*k1^{g}*p1^{a}*p2_{a}");
+        t = parse("Tr[p2_a*G^a*e2_b*G^b*k1_c*G^c*e1_d*G^d*p1_e*G^e*e2_f*G^f*p1_g*G^g*e1_h*G^h]");
+        TAssert.assertEquals(tr(t), "-32*p1_{g}*k1^{g}*p1^{a}*p2_{a}");
+        t = parse("Tr[p2_a*G^a*e2_b*G^b*k1_c*G^c*e1_d*G^d*p1_e*G^e*e2_f*G^f*k1_g*G^g*e1_h*G^h]");
+        TAssert.assertEquals(parseExpression("k1_a*k1^a = 0").transform(tr(t)), "0");
+        t = parse("Tr[p2_a*G^a*e2_b*G^b*k1_c*G^c*e1_d*G^d*p1_e*G^e*e1_f*G^f*k2_g*G^g*e2_h*G^h]");
+        TAssert.assertEquals(tr(t), tr("4*Tr[p2_a*G^a*k2_b*G^b*p1_c*G^c*k1_d*G^d]"));
+        t = parse("Tr[p2_a*G^a*e2_b*G^b*p1_c*G^c*e1_d*G^d*p1_e*G^e*e1_f*G^f*k2_g*G^g*e2_h*G^h]");
+        TAssert.assertEquals(parseExpression("p1_a*p1^a = 0").transform(tr(t)), "0");
+        t = parse("Tr[p2_a*G^a*e2_b*G^b*k1_c*G^c*e1_d*G^d*p1_e*G^e*e1_f*G^f*p1_g*G^g*e2_h*G^h]");
+        TAssert.assertEquals(parseExpression("p1_a*p1^a = 0").transform(tr(t)), "0");
+        t = parse("Tr[p2_a*G^a*e1_b*G^b*p1_c*G^c*e2_d*G^d*p1_e*G^e*e2_f*G^f*p1_g*G^g*e1_h*G^h]");
+        TAssert.assertEquals(parseExpression("p1_a*p1^a = 0").transform(tr(t)), "0");
+        t = parse("Tr[p2_a*G^a*e1_b*G^b*p1_c*G^c*e2_d*G^d*p1_e*G^e*e2_f*G^f*k1_g*G^g*e1_h*G^h]");
+        TAssert.assertEquals(parseExpression("p1_a*p1^a = 0").transform(tr(t)), "0");
+        t = parse("Tr[p2_a*G^a*e1_b*G^b*k2_c*G^c*e2_d*G^d*p1_e*G^e*e2_f*G^f*p1_g*G^g*e1_h*G^h]");
+        TAssert.assertEquals(parseExpression("p1_a*p1^a = 0").transform(tr(t)), "0");
+        t = parse("Tr[p2_a*G^a*e1_b*G^b*k2_c*G^c*e2_d*G^d*p1_e*G^e*e2_f*G^f*k1_g*G^g*e1_h*G^h]");
+        TAssert.assertEquals(tr(t), tr("4*Tr[p2_a*G^a*k2_b*G^b*p1_c*G^c*k1_d*G^d]"));
+        t = parse("Tr[p2_a*G^a*e1_b*G^b*p1_c*G^c*e2_d*G^d*p1_e*G^e*e1_f*G^f*p1_g*G^g*e2_h*G^h]");
+        TAssert.assertEquals(parseExpression("p1_a*p1^a = 0").transform(tr(t)), "0");
+        t = parse("Tr[p2_a*G^a*e1_b*G^b*p1_c*G^c*e2_d*G^d*p1_e*G^e*e1_f*G^f*k2_g*G^g*e2_h*G^h]");
+        TAssert.assertEquals(parseExpression("p1_a*p1^a = 0").transform(tr(t)), "-32*p1_{g}*k2^{g}*p1^{a}*p2_{a}");
+        t = parse("Tr[p2_a*G^a*e1_b*G^b*k2_c*G^c*e2_d*G^d*p1_e*G^e*e1_f*G^f*k2_g*G^g*e2_h*G^h]");
+        TAssert.assertEquals(parseExpression("k2_a*k2^a = 0").transform(tr(t)), "0");
+    }
+
+    private static Tensor tr(String t) {
+        return tr(parse(t));
+    }
+
+    private static Tensor tr(Tensor t) {
+        t = DiracTrace.trace(t);
+        t = parseExpression("e1_m*e1_n = g_mn").transform(t);
+        t = parseExpression("e2_m*e2_n = g_mn").transform(t);
+        t = ContractIndices.contract(t);
+        t = parseExpression("d^m_m = 4").transform(t);
+        return t;
     }
 
     private static final SimpleTensor defaultGamma = parseSimple("G^a'_b'a");
