@@ -1,7 +1,5 @@
 package cc.redberry.physics.feyncalc;
 
-import cc.redberry.core.context.CC;
-import cc.redberry.core.context.NameDescriptor;
 import cc.redberry.core.indexgenerator.IndexGenerator;
 import cc.redberry.core.indices.*;
 import cc.redberry.core.number.Complex;
@@ -21,22 +19,29 @@ import static cc.redberry.core.tensor.Tensors.*;
  * @author Stanislav Poslavsky
  */
 public class DiracTrace implements Transformation {
-    private final SimpleTensor gammaMatrix;
+    private final SimpleTensor gammaMatrix, gamma5, leviCivita;
 
-    public DiracTrace(SimpleTensor gammaMatrix) {
+    public DiracTrace(SimpleTensor gammaMatrix, SimpleTensor gamma5, SimpleTensor leviCivita) {
         this.gammaMatrix = gammaMatrix;
+        this.gamma5 = gamma5;
+        this.leviCivita = leviCivita;
     }
 
     @Override
     public Tensor transform(Tensor t) {
-        return trace(t, gammaMatrix);
+        return trace(t, gammaMatrix, gamma5, leviCivita);
+    }
+
+    private static SimpleTensor[] defaultGammasAndLeviCivita() {
+        return new SimpleTensor[]{parseSimple("G^a'_b'a"), parseSimple("G5^a'_b'"), parseSimple("e_abcd")};
     }
 
     public static Tensor trace(Tensor tensor) {
-        return trace(tensor, Tensors.parseSimple("G^a'_b'a"));
+        SimpleTensor[] defaulT = defaultGammasAndLeviCivita();
+        return trace(tensor, defaulT[0], defaulT[1], defaulT[2]);
     }
 
-    public static Tensor trace(Tensor tensor, SimpleTensor gammaMatrix) {
+    public static Tensor trace(Tensor tensor, SimpleTensor gammaMatrix, SimpleTensor gamma5, SimpleTensor leviCivita) {
         IndexType[] types = TraceUtils.extractTypesFromMatrix(gammaMatrix);
         //todo check for contains gammas
         tensor = ExpandAll.expandAll(tensor, ContractIndices.ContractIndices);
@@ -51,27 +56,46 @@ public class DiracTrace implements Transformation {
                     continue;
 
                 int gammasCount = 0;
+                int gamma5Count = 0;
                 for (Tensor t : current) {
-                    if (t instanceof SimpleTensor && ((SimpleTensor) t).getName() == gammaMatrix.getName())
-                        ++gammasCount;
+                    if (t instanceof SimpleTensor) {
+                        if (((SimpleTensor) t).getName() == gammaMatrix.getName())
+                            ++gammasCount;
+                        if (((SimpleTensor) t).getName() == gamma5.getName())
+                            ++gamma5Count;
+                    }
                 }
-                if (gammasCount == 0)
-                    continue;
+                if (gammasCount == 0) {
+                    if (gamma5Count == 0)
+                        continue;
+                    if (gamma5Count % 2 == 1)
+                        iterator.set(Complex.ZERO);
+                }
 
-                if (gammasCount % 2 == 1)
+                if (gamma5Count == 0 && gammasCount % 2 == 1)
                     iterator.set(Complex.ZERO);
 
-                current = createSubstitution(gammaMatrix.getName(),
-                        gammasCount, types[0], types[1]).transform(current);
+                if (gamma5Count == 0)
+                    current = createGammaSubstitution(gammaMatrix.getName(),
+                            gammasCount, types[0], types[1]).transform(current);
+                else {
+
+                }
                 current = Expand.expand(current, ContractIndices.ContractIndices);
                 current = ContractIndices.contract(current);
                 iterator.set(current);
             }
         }
+
         return iterator.result();
     }
 
-    private static Substitution createSubstitution(int gammaName, int gammasCount, IndexType metricType, IndexType matrixType) {
+    private static Tensor traceWithout5(Tensor tensor, int gammaName, int gammasCount, IndexType metricType, IndexType matrixType) {
+        return null;
+    }
+
+    //todo cache substitutions
+    private static Substitution createGammaSubstitution(int gammaName, int gammasCount, IndexType metricType, IndexType matrixType) {
         Tensor[] gammas = new Tensor[gammasCount];
         IndexGenerator generator = new IndexGenerator();
         int firstUpper, u = firstUpper = generator.generate(matrixType), i;
@@ -145,9 +169,9 @@ public class DiracTrace implements Transformation {
     }
 
     static Tensor traceOfArray5(Tensor[] product, IndexType metricType, int epsilonName) {
-        if (product.length < 5 || product.length % 2 == 0)
+        if (product.length < 4 || product.length % 2 == 1)
             return Complex.ZERO;
-        if (product.length == 5) {
+        if (product.length == 4) {
             int[] indices = new int[4];
             for (int i = 0; i < 4; ++i)
                 indices[i] = product[i].getIndices().get(metricType, 0);
