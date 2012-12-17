@@ -4,8 +4,10 @@ import cc.redberry.core.TAssert;
 import cc.redberry.core.context.CC;
 import cc.redberry.core.indices.IndexType;
 import cc.redberry.core.parser.preprocessor.GeneralIndicesInsertion;
+import cc.redberry.core.tensor.Expression;
 import cc.redberry.core.tensor.SimpleTensor;
 import cc.redberry.core.tensor.Tensor;
+import cc.redberry.core.tensor.Tensors;
 import cc.redberry.core.tensor.iterator.TensorLastIterator;
 import cc.redberry.core.transformations.ContractIndices;
 import cc.redberry.core.transformations.expand.Expand;
@@ -202,21 +204,52 @@ public class DiracTraceTest {
 
     @Test
     public void test12() {
-        CC.resetTensorNames(-4024795900036230075L);
-        System.out.println(CC.getNameManager().getSeed());
         GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
         CC.current().getParseManager().defaultParserPreprocessors.add(indicesInsertion);
         indicesInsertion.addInsertionRule(parseSimple("G^a'_b'a"), IndexType.LatinLower1);
         indicesInsertion.addInsertionRule(parseSimple("G5^a'_b'"), IndexType.LatinLower1);
         setAntiSymmetric(parseSimple("e_abcd"));
         Tensor t;
-        t = parse("Tr[G_a*G_b*G_c*G_d*G_e*G_f*G5]");
-        System.out.println(trace(t));
-        Tensor expected = parse("-4*I*g_{ab}*e_{cdef}+4*I*g_{ac}*e_{bdef}-4*I*g_{ad}*e_{bcef}+4*I*g_{ae}*e_{bcdf}-4*I*g_{af}*e_{bcde}-4*I*g_{bc}*e_{adef}+4*I*g_{bd}*e_{acef}-4*I*g_{be}*e_{acdf}+4*I*g_{bf}*e_{acde}-4*I*g_{cd}*e_{abef}+4*I*g_{ce}*e_{abdf}-4*I*g_{cf}*e_{abde}-4*I*g_{de}*e_{abcf}+4*I*g_{df}*e_{abce}-4*I*g_{ef}*e_{abcd}");
-        System.out.println(expected);
-        TAssert.assertEquals(trace(t), expected);
+
+        t = parse("Tr[G_a*G_b*G_c*G_d*G_e*G^d*G5]");
+        TAssert.assertEquals(trace(t), "8*I*e_abce");
+        t = parse("Tr[G_a*G_b*G_c*G_d*G_e*G^a*G5]");
+        TAssert.assertEquals(trace(t), "16*I*e_bcde");
+        t = parse("Tr[G_a*G_b*G_c*G_d*G_e*G^b*G5]");
+        TAssert.assertEquals(trace(t), "-8*I*e_acde");
+        t = parse("Tr[G_a*G_b*G_c*G_d*G_e*G^c*G5]");
+        TAssert.assertEquals(trace(t), "0");
+        t = parse("Tr[G_a*G_b*G_c*G_d*G_e*G^e*G5]");
+        TAssert.assertEquals(trace(t), "-16*I*e_abcd");
+        t = parse("-Tr[G5*G_a*G5*G_b*G_c*G_d*G_e*G^d*G5]");
+        TAssert.assertEquals(trace(t), "8*I*e_abce");
+        t = parse("Tr[G_a*G5*G_b*G_c*G5*G5*G5*G_d*G_e*G^a*G5]");
+        TAssert.assertEquals(trace(t), "16*I*e_bcde");
+        t = parse("Tr[G_a*G5*G_b*G_c*G_d*G5*G_e*G^b*G5]");
+        TAssert.assertEquals(trace(t), "8*I*e_acde");
+        t = parse("Tr[-G5*G_a*G_b*G_c*G5*G_d*G_e*G^c*G5]");
+        TAssert.assertEquals(trace(t), "0");
+        t = parse("-Tr[G5*G_a*G5*G_b*G5*G_c*G_d*G_e*G^e*G5*G5]");
+        TAssert.assertEquals(trace(t), "-16*I*e_abcd");
     }
 
+    @Test
+    public void test13() {
+        GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
+        CC.current().getParseManager().defaultParserPreprocessors.add(indicesInsertion);
+        indicesInsertion.addInsertionRule(parseSimple("G^a'_b'a"), IndexType.LatinLower1);
+        indicesInsertion.addInsertionRule(parseSimple("G5^a'_b'"), IndexType.LatinLower1);
+        setAntiSymmetric(parseSimple("e_abcd"));
+        Tensor t, expected;
+
+        t = parse("Tr[G_a*G_b*G_c*G_d*G_e*G_f*G_g*G^a*G5]");
+        expected = parse("16*I*g_{bf}*e_{cdeg}-16*I*g_{bg}*e_{cdef}+16*I*g_{cd}*e_{befg}-16*I*g_{ce}*e_{bdfg}+16*I*g_{de}*e_{bcfg}+16*I*g_{fg}*e_{bcde}");
+        TAssert.assertEquals(trace(t), expected);
+        t = parse("Tr[G_a*G_b*G_c*G_d*G_e*G^d*G_g*G^b*G5]");
+        TAssert.assertEquals(trace(t), "16*I*e_aceg");
+    }
+
+    //Expression shouten = parseExpression("g_fa*e_bcde = -(g_fb*e_cdea + g_fc*e_deab+g_fd*e_eabc+g_fe*e_abcd)");
     private static final SimpleTensor defaultGamma = parseSimple("G^a'_b'a");
 
     private static void assertContainsGamma(Tensor t) {

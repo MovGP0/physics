@@ -116,6 +116,7 @@ public class DiracTrace implements Transformation {
         Tensor t = createGammaSubstitution(gammasCount).transform(tensor);
         t = Expand.expand(t, ContractIndices.ContractIndices);
         t = ContractIndices.contract(t);
+        t = parseExpression("d_a^a=4").transform(t);
         return t;
     }
 
@@ -260,6 +261,7 @@ public class DiracTrace implements Transformation {
         t = Expand.expand(t, ContractIndices.ContractIndices);
         t = ContractIndices.contract(t);
         t = LeviCivitaSimplify.transform(t);
+        t = parseExpression("d_a^a=4").transform(t);
         return t;
     }
 
