@@ -63,6 +63,8 @@ public class DiracTrace implements Transformation {
                 int gamma5Count = gg[1];
 
                 if (gammasCount == 0) {
+                    if (gamma5Count == 0)
+                        continue;
                     if (gamma5Count % 2 == 1)
                         iterator.set(Complex.ZERO);
                     else
@@ -113,14 +115,15 @@ public class DiracTrace implements Transformation {
      */
 
     private Tensor traceWithout5(Tensor tensor, int gammasCount) {
-        Tensor t = createGammaSubstitution(gammasCount).transform(tensor);
-        t = Expand.expand(t, ContractIndices.ContractIndices);
-        t = ContractIndices.contract(t);
-        t = parseExpression("d_a^a=4").transform(t);
-        return t;
+        tensor = createGammaSubstitution(gammasCount).transform(tensor);
+        tensor = Expand.expand(tensor, ContractIndices.ContractIndices);
+        tensor = ContractIndices.contract(tensor);
+        tensor = parseExpression("d^a_a = 4").transform(tensor);
+        return tensor;
     }
 
     //cached trace identities
+    //todo make context independent
     private static final HashMap<Key, Substitution> cache = new HashMap<>();
 
     private static class Key {
@@ -288,6 +291,7 @@ public class DiracTrace implements Transformation {
         return multiply(t, pivot);
     }
 
+    //todo make context independent
     private static HashMap<Key5, Substitution[]> cache5 = new HashMap<>();
 
     private static final class Key5 extends Key {

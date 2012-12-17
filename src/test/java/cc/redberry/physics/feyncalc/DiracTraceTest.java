@@ -166,6 +166,7 @@ public class DiracTraceTest {
         t = parse("Tr[G_a*G5]");
         TAssert.assertEquals(trace(t), "0");
         t = parse("Tr[G_a*G_b*G5]");
+        System.out.println(trace(t));
         TAssert.assertEquals(trace(t), "0");
         t = parse("Tr[G_a*G_b*G_c*G5]");
         TAssert.assertEquals(trace(t), "0");
@@ -194,7 +195,7 @@ public class DiracTraceTest {
         t = parse("Tr[G5*G5*G_a*G5*G5*G_b*G5*G_c*G5*G5*G_d*G5*G5*G5]");
         TAssert.assertEquals(trace(t), trace(parse("Tr[G_a*G_b*G_c*G_d]")));
         t = parse("a*Tr[G5*G5*G_a*G5*G5*G_b*G5*G_c*G5*G5*b*G_d*G5*G5*G5]");
-        TAssert.assertEquals(trace(t), trace(parse("a*b*Tr[G_a*G_b*G_c*G_d]")));
+        TAssert.assertEquals(Expand.expand(trace(t)), trace(parse("a*b*Tr[G_a*G_b*G_c*G_d]")));
         t = parse("Tr[G5*G5*G5*G5*G5*G5]");
         TAssert.assertEquals(trace(t), "4");
         t = parse("Tr[G5*G5*G5*G5*G5]");
@@ -249,7 +250,7 @@ public class DiracTraceTest {
         TAssert.assertEquals(trace(t), "16*I*e_aceg");
     }
 
-    //Expression shouten = parseExpression("g_fa*e_bcde = -(g_fb*e_cdea + g_fc*e_deab+g_fd*e_eabc+g_fe*e_abcd)");
+    //Expression schouten = parseExpression("g_fa*e_bcde = -(g_fb*e_cdea + g_fc*e_deab+g_fd*e_eabc+g_fe*e_abcd)");
     private static final SimpleTensor defaultGamma = parseSimple("G^a'_b'a");
 
     private static void assertContainsGamma(Tensor t) {
