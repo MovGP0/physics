@@ -46,7 +46,7 @@ public class DiracTrace implements Transformation {
     @Override
     public Tensor transform(Tensor tensor) {
         //todo check for contains gammas
-        tensor = ExpandAll.expandAll(tensor, ContractIndices.ContractIndices);
+        tensor = Expand.expand(tensor, ContractIndices.ContractIndices);
         tensor = ContractIndices.contract(tensor);
         TensorLastIterator iterator = new TensorLastIterator(tensor);
         Tensor current;
@@ -226,7 +226,11 @@ public class DiracTrace implements Transformation {
             //removing gamma from product
             if (nonGammaPart instanceof Product)
                 nonGammaPart = ((Product) nonGammaPart).remove(i);
-            else nonGammaPart = Complex.ONE;
+            else {
+//                assert nonGammaPart instanceof SimpleTensor;
+//                assert ((SimpleTensor) nonGammaPart).getName() == gammaName;
+                nonGammaPart = Complex.ONE;
+            }
 
             gammasBuilder.put(t);
         }
@@ -240,8 +244,7 @@ public class DiracTrace implements Transformation {
         //then all of them were eliminated
         if (gamma5Count % 2 == 0) {
             t = traceWithout5(gammasPart, gammasCount);
-            t = multiply(nonGammaPart, t);
-            return t;
+            return multiply(nonGammaPart, t);
         }
 
         //main routine
@@ -251,6 +254,7 @@ public class DiracTrace implements Transformation {
         if (t instanceof Sum) {
             SumBuilder sb = new SumBuilder();
             for (Tensor tt : t) {
+                assert tt instanceof Product;
                 int[] gg = calculateGammasInProduct(tt);
                 sb.put(trace5((Product) tt, gg[0], gg[1]));
             }
@@ -280,7 +284,7 @@ public class DiracTrace implements Transformation {
                 break;
             }
         }
-        Tensor temp = tensor;
+        Tensor temp;
         t = tensor;
         do {
             temp = t;

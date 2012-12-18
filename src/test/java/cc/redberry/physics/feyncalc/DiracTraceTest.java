@@ -2,20 +2,20 @@ package cc.redberry.physics.feyncalc;
 
 import cc.redberry.core.TAssert;
 import cc.redberry.core.context.CC;
+import cc.redberry.core.context.ContextManager;
 import cc.redberry.core.indices.IndexType;
 import cc.redberry.core.parser.preprocessor.GeneralIndicesInsertion;
-import cc.redberry.core.tensor.Expression;
-import cc.redberry.core.tensor.SimpleTensor;
-import cc.redberry.core.tensor.Tensor;
-import cc.redberry.core.tensor.Tensors;
+import cc.redberry.core.tensor.*;
 import cc.redberry.core.tensor.iterator.TensorLastIterator;
 import cc.redberry.core.transformations.ContractIndices;
 import cc.redberry.core.transformations.expand.Expand;
+import cc.redberry.core.utils.TensorUtils;
 import junit.framework.Assert;
 import org.junit.Test;
 
 import static cc.redberry.core.tensor.Tensors.*;
 import static cc.redberry.physics.feyncalc.DiracTrace.trace;
+import static cc.redberry.physics.feyncalc.LeviCivitaSimplify.simplifyLeviCivita;
 
 /**
  * @author Dmitry Bolotin
@@ -247,7 +247,98 @@ public class DiracTraceTest {
         expected = parse("16*I*g_{bf}*e_{cdeg}-16*I*g_{bg}*e_{cdef}+16*I*g_{cd}*e_{befg}-16*I*g_{ce}*e_{bdfg}+16*I*g_{de}*e_{bcfg}+16*I*g_{fg}*e_{bcde}");
         TAssert.assertEquals(trace(t), expected);
         t = parse("Tr[G_a*G_b*G_c*G_d*G_e*G^d*G_g*G^b*G5]");
-        TAssert.assertEquals(trace(t), "16*I*e_aceg");
+        TAssert.assertEquals(trace(t), "(16*I)*e_{aceg}");
+        t = parse("Tr[(g_ab*G_c-g_ac*G_b+g_bc*G_a-I*e_abcd*G5*G^d)*G_d*(d_e^d*G_g-g_eg*G^d+d_g^d*G_e-I*e_e^d_gf*G5*G^f)*G^b*G5]");
+        TAssert.assertEquals(tr1(t), "(16*I)*e_{aceg}");
+
+        t = parse("Tr[G_c*G_e*G_g*G_a*G5]");
+        TAssert.assertEquals(trace(t), "-4*I*e_cega");
+        t = parse("Tr[-g_eg*G_c*G_d*G^d*G_b*G5]");
+        TAssert.assertEquals(trace(t), "0");
+        t = parse("Tr[g_ab*G_c*G_d*d_g^d*G_e*G^b*G5]");
+        TAssert.assertEquals(trace(t), "-4*I*e_cgea");
+
+        t = parse("Tr[-I*g_ab*G_c*G_d*e_e^d_gf*G5*G^f*G^b*G5]");
+        TAssert.assertEquals(tr1(t), "-8*I*e_ecga");
+        t = parse("Tr[I*g_ac*G_b*G_d*e_e^d_gf*G5*G^f*G^b*G5]");
+        TAssert.assertEquals(tr1(t), "0");
+        t = parse("Tr[-I*g_bc*G_a*G_d*e_e^d_gf*G5*G^f*G^b*G5]");
+        TAssert.assertEquals(tr1(t), "-8*I*e_eagc");
+        t = parse("Tr[(-I)*(-I)*e_abcj*G5*G^j*G^d*e_edgf*G5*G^f*G^b*G5]");
+        TAssert.assertEquals(tr1(t), simplifyLeviCivita(parse("4*I*e_abcj*e_edgf*e^jdfb"), parseSimple("e_abcd")));
+        t = parse("Tr[-I*e_abcj*G5*G^j*G_d*d_e^d*G_g*G^b*G5]");
+        TAssert.assertEquals(tr1(t), "-8*I*e_agce");
+        t = parse("Tr[-I*e_abcj*G5*G^j*G_d*g_eg*G^d*G^b*G5]");
+        TAssert.assertEquals(tr1(t), "0");
+        t = parse("Tr[-I*e_abcj*G5*G^j*G_d*d^d_g*G_e*G^b*G5]");
+        TAssert.assertEquals(tr1(t), "-8*I*e_aecg");
+        t = parse("Tr[-g_ac*G_b*G_d*g_eg*G^d*G^b*G5]");
+        TAssert.assertEquals(tr1(t), "0");
+        t = parse("Tr[-g_ac*G_b*G_d*g^d_g*G_e*G^b*G5]");
+        TAssert.assertEquals(tr1(t), "0");
+        t = parse("Tr[g_bc*G_a*G_d*g^d_e*G_g*G^b*G5]");
+        TAssert.assertEquals(tr1(t), "-4*I*e_aegc");
+        t = parse("Tr[-g_bc*G_a*G_d*g_eg*G^d*G^b*G5]");
+        TAssert.assertEquals(tr1(t), "0");
+        t = parse("Tr[g_bc*G_a*G_d*g^d_g*G_e*G^b*G5]");
+        TAssert.assertEquals(tr1(t), "-4*I*e_agec");
+    }
+
+    @Test
+    public void test13a() {
+        CC.resetTensorNames(8996284584077168957L);
+        GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
+        CC.current().getParseManager().defaultParserPreprocessors.add(indicesInsertion);
+        indicesInsertion.addInsertionRule(parseSimple("G^a'_b'a"), IndexType.LatinLower1);
+        indicesInsertion.addInsertionRule(parseSimple("G5^a'_b'"), IndexType.LatinLower1);
+        setAntiSymmetric(parseSimple("e_abcd"));
+
+        Tensor t;
+
+        t = parse("Tr[G_a*G_b*G_c*G_d*G_e*G^d*G_g*G^b*G5]");
+        TAssert.assertEquals(trace(t), "(16*I)*e_{aceg}");
+        t = parse("Tr[(g_ab*G_c-g_ac*G_b+g_bc*G_a-I*e_abcd*G5*G^d)*G_d*(d_e^d*G_g-g_eg*G^d+d_g^d*G_e-I*e_e^d_gf*G5*G^f)*G^b*G5]");
+        TAssert.assertEquals(trace(t), "(16*I)*e_{aceg}");
+
+        t = parse("Tr[G_c*G_e*G_g*G_a*G5]");
+        TAssert.assertEquals(trace(t), "-4*I*e_cega");
+        t = parse("Tr[-g_eg*G_c*G_d*G^d*G_b*G5]");
+        TAssert.assertEquals(trace(t), "0");
+        t = parse("Tr[g_ab*G_c*G_d*d_g^d*G_e*G^b*G5]");
+        TAssert.assertEquals(trace(t), "-4*I*e_cgea");
+
+        t = parse("Tr[-I*g_ab*G_c*G_d*e_e^d_gf*G5*G^f*G^b*G5]");
+        TAssert.assertEquals(tr1(t), "-8*I*e_ecga");
+        t = parse("Tr[I*g_ac*G_b*G_d*e_e^d_gf*G5*G^f*G^b*G5]");
+        TAssert.assertEquals(tr1(t), "0");
+        t = parse("Tr[-I*g_bc*G_a*G_d*e_e^d_gf*G5*G^f*G^b*G5]");
+        TAssert.assertEquals(tr1(t), "-8*I*e_eagc");
+        t = parse("Tr[(-I)*(-I)*e_abcj*G5*G^j*G^d*e_edgf*G5*G^f*G^b*G5]");
+        TAssert.assertEquals(tr1(t), simplifyLeviCivita(parse("4*I*e_abcj*e_edgf*e^jdfb"), parseSimple("e_abcd")));
+        t = parse("Tr[-I*e_abcj*G5*G^j*G_d*d_e^d*G_g*G^b*G5]");
+        TAssert.assertEquals(tr1(t), "-8*I*e_agce");
+        t = parse("Tr[-I*e_abcj*G5*G^j*G_d*g_eg*G^d*G^b*G5]");
+        TAssert.assertEquals(tr1(t), "0");
+        t = parse("Tr[-I*e_abcj*G5*G^j*G_d*d^d_g*G_e*G^b*G5]");
+        TAssert.assertEquals(tr1(t), "-8*I*e_aecg");
+        t = parse("Tr[-g_ac*G_b*G_d*g_eg*G^d*G^b*G5]");
+        TAssert.assertEquals(tr1(t), "0");
+        t = parse("Tr[-g_ac*G_b*G_d*g^d_g*G_e*G^b*G5]");
+        TAssert.assertEquals(tr1(t), "0");
+        t = parse("Tr[g_bc*G_a*G_d*g^d_e*G_g*G^b*G5]");
+        TAssert.assertEquals(tr1(t), "-4*I*e_aegc");
+        t = parse("Tr[-g_bc*G_a*G_d*g_eg*G^d*G^b*G5]");
+        TAssert.assertEquals(tr1(t), "0");
+        t = parse("Tr[g_bc*G_a*G_d*g^d_g*G_e*G^b*G5]");
+        TAssert.assertEquals(tr1(t), "-4*I*e_agec");
+    }
+
+
+    public static Tensor tr1(Tensor t) {
+        t = Expand.expand(trace(t), ContractIndices.ContractIndices);
+        t = ContractIndices.contract(t);
+        t = simplifyLeviCivita(t, parseSimple("e_abcd"));
+        return t;
     }
 
     //Expression schouten = parseExpression("g_fa*e_bcde = -(g_fb*e_cdea + g_fc*e_deab+g_fd*e_eabc+g_fe*e_abcd)");

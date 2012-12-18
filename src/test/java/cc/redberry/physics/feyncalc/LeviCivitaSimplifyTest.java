@@ -1,6 +1,7 @@
 package cc.redberry.physics.feyncalc;
 
 import cc.redberry.core.TAssert;
+import cc.redberry.core.context.ContextManager;
 import cc.redberry.core.tensor.SimpleTensor;
 import cc.redberry.core.tensor.Tensor;
 import junit.framework.TestCase;
@@ -87,5 +88,9 @@ public class LeviCivitaSimplifyTest extends TestCase {
         TAssert.assertEquals(simplifyLeviCivita(t, eps), "-24");
         t = parse("e_abce*e^pqrs*e_rs^ce");
         TAssert.assertEquals(simplifyLeviCivita(t, eps), "-4*e_{ab}^{pq}");
+        t = parse("-4*I*e^{dh}_{b}^{f}*e_{g}^{b}_{ah}*e_{cdef}");
+        TAssert.assertEquals(simplifyLeviCivita(t, eps), "16*I*e_aceg");
+        t = parse("(4*I)*e^{h}_{d}^{fb}*e_{abch}*e_{e}^{d}_{gf}");
+        TAssert.assertEquals(simplifyLeviCivita(t, eps), "16*I*e_aceg");
     }
 }
