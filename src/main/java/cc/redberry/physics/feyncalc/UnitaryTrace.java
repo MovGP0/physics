@@ -52,21 +52,22 @@ public final class UnitaryTrace implements Transformation {
             } else if (c instanceof Product) {
                 TensorBuilder suns = new ProductBuilder();
                 boolean containsSun = false;
+                Tensor nonSun = c;
                 for (int i = c.size() - 1; i >= 0; --i) {
                     if (isSuN(c.get(i), SuN.getName())) {
                         containsSun = true;
                         suns.put(c.get(i));
-                        if (c instanceof Product)
-                            c = ((Product) c).remove(i);
+                        if (nonSun instanceof Product)
+                            nonSun = ((Product) nonSun).remove(i);
                         else {
                             assert i == 0;
-                            c = Complex.ONE;
+                            nonSun = Complex.ONE;
                         }
                     }
                 }
                 if (!containsSun)
                     continue;
-                Tensor temp = multiply(c, traceOfProduct(suns.build(), SuN.getName(), f.getName(), d.getName(), N, types[0], types[1]));
+                Tensor temp = multiply(nonSun, traceOfProduct(suns.build(), SuN.getName(), f.getName(), d.getName(), N, types[0], types[1]));
                 temp = Expand.expand(temp, ContractIndices.ContractIndices);
                 temp = ContractIndices.contract(temp);
                 iterator.set(temp);
