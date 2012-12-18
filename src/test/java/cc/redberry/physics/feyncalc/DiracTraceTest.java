@@ -298,7 +298,7 @@ public class DiracTraceTest {
         t = parse("Tr[G_a*G_b*G_c*G_d*G_e*G^d*G_g*G^b*G5]");
         TAssert.assertEquals(trace(t), "(16*I)*e_{aceg}");
         t = parse("Tr[(g_ab*G_c-g_ac*G_b+g_bc*G_a-I*e_abcd*G5*G^d)*G_d*(d_e^d*G_g-g_eg*G^d+d_g^d*G_e-I*e_e^d_gf*G5*G^f)*G^b*G5]");
-        TAssert.assertEquals(trace(t), "(16*I)*e_{aceg}");
+        TAssert.assertEquals(tr1(t), "(16*I)*e_{aceg}");
 
         t = parse("Tr[G_c*G_e*G_g*G_a*G5]");
         TAssert.assertEquals(trace(t), "-4*I*e_cega");
