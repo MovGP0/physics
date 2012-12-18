@@ -20,7 +20,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Redberry. If not, see <http://www.gnu.org/licenses/>.
  */
-
 package cc.redberry.physics.oneloopdiv;
 
 /**
@@ -37,7 +36,8 @@ public final class NonMinimalGravityBenchmark {
 //        Benchmarks.burnJVM();
         Benchmarks.Timer timer = new Benchmarks.Timer();
         timer.start();
-        Benchmarks.testNonMinimalGaugeGravity();
+//        Benchmarks.testNonMinimalGaugeGravity();
+        Benchmarks.testSpin3Ghosts();
         System.out.println("Non minimal gravity: " + timer.elapsedTimeInSeconds() + " s.");
     }
 }

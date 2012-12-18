@@ -559,7 +559,7 @@ public final class OneLoopCounterterms {
                 temp = tr.transform(temp);
 
             deltaExpressions[i] = (Expression) temp;
-//            System.out.println("delta" + i + " done");
+            System.out.println("delta" + i + " done");
         }
         Tensor[] combinations;
         Expression[] calculatedCombinations;
@@ -571,7 +571,7 @@ public final class OneLoopCounterterms {
                 Tensors.parse("HATK^{\\mu}*HATK^{\\nu}*HATK^{\\alpha}", deltaIndicesInsertion)
         };
         calculatedCombinations = new Expression[combinations.length];
-//        System.out.println("Delta3:");
+        System.out.println("Delta3:");
         for (i = 0; i < combinations.length; ++i) {
             temp = combinations[i];
 //            System.out.println("Delta3: subs" + i);
@@ -593,7 +593,7 @@ public final class OneLoopCounterterms {
 //        System.out.println("Delta3:subs");
         for (Transformation tr : common)
             temp = tr.transform(temp);
-//        System.out.println("Delta3:done");
+        System.out.println("Delta3:done");
         deltaExpressions[2] = (Expression) temp;
         //DELTA_4  //todo for different L values somecombinations can be neglected
         combinations = new Tensor[]{
@@ -606,7 +606,7 @@ public final class OneLoopCounterterms {
                 Tensors.parse("HATK^{\\alpha\\beta}*HATK^{\\mu}*HATK^{\\nu}", deltaIndicesInsertion),
                 Tensors.parse("HATK^{\\beta}*HATK^{\\alpha}*HATK^{\\mu}*HATK^{\\nu}", deltaIndicesInsertion)};
         calculatedCombinations = new Expression[combinations.length];
-//        System.out.println("Delta4:");
+        System.out.println("Delta4:");
         for (i = 0; i < combinations.length; ++i) {
             temp = combinations[i];
 //            System.out.println("Delta4: subs " + i);
@@ -625,7 +625,7 @@ public final class OneLoopCounterterms {
             temp = new NaiveSubstitution(t.get(0), t.get(1)).transform(temp);//t.transform(temp);
 //        System.out.println("Delta4: expand");
         temp = Expand.expand(temp, common);
-//        System.out.println("Delta4: tr");
+        System.out.println("Delta4: tr");
         for (Transformation tr : common)
             temp = tr.transform(temp);
         deltaExpressions[3] = (Expression) temp;

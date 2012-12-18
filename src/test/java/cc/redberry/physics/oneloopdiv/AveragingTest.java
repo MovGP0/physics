@@ -34,6 +34,7 @@ import cc.redberry.core.transformations.expand.Expand;
 import cc.redberry.core.transformations.RemoveDueToSymmetry;
 import cc.redberry.core.utils.TensorUtils;
 import junit.framework.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class AveragingTest {
@@ -137,6 +138,7 @@ public class AveragingTest {
         new Averaging(Tensors.parseSimple("n_\\mu")).transform(t);
     }
 
+    @Ignore
     @Test
     public void test11() {
         Tensor t = Tensors.parse("(n_{\\sigma}*n^{\\alpha}*R_{\\alpha}^{\\sigma})**2");
@@ -146,6 +148,7 @@ public class AveragingTest {
         Assert.assertTrue(TensorUtils.equals(t, Tensors.parse("(1/16)*R_{\\sigma}^{\\sigma}**2")));
     }
 
+    @Ignore
     @Test
     public void test12() {
         Tensor t = Tensors.parse("2+(n_{\\sigma}*n^{\\alpha}*R_{\\alpha}^{\\sigma})**2");
@@ -154,6 +157,7 @@ public class AveragingTest {
         Assert.assertTrue(TensorUtils.equals(t, Tensors.parse("2+(1/16)*R_{\\sigma}^{\\sigma}**2")));
     }
 
+    @Ignore
     @Test
     public void test13() {
         Tensor t = Tensors.parse("n_\\mu*n^\\mu+(n_{\\sigma}*n^{\\alpha}*R_{\\alpha}^{\\sigma})**2");
@@ -163,6 +167,7 @@ public class AveragingTest {
         Assert.assertTrue(TensorUtils.equals(t, Tensors.parse("1+(1/16)*R_{\\sigma}^{\\sigma}**2")));
     }
 
+    @Ignore
     @Test
     public void test14() {
         Tensor t = Tensors.parse("(128/5)*(R^{\\sigma}_{\\alpha\\beta\\gamma}*n^{\\gamma}*n_{\\sigma}*n^{\\alpha}*n^{\\beta})**2-(1/6)*R**2+(24/5)*(R_{\\gamma}^{\\sigma}*n_{\\sigma}*n^{\\gamma})**2-(1/3)*R_{\\mu\\nu}*R^{\\mu\\nu}");
@@ -173,6 +178,7 @@ public class AveragingTest {
         t = RemoveDueToSymmetry.INSTANCE.transform(t);
     }
 
+    @Ignore
     @Test
     public void test15() {
         Tensor t = Tensors.parse("4*(-(4/5)*(n_{\\rho}*n^{\\beta}*R_{\\beta}^{\\rho})**2+(32/5)*(R^{\\sigma}_{\\alpha\\beta\\gamma}*n^{\\alpha}*n^{\\beta}*n_{\\sigma}*n^{\\gamma})**2)");
