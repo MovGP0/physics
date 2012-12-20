@@ -13,7 +13,7 @@ import cc.redberry.core.tensor.SimpleTensor;
 final class TraceUtils {
     static final IndexType[] extractTypesFromMatrix(SimpleTensor matrix) {
         if (matrix.getIndices().size() != 3)
-            throw new IllegalArgumentException("Not a SU(N) matrix: " + matrix + ".");
+            throw new IllegalArgumentException("Not a matrix: " + matrix + ".");
         NameDescriptor descriptor = CC.getNameDescriptor(matrix.getName());
         IndicesTypeStructure typeStructure = descriptor.getIndicesTypeStructure();
         byte metricType = -1, matrixType = -1;
@@ -24,18 +24,18 @@ final class TraceUtils {
                 continue;
             else if (typeCount == 2) {
                 if (matrixType != -1)
-                    throw new IllegalArgumentException("Not a SU(N) matrix: " + matrix + ".");
+                    throw new IllegalArgumentException("Not a matrix: " + matrix + ".");
                 matrixType = type;
                 if (CC.isMetric(matrixType))
-                    throw new IllegalArgumentException("Not a SU(N) matrix: " + matrix + ".");
+                    throw new IllegalArgumentException("Not a matrix: " + matrix + ".");
             } else if (typeCount == 1) {
                 if (metricType != -1)
-                    throw new IllegalArgumentException("Not a SU(N) matrix: " + matrix + ".");
+                    throw new IllegalArgumentException("Not a matrix: " + matrix + ".");
                 metricType = type;
                 if (!CC.isMetric(metricType))
-                    throw new IllegalArgumentException("Not a SU(N) matrix: " + matrix + ".");
+                    throw new IllegalArgumentException("Not a matrix: " + matrix + ".");
             } else
-                throw new IllegalArgumentException("Not a SU(N) matrix: " + matrix + ".");
+                throw new IllegalArgumentException("Not a matrix: " + matrix + ".");
         }
         return new IndexType[]{IndexType.getType(metricType), IndexType.getType(matrixType)};
     }

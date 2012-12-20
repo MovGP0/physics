@@ -1,5 +1,6 @@
 package cc.redberry.physics.feyncalc;
 
+import cc.redberry.core.context.CC;
 import cc.redberry.core.indexgenerator.IndexGenerator;
 import cc.redberry.core.indices.*;
 import cc.redberry.core.number.Complex;
@@ -30,6 +31,29 @@ public class DiracTrace implements Transformation {
 
     public DiracTrace() {
         this(parseSimple("G^a'_{a b'}"), parseSimple("G5^a'_b'"), parseSimple("e_{abcd}"));
+    }
+
+    public DiracTrace(SimpleTensor gammaMatrix) {
+        //todo check correct input
+        this.gammaName = gammaMatrix.getName();
+        IndexType[] types = TraceUtils.extractTypesFromMatrix(gammaMatrix);
+        this.metricType = types[0];
+        this.matrixType = types[1];
+
+        //creating default gamma5 tensor
+        String gamma5String = CC.getNameManager().getNameDescriptor(gammaName).getName(null) + "5";
+        IndicesTypeStructure gamma5Types = new IndicesTypeStructure(matrixType.getType(), 2, true, false);
+        this.gamma5Name = CC.getNameManager().mapNameDescriptor(gamma5String, gamma5Types).getId();
+
+        //creating default Levi-Civita tensor
+        IndicesTypeStructure leviCivitaTypes = new IndicesTypeStructure(metricType.getType(), 4);
+        this.leviCivitaName = CC.getNameManager().mapNameDescriptor("e", leviCivitaTypes).getId();
+        SimpleTensor leviCivita = simpleTensor(leviCivitaName, IndicesFactory.createSimple(null,
+                setType(metricType, 0),
+                setType(metricType, 1),
+                setType(metricType, 2),
+                setType(metricType, 3)));
+        this.LeviCivitaSimplify = new LeviCivitaSimplify(leviCivita);
     }
 
     public DiracTrace(SimpleTensor gammaMatrix, SimpleTensor gamma5, SimpleTensor leviCivita) {

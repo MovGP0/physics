@@ -40,16 +40,21 @@ public class LeviCivitaSimplify implements Transformation {
     private final SimpleTensor LeviCivita;
 
     public LeviCivitaSimplify(SimpleTensor leviCivita) {
+        checkLeviCivita(leviCivita);
         LeviCivita = leviCivita;
     }
 
     @Override
     public Tensor transform(Tensor t) {
-        return simplifyLeviCivita(t, LeviCivita);
+        return simplifyLeviCivita1(t, LeviCivita);
     }
 
     public static Tensor simplifyLeviCivita(Tensor tensor, SimpleTensor LeviCivita) {
         checkLeviCivita(LeviCivita);
+        return simplifyLeviCivita1(tensor, LeviCivita);
+    }
+
+    private static Tensor simplifyLeviCivita1(Tensor tensor, SimpleTensor LeviCivita) {
         TensorLastIterator iterator = new TensorLastIterator(tensor);
         Tensor c;
         while ((c = iterator.next()) != null) {
