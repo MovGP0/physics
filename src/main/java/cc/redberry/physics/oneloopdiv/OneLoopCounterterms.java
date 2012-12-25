@@ -419,7 +419,7 @@ public final class OneLoopCounterterms {
      *
      * @return resulting counterterms
      */
-    public Expression counterterms() { return ACTION; }
+    public Expression getCounterterms() { return ACTION; }
 
     /**
      * Returns \Delta^{\mu ...} tensor, where dots mean 'matrix' indices.
