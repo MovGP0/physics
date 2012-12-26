@@ -24,22 +24,20 @@ package cc.redberry.physics.feyncalc;
 
 import cc.redberry.core.TAssert;
 import cc.redberry.core.context.CC;
-import cc.redberry.core.indices.IndexType;
 import cc.redberry.core.parser.preprocessor.GeneralIndicesInsertion;
 import cc.redberry.core.tensor.Tensor;
-import cc.redberry.core.tensor.Tensors;
 import org.junit.Test;
 
 import static cc.redberry.core.indices.IndexType.LatinLower1;
 import static cc.redberry.core.tensor.Tensors.parse;
 import static cc.redberry.core.tensor.Tensors.parseSimple;
-import static cc.redberry.physics.feyncalc.InverseOrderOfMatrices.inverseOrderOfMatrices;
+import static cc.redberry.physics.feyncalc.TrInverseOrderOfMatrices.inverseOrderOfMatrices;
 
 /**
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public class InverseOrderOfMatricesTest {
+public class TrInverseOrderOfMatricesTest {
     @Test
     public void test1() {
         GeneralIndicesInsertion gii = new GeneralIndicesInsertion();

@@ -368,49 +368,63 @@ public final class OneLoopCounterterms {
      *
      * @return Flat counterterms part
      */
-    public Expression Flat() { return Flat; }
+    public Expression Flat() {
+        return Flat;
+    }
 
     /**
      * Returns the WR counterterms part
      *
      * @return WR counterterms part
      */
-    public Expression WR() { return WR; }
+    public Expression WR() {
+        return WR;
+    }
 
     /**
      * Returns the SR counterterms part
      *
      * @return SR counterterms part
      */
-    public Expression SR() { return SR; }
+    public Expression SR() {
+        return SR;
+    }
 
     /**
      * Returns the SSR counterterms part
      *
      * @return SSR counterterms part
      */
-    public Expression SSR() { return SSR; }
+    public Expression SSR() {
+        return SSR;
+    }
 
     /**
      * Returns the FF counterterms part
      *
      * @return FF counterterms part
      */
-    public Expression FF() { return FF; }
+    public Expression FF() {
+        return FF;
+    }
 
     /**
      * Returns the FR counterterms part
      *
      * @return FR counterterms part
      */
-    public Expression FR() { return FR; }
+    public Expression FR() {
+        return FR;
+    }
 
     /**
      * Returns the RR counterterms part
      *
      * @return RR counterterms part
      */
-    public Expression RR() { return RR; }
+    public Expression RR() {
+        return RR;
+    }
 
     /**
      * Return resulting counterterms, i.e. the Flat + WR + SR + SSR + FF + FR + RR.
@@ -419,35 +433,45 @@ public final class OneLoopCounterterms {
      *
      * @return resulting counterterms
      */
-    public Expression getCounterterms() { return ACTION; }
+    public Expression getCounterterms() {
+        return ACTION;
+    }
 
     /**
      * Returns \Delta^{\mu ...} tensor, where dots mean 'matrix' indices.
      *
      * @return \Delta^{\mu ...} tensor, where dots mean 'matrix' indices.
      */
-    public Expression DELTA_1() { return DELTA_1; }
+    public Expression DELTA_1() {
+        return DELTA_1;
+    }
 
     /**
      * Returns \Delta^{\mu\nu ...} tensor, where dots mean 'matrix' indices.
      *
      * @return \Delta^{\mu\nu ...} tensor, where dots mean 'matrix' indices.
      */
-    public Expression DELTA_2() { return DELTA_2; }
+    public Expression DELTA_2() {
+        return DELTA_2;
+    }
 
     /**
      * Returns \Delta^{\mu\nu\alpha ...} tensor, where dots mean 'matrix' indices.
      *
      * @return \Delta^{\mu\nu\alpha ...} tensor, where dots mean 'matrix' indices.
      */
-    public Expression DELTA_3() { return DELTA_3; }
+    public Expression DELTA_3() {
+        return DELTA_3;
+    }
 
     /**
      * Returns \Delta^{\mu\nu\alpha\beta ...} tensor, where dots mean 'matrix' indices.
      *
      * @return \Delta^{\mu\nu\alpha\beta ...} tensor, where dots mean 'matrix' indices.
      */
-    public Expression DELTA_4() { return DELTA_4; }
+    public Expression DELTA_4() {
+        return DELTA_4;
+    }
 
     /**
      * This method performs the calculation of the one-loop counterterms.
@@ -533,8 +557,7 @@ public final class OneLoopCounterterms {
                 Tensors.parseExpression("F_{\\mu}^{\\mu}^{\\alpha}_{\\beta}=0"),
                 Tensors.parseExpression("R_{\\mu\\nu\\alpha\\beta}*R^{\\mu\\alpha\\nu\\beta}=(1/2)*R_{\\mu\\nu\\alpha\\beta}*R^{\\mu\\nu\\alpha\\beta}"),
                 Tensors.parseExpression("R_{\\mu\\nu\\alpha\\beta}*R^{\\mu\\nu\\alpha\\beta}=4*R_{\\mu\\nu}*R^{\\mu\\nu}-R*R"),
-                Tensors.parseExpression("R_{\\mu}^{\\mu}= R"),
-                Tensors.parseExpression("P_{\\mu}^{\\mu}= P")
+                Tensors.parseExpression("R_{\\mu}^{\\mu}= R")
         };
 
 
