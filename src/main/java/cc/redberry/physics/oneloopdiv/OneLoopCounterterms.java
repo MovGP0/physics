@@ -546,8 +546,8 @@ public final class OneLoopCounterterms {
         Expression[] deltaExpressions = new Expression[]{DELTA_1, DELTA_2, DELTA_3, DELTA_4};
 
         Expression FSubstitution = input.getF();
-        for (Transformation backround : input.getRiemannBackground())
-            FSubstitution = (Expression) backround.transform(FSubstitution);
+        for (Transformation background : input.getRiemannBackground())
+            FSubstitution = (Expression) background.transform(FSubstitution);
 
         //Calculations        
         Expression[] riemansSubstitutions = new Expression[]{
@@ -586,7 +586,7 @@ public final class OneLoopCounterterms {
         }
         Tensor[] combinations;
         Expression[] calculatedCombinations;
-        //DELTA_3 //todo for different L values somecombinations can be neglected
+        //DELTA_3 //todo for particular values of L some combinations can be neglected
         combinations = new Tensor[]{
                 Tensors.parse("HATK^{\\mu\\nu\\alpha}", deltaIndicesInsertion),
                 Tensors.parse("HATK^{\\mu\\nu}*HATK^{\\alpha}", deltaIndicesInsertion),

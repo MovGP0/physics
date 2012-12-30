@@ -28,7 +28,10 @@ import cc.redberry.core.indices.IndexType;
 import cc.redberry.core.tensor.Expression;
 import cc.redberry.core.tensor.Tensors;
 import cc.redberry.core.transformations.ContractIndices;
+import cc.redberry.core.transformations.Transformation;
 import cc.redberry.core.transformations.expand.Expand;
+import cc.redberry.core.transformations.factor.Factor;
+import cc.redberry.core.utils.ArraysUtils;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -454,16 +457,20 @@ public final class Benchmarks {
                 Tensors.parseExpression("c=(1+2*beta)/(5+6*beta)"),
                 Tensors.parseExpression("b=-(1+2*beta)/(1+beta)")
         };
-//        for (Expression cons : consts) {
-//            KINV = (Expression) cons.transform(KINV);
-//            K = (Expression) cons.transform(K);
-//        }
+        for (Expression cons : consts) {
+            KINV = (Expression) cons.transform(KINV);
+            K = (Expression) cons.transform(K);
+        }
 
         Expression S = (Expression) Tensors.parse("S^\\rho^{\\alpha\\beta}_{\\mu\\nu}=0");
         Expression W = (Expression) Tensors.parse("W^{\\alpha\\beta}_{\\mu\\nu}=0");
         Expression F = Tensors.parseExpression("F_\\mu\\nu\\alpha\\beta\\gamma\\delta=0");
 
-        OneLoopInput input = new OneLoopInput(2, KINV, K, S, W, null, null, F, OneLoopUtils.antiDeSitterBackground());
+        Transformation[] ds = OneLoopUtils.antiDeSitterBackground();
+        Transformation[] tr = new Transformation[ds.length + 1];
+        System.arraycopy(ds, 0, tr, 0, ds.length);
+        tr[tr.length - 1] = Factor.FACTOR;
+        OneLoopInput input = new OneLoopInput(2, KINV, K, S, W, null, null, F, tr);
 
         OneLoopCounterterms action = OneLoopCounterterms.calculateOneLoopCounterterms(input);
     }

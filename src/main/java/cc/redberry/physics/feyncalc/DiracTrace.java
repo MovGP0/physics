@@ -1,6 +1,9 @@
 package cc.redberry.physics.feyncalc;
 
 import cc.redberry.core.context.CC;
+import cc.redberry.core.graph.GraphType;
+import cc.redberry.core.graph.PrimitiveSubgraph;
+import cc.redberry.core.graph.PrimitiveSubgraphPartition;
 import cc.redberry.core.indexgenerator.IndexGenerator;
 import cc.redberry.core.indices.*;
 import cc.redberry.core.number.Complex;
@@ -11,6 +14,7 @@ import cc.redberry.core.transformations.Transformation;
 import cc.redberry.core.transformations.expand.Expand;
 import cc.redberry.core.transformations.expand.ExpandAll;
 import cc.redberry.core.transformations.substitutions.Substitution;
+import cc.redberry.core.utils.ArraysUtils;
 
 import java.rmi.server.UID;
 import java.util.HashMap;
@@ -74,6 +78,7 @@ public class DiracTrace implements Transformation {
         tensor = ContractIndices.contract(tensor);
         TensorLastIterator iterator = new TensorLastIterator(tensor);
         Tensor current;
+        out:
         while ((current = iterator.next()) != null) {
             if (isGammaOrGamma5(current)
                     && current.getIndices().getFree().size(matrixType) == 0) {
@@ -81,42 +86,65 @@ public class DiracTrace implements Transformation {
             } else if (current instanceof Product) {
                 if (current.getIndices().getFree().size(matrixType) != 0)
                     continue;
+                Product product = (Product) current;
+                ProductContent pc = product.getContent();
+                int sizeOfIndexless = product.sizeOfIndexlessPart();
+                PrimitiveSubgraph[] partition
+                        = PrimitiveSubgraphPartition.calculatePartition(pc, matrixType);
 
-                int[] gg = calculateGammasInProduct(current);
-                int gammasCount = gg[0];
-                int gamma5Count = gg[1];
-
-                if (gammasCount == 0) {
-                    if (gamma5Count == 0)
+                for (PrimitiveSubgraph subgraph : partition) {
+                    if (subgraph.getGraphType() != GraphType.Cycle)
                         continue;
-                    if (gamma5Count % 2 == 1)
+
+                    int[] positions = subgraph.getPartition();
+                    //actual positions in current
+                    for (int i = positions.length - 1; i >= 0; --i)
+                        positions[i] = positions[i] + sizeOfIndexless;
+
+                    int[] gg = calculateGammasInProduct(product.select(positions));
+                    if (gg[0] + gg[1] != positions.length)
+                        continue;
+
+                    assert positions.length != 0;
+
+                    if (positions.length == 1) {
                         iterator.set(Complex.ZERO);
+                        continue out;
+                    }
+
+                    int gammasCount = gg[0];
+                    int gamma5Count = gg[1];
+
+                    if (gammasCount == 0) {
+                        if (gamma5Count % 2 == 0) {
+                            iterator.set(multiply(product.remove(positions), Complex.FOUR));
+                            continue out;
+                        } else {
+                            iterator.set(Complex.ZERO);
+                            continue out;
+                        }
+                    }
+
+                    if (gamma5Count == 0 && gammasCount % 2 == 1) {
+                        iterator.set(Complex.ZERO);
+                        continue out;
+                    }
+
+                    if (gamma5Count % 2 == 1 && gammasCount % 2 == 1) {
+                        iterator.set(Complex.ZERO);
+                        continue out;
+                    }
+
+                    if (gamma5Count == 0)
+                        current = traceWithout5(current, gammasCount);
                     else
-                        iterator.set(Complex.FOUR);
-                    continue;
+                        current = trace5((Product) current, gammasCount, gamma5Count);
+
                 }
-
-                if (gamma5Count == 0 && gammasCount % 2 == 1) {
-                    iterator.set(Complex.ZERO);
-                    continue;
-                }
-
-                if (gamma5Count % 2 == 1 && gammasCount % 2 == 1) {
-                    iterator.set(Complex.ZERO);
-                    continue;
-                }
-
-                if (gamma5Count == 0)
-                    current = traceWithout5(current, gammasCount);
-                else
-                    current = trace5((Product) current, gammasCount, gamma5Count);
-
-
                 //todo d_i^i = 4
                 iterator.set(current);
             }
         }
-
         return iterator.result();
     }
 
@@ -124,12 +152,13 @@ public class DiracTrace implements Transformation {
     int[] calculateGammasInProduct(Tensor product) {
         int[] r = new int[2];
         for (Tensor t : product) {
-            if (t instanceof SimpleTensor) {
-                if (((SimpleTensor) t).getName() == gammaName)
-                    ++r[0];
-                if (((SimpleTensor) t).getName() == gamma5Name)
-                    ++r[1];
-            }
+            if (!(t instanceof SimpleTensor))
+                continue;
+            SimpleTensor st = (SimpleTensor) t;
+            if (st.getName() == gammaName)
+                ++r[0];
+            if (st.getName() == gamma5Name)
+                ++r[1];
         }
         return r;
     }
@@ -147,7 +176,7 @@ public class DiracTrace implements Transformation {
     }
 
     //cached trace identities
-    //todo make context independent
+//todo make context independent
     private static final HashMap<Key, Substitution> cache = new HashMap<>();
 
     private static class Key {
@@ -349,6 +378,7 @@ public class DiracTrace implements Transformation {
             result = 31 * result + gamma5Name;
             return result;
         }
+
     }
 
     //first is swapping, second is trace of 4x1 and Chiholm-Kahane identitie

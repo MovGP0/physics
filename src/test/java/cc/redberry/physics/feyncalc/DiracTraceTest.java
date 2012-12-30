@@ -25,7 +25,7 @@ public class DiracTraceTest {
     @Test
     public void test1() {
         for (int i = 0; i < 100; ++i) {
-            CC.resetTensorNames();
+            ContextManager.initializeNew();
             GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
             CC.current().getParseManager().defaultParserPreprocessors.add(indicesInsertion);
             indicesInsertion.addInsertionRule(parseSimple("G^a'_b'a"), IndexType.LatinLower1);
@@ -40,7 +40,7 @@ public class DiracTraceTest {
     @Test
     public void test2() {
         for (int i = 0; i < 100; ++i) {
-            CC.resetTensorNames();
+            ContextManager.initializeNew();
             GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
             CC.current().getParseManager().defaultParserPreprocessors.add(indicesInsertion);
             indicesInsertion.addInsertionRule(parseSimple("G^a'_b'a"), IndexType.LatinLower1);
@@ -143,6 +143,16 @@ public class DiracTraceTest {
         TAssert.assertEquals(parseExpression("k2_a*k2^a = 0").transform(tr(t)), "0");
     }
 
+    @Test
+    public void test9a() {
+        GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
+        CC.current().getParseManager().defaultParserPreprocessors.add(indicesInsertion);
+        indicesInsertion.addInsertionRule(parseSimple("G^a'_b'a"), IndexType.LatinLower1);
+        Tensor t;
+        t = parse("4*Tr[p2_a*G^a*k2_b*G^b*p1_c*G^c*k1_d*G^d]");
+        TAssert.assertEquals(tr(t), "16*k2_{f}*k1^{a}*p1^{f}*p2_{a}+16*k2^{a}*k1^{e}*p1_{e}*p2_{a}-16*k2^{c}*k1_{c}*p1^{a}*p2_{a}");
+    }
+
     private static Tensor tr(String t) {
         return tr(parse(t));
     }
@@ -166,7 +176,6 @@ public class DiracTraceTest {
         t = parse("Tr[G_a*G5]");
         TAssert.assertEquals(trace(t), "0");
         t = parse("Tr[G_a*G_b*G5]");
-        System.out.println(trace(t));
         TAssert.assertEquals(trace(t), "0");
         t = parse("Tr[G_a*G_b*G_c*G5]");
         TAssert.assertEquals(trace(t), "0");
@@ -200,6 +209,18 @@ public class DiracTraceTest {
         TAssert.assertEquals(trace(t), "4");
         t = parse("Tr[G5*G5*G5*G5*G5]");
         TAssert.assertEquals(trace(t), "0");
+    }
+
+    @Test
+    public void test11a() {
+        GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
+        CC.current().getParseManager().defaultParserPreprocessors.add(indicesInsertion);
+        indicesInsertion.addInsertionRule(parseSimple("G^a'_b'a"), IndexType.LatinLower1);
+        indicesInsertion.addInsertionRule(parseSimple("G5^a'_b'"), IndexType.LatinLower1);
+        setAntiSymmetric(parseSimple("e_abcd"));
+        Tensor t;
+        t = parse("Tr[G5*G5*G5*G5*G5*G5]");
+        TAssert.assertEquals(trace(t), "4");
     }
 
 
@@ -351,6 +372,21 @@ public class DiracTraceTest {
             if (c instanceof SimpleTensor && ((SimpleTensor) c).getName() == defaultGamma.getName())
                 throw new AssertionError();
         }
+    }
+
+
+    @Test
+    public void test14() {
+        GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
+        CC.current().getParseManager().defaultParserPreprocessors.add(indicesInsertion);
+        indicesInsertion.addInsertionRule(parseSimple("G^a'_b'a"), IndexType.LatinLower1);
+
+        Tensor t;
+        t = parse("Tr[(G_a*p^a + m)*G_b + (G_a*k^a + m)*G_b]");
+        TAssert.assertEquals(tr(t), "4*p_{b}+4*k_{b}");
+
+        t = parse("Tr[G_a*G_b]*Tr[G_c*G_d] + Tr[G_a*G_b]*g_cd + f_abcd");
+        TAssert.assertEquals(tr(t), "20*g_ab*g_cd + f_abcd");
     }
 
 }

@@ -35,13 +35,13 @@
  *
  * <h3>Literature</h3>
  *
- * [1] Petr I. Pronin, Konstantin V. Stepanyantz, <i>One loop counterterms for
- * the dimensional regularization of arbitrary Lagrangians</i>, Phys. Lett. B414
+ * [1] Petr I. Pronin, Konstantin V. Stepanyantz, <i>One-loop counterterms
+ * for higher derivative regularized Lagrangians</i>, Phys. Lett. B414
  * (1997) 117-122, <a
  * href="http://arxiv.org/abs/hep-th/9707008">hep-th/9707008</a><br/>
  *
- * [2] P.I. Pronin, K. Stepanyantz, <i>One loop counterterms for higher
- * differentiate regularized Lagrangians</i>, Nucl. Phys. B485 (1997) 517-544, <a
+ * [2] P.I. Pronin, K. Stepanyantz, <i>One-loop counterterms for the
+ * dimensional regularization of arbitrary Lagrangians</i>, Nucl. Phys. B485 (1997) 517-544, <a
  * href="http://arxiv.org/abs/hep-th/9605206">hep-th/9605206</a><br/>
  *
  *
