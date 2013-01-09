@@ -1,7 +1,7 @@
 /*
  * Redberry: symbolic tensor computations.
  *
- * Copyright (c) 2010-2012:
+ * Copyright (c) 2010-2013:
  *   Stanislav Poslavsky   <stvlpos@mail.ru>
  *   Bolotin Dmitriy       <bolotin.dmitriy@gmail.com>
  *
@@ -27,13 +27,13 @@ import cc.redberry.core.context.CC;
 import cc.redberry.core.indexmapping.IndexMappings;
 import cc.redberry.core.number.Complex;
 import cc.redberry.core.tensor.*;
-import cc.redberry.core.tensor.iterator.TensorLastIterator;
+import cc.redberry.core.tensor.iterator.FromChildToParentIterator;
 import cc.redberry.core.tensorgenerator.GeneratedTensor;
 import cc.redberry.core.tensorgenerator.SymbolsGenerator;
 import cc.redberry.core.tensorgenerator.TensorGenerator;
-import cc.redberry.core.transformations.CollectNonScalars;
-import cc.redberry.core.transformations.ContractIndices;
-import cc.redberry.core.transformations.expand.Expand;
+import cc.redberry.core.transformations.CollectNonScalarsTransformation;
+import cc.redberry.core.transformations.EliminateMetricsTransformation;
+import cc.redberry.core.transformations.expand.ExpandTransformation;
 import cc.redberry.core.transformations.Transformation;
 import cc.redberry.core.utils.ArraysUtils;
 import cc.redberry.core.utils.THashMap;
@@ -148,13 +148,13 @@ public final class InverseTensor {
         temp = generalInverse.transform(temp);
 
         //collecting all transformations in single array
-        transformations = ArraysUtils.addAll(new Transformation[]{ContractIndices.ContractIndices}, transformations);
+        transformations = ArraysUtils.addAll(new Transformation[]{EliminateMetricsTransformation.ELIMINATE_METRICS}, transformations);
 
         //preparing equation
-        temp = Expand.expand(temp, transformations);
+        temp = ExpandTransformation.expand(temp, transformations);
         for (Transformation transformation : transformations)
             temp = transformation.transform(temp);
-        temp = CollectNonScalars.collectNonScalars(temp);
+        temp = CollectNonScalarsTransformation.collectNonScalars(temp);
         equation = (Expression) temp;
 
 
@@ -355,7 +355,7 @@ public final class InverseTensor {
         for (i = 0; i < equations.length; ++i) {
             Expression eq = equations[i];
             //iterating over the whole equation
-            TensorLastIterator iterator = new TensorLastIterator(eq);
+            FromChildToParentIterator iterator = new FromChildToParentIterator(eq);
             Tensor t;
             while ((t = iterator.next()) != null) {
                 if (!(t instanceof Product) || t.getIndices().size() == 0)

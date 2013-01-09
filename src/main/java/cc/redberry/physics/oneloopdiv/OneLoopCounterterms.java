@@ -1,7 +1,7 @@
 /*
  * Redberry: symbolic tensor computations.
  *
- * Copyright (c) 2010-2012:
+ * Copyright (c) 2010-2013:
  *   Stanislav Poslavsky   <stvlpos@mail.ru>
  *   Bolotin Dmitriy       <bolotin.dmitriy@gmail.com>
  *
@@ -25,16 +25,16 @@ package cc.redberry.physics.oneloopdiv;
 
 import cc.redberry.core.indices.IndexType;
 import cc.redberry.core.indices.IndicesFactory;
-import cc.redberry.core.indices.IndicesTypeStructure;
+import cc.redberry.core.indices.StructureOfIndices;
 import cc.redberry.core.indices.IndicesUtils;
-import cc.redberry.core.parser.ParseNodeSimpleTensor;
+import cc.redberry.core.parser.ParseTokenSimpleTensor;
 import cc.redberry.core.parser.preprocessor.IndicesInsertion;
 import cc.redberry.core.tensor.Expression;
 import cc.redberry.core.tensor.Tensor;
 import cc.redberry.core.tensor.Tensors;
 import cc.redberry.core.tensor.iterator.TraverseState;
-import cc.redberry.core.transformations.ContractIndices;
-import cc.redberry.core.transformations.expand.Expand;
+import cc.redberry.core.transformations.EliminateMetricsTransformation;
+import cc.redberry.core.transformations.expand.ExpandTransformation;
 import cc.redberry.core.transformations.Transformation;
 import cc.redberry.core.transformations.Transformer;
 import cc.redberry.core.utils.ArraysUtils;
@@ -490,17 +490,17 @@ public final class OneLoopCounterterms {
                 "Flat", "FF", "WR", "SR", "SSR", "FR", "RR", "Kn"};
 
         //F_{\\mu\\nu} type structure
-        final IndicesTypeStructure F_TYPE_STRUCTURE = new IndicesTypeStructure(IndexType.GreekLower.getType(), 2);
+        final StructureOfIndices F_TYPE_STRUCTURE = new StructureOfIndices(IndexType.GreekLower.getType(), 2);
         //matrices indicator for parse preprocessor
-        final Indicator<ParseNodeSimpleTensor> matricesIndicator = new Indicator<ParseNodeSimpleTensor>() {
+        final Indicator<ParseTokenSimpleTensor> matricesIndicator = new Indicator<ParseTokenSimpleTensor>() {
 
             @Override
-            public boolean is(ParseNodeSimpleTensor object) {
+            public boolean is(ParseTokenSimpleTensor object) {
                 String name = object.name;
                 for (String matrix : matrices)
                     if (name.equals(matrix))
                         return true;
-                if (name.equals("F") && object.indices.getIndicesTypeStructure().equals(F_TYPE_STRUCTURE))
+                if (name.equals("F") && object.indices.getStructureOfIndices().equals(F_TYPE_STRUCTURE))
                     return true;
                 return false;
             }
@@ -563,7 +563,7 @@ public final class OneLoopCounterterms {
 
         Expression kronecker = (Expression) Tensors.parse("d_{\\mu}^{\\mu}=4");
         Transformation n2 = new SqrSubs(Tensors.parseSimple("n_\\mu")), n2Transformer = new Transformer(TraverseState.Leaving, new Transformation[]{n2});
-        Transformation[] common = new Transformation[]{ContractIndices.ContractIndices, n2Transformer, kronecker};
+        Transformation[] common = new Transformation[]{EliminateMetricsTransformation.ELIMINATE_METRICS, n2Transformer, kronecker};
         Transformation[] all = ArraysUtils.addAll(common, riemansSubstitutions);
         Tensor temp;
 
@@ -577,7 +577,7 @@ public final class OneLoopCounterterms {
 
             for (Expression hatK : input.getHatQuantities(0))
                 temp = hatK.transform(temp);
-            temp = Expand.expand(temp, common);
+            temp = ExpandTransformation.expand(temp, common);
             for (Transformation tr : common)
                 temp = tr.transform(temp);
 
@@ -601,7 +601,7 @@ public final class OneLoopCounterterms {
             for (Expression hatK : input.getHatQuantities(0))
                 temp = hatK.transform(temp);
 //            System.out.println("Delta3: expand" + i);
-            temp = Expand.expand(temp, common);
+            temp = ExpandTransformation.expand(temp, common);
             for (Transformation tr : common)
                 temp = tr.transform(temp);
             calculatedCombinations[i] = Tensors.expression(combinations[i], temp);
@@ -612,7 +612,7 @@ public final class OneLoopCounterterms {
         for (Expression t : calculatedCombinations)
             temp = new NaiveSubstitution(t.get(0), t.get(1)).transform(temp);//t.transform(temp);
 //        System.out.println("Delta3:expand");
-        temp = Expand.expand(temp, common);
+        temp = ExpandTransformation.expand(temp, common);
 //        System.out.println("Delta3:subs");
         for (Transformation tr : common)
             temp = tr.transform(temp);
@@ -636,7 +636,7 @@ public final class OneLoopCounterterms {
             for (Expression hatK : input.getHatQuantities(0))
                 temp = hatK.transform(temp);
 //            System.out.println("Delta4: expand " + i);
-            temp = Expand.expand(temp, common);
+            temp = ExpandTransformation.expand(temp, common);
 //            System.out.println("Delta4: tr" + i);
             for (Transformation tr : common)
                 temp = tr.transform(temp);
@@ -647,7 +647,7 @@ public final class OneLoopCounterterms {
         for (Expression t : calculatedCombinations)
             temp = new NaiveSubstitution(t.get(0), t.get(1)).transform(temp);//t.transform(temp);
 //        System.out.println("Delta4: expand");
-        temp = Expand.expand(temp, common);
+        temp = ExpandTransformation.expand(temp, common);
         System.out.println("Delta4: tr");
         for (Transformation tr : common)
             temp = tr.transform(temp);
@@ -665,7 +665,7 @@ public final class OneLoopCounterterms {
             for (Transformation riemannBackround : input.getRiemannBackground())
                 temp = riemannBackround.transform(temp);
 
-            temp = Expand.expand(temp, all);//TODO may be redundant
+            temp = ExpandTransformation.expand(temp, all);//TODO may be redundant
             for (Transformation tr : all)
                 temp = tr.transform(temp);
 
@@ -688,23 +688,23 @@ public final class OneLoopCounterterms {
                 temp = delta.transform(temp);
 
 //            System.out.println("delta " + temp.get(0));
-            temp = Expand.expand(temp, all);
+            temp = ExpandTransformation.expand(temp, all);
             for (Transformation tr : all)
                 temp = tr.transform(temp);
 
 //            System.out.println("expand " + temp.get(0));
 
             //todo remove this line after fixing Redberry #42
-            temp = Expand.expand(temp);
+            temp = ExpandTransformation.expand(temp);
 
             temp = new Averaging(Tensors.parseSimple("n_\\mu")).transform(temp);
 
-            temp = Expand.expand(temp, all);
+            temp = ExpandTransformation.expand(temp, all);
             for (Transformation tr : all)
                 temp = tr.transform(temp);
 //            System.out.println("expand " + temp.get(0));
 
-            temp = Expand.expand(temp, all);
+            temp = ExpandTransformation.expand(temp, all);
 
 //            System.out.println("expand " + temp.get(0));
 

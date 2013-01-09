@@ -1,7 +1,7 @@
 /*
  * Redberry: symbolic tensor computations.
  *
- * Copyright (c) 2010-2012:
+ * Copyright (c) 2010-2013:
  *   Stanislav Poslavsky   <stvlpos@mail.ru>
  *   Bolotin Dmitriy       <bolotin.dmitriy@gmail.com>
  *
@@ -28,7 +28,7 @@ import cc.redberry.core.parser.preprocessor.GeneralIndicesInsertion;
 import cc.redberry.core.tensor.Tensor;
 import org.junit.Test;
 
-import static cc.redberry.core.indices.IndexType.LatinLower1;
+import static cc.redberry.core.indices.IndexType.Matrix1;
 import static cc.redberry.core.tensor.Tensors.parse;
 import static cc.redberry.core.tensor.Tensors.parseSimple;
 import static cc.redberry.physics.feyncalc.TrInverseOrderOfMatrices.inverseOrderOfMatrices;
@@ -41,28 +41,28 @@ public class TrInverseOrderOfMatricesTest {
     @Test
     public void test1() {
         GeneralIndicesInsertion gii = new GeneralIndicesInsertion();
-        gii.addInsertionRule(parseSimple("A^a'_b'"), LatinLower1);
-        gii.addInsertionRule(parseSimple("B^a'_b'"), LatinLower1);
-        gii.addInsertionRule(parseSimple("C^a'_b'"), LatinLower1);
-        gii.addInsertionRule(parseSimple("cv_b'"), LatinLower1);
-        gii.addInsertionRule(parseSimple("v^b'"), LatinLower1);
+        gii.addInsertionRule(parseSimple("A^a'_b'"), Matrix1);
+        gii.addInsertionRule(parseSimple("B^a'_b'"), Matrix1);
+        gii.addInsertionRule(parseSimple("C^a'_b'"), Matrix1);
+        gii.addInsertionRule(parseSimple("cv_b'"), Matrix1);
+        gii.addInsertionRule(parseSimple("v^b'"), Matrix1);
         CC.current().getParseManager().defaultParserPreprocessors.add(gii);
 
         Tensor t, exp;
         t = parse("A*B*C");
         exp = parse("C*B*A");
-        TAssert.assertEquals(inverseOrderOfMatrices(t, LatinLower1), exp);
+        TAssert.assertEquals(inverseOrderOfMatrices(t, Matrix1), exp);
 
         t = parse("cv*A*B*C");
         exp = parse("cv*C*B*A");
-        TAssert.assertEquals(inverseOrderOfMatrices(t, LatinLower1), exp);
+        TAssert.assertEquals(inverseOrderOfMatrices(t, Matrix1), exp);
 
         t = parse("A*B*C*v");
         exp = parse("C*B*A*v");
-        TAssert.assertEquals(inverseOrderOfMatrices(t, LatinLower1), exp);
+        TAssert.assertEquals(inverseOrderOfMatrices(t, Matrix1), exp);
 
         t = parse("cv*A*B*C*v");
         exp = parse("cv*C*B*A*v");
-        TAssert.assertEquals(inverseOrderOfMatrices(t, LatinLower1), exp);
+        TAssert.assertEquals(inverseOrderOfMatrices(t, Matrix1), exp);
     }
 }

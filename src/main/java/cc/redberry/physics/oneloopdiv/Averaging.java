@@ -1,7 +1,7 @@
 /*
  * Redberry: symbolic tensor computations.
  *
- * Copyright (c) 2010-2012:
+ * Copyright (c) 2010-2013:
  *   Stanislav Poslavsky   <stvlpos@mail.ru>
  *   Bolotin Dmitriy       <bolotin.dmitriy@gmail.com>
  *
@@ -25,9 +25,9 @@ package cc.redberry.physics.oneloopdiv;
 import cc.redberry.core.indices.IndicesBuilder;
 import cc.redberry.core.number.Complex;
 import cc.redberry.core.tensor.*;
-import cc.redberry.core.tensor.iterator.TensorLastIterator;
+import cc.redberry.core.tensor.iterator.FromChildToParentIterator;
 import cc.redberry.core.tensor.ApplyIndexMapping;
-import cc.redberry.core.transformations.expand.Expand;
+import cc.redberry.core.transformations.expand.ExpandTransformation;
 import cc.redberry.core.transformations.Transformation;
 import cc.redberry.core.utils.TensorUtils;
 import org.apache.commons.math3.util.ArithmeticUtils;
@@ -95,7 +95,7 @@ public final class Averaging implements Transformation {
                     ++count;
                 } else {
                     if (TensorUtils.isScalar(current)) {
-                        TensorLastIterator iterator = new TensorLastIterator(current);
+                        FromChildToParentIterator iterator = new FromChildToParentIterator(current);
                         Tensor temp;
                         boolean flag = false;
                         while ((temp = iterator.next()) != null) {
@@ -139,7 +139,7 @@ public final class Averaging implements Transformation {
             Tensor result = average(ib.getIndices().getAllIndices().copy());
             long factor = ArithmeticUtils.pow((long) 2, count) * ArithmeticUtils.factorial(count + 1);//may be BigInteger?
             Complex number = new Complex((long) factor).reciprocal();
-            result = Expand.expand(result);
+            result = ExpandTransformation.expand(result);
             newProductElements.add(number);
             newProductElements.add(result);
             return Tensors.multiply(newProductElements.toArray(new Tensor[newProductElements.size()]));

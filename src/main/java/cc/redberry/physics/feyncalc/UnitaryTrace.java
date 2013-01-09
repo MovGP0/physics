@@ -1,3 +1,25 @@
+/*
+ * Redberry: symbolic tensor computations.
+ *
+ * Copyright (c) 2010-2013:
+ *   Stanislav Poslavsky   <stvlpos@mail.ru>
+ *   Bolotin Dmitriy       <bolotin.dmitriy@gmail.com>
+ *
+ * This file is part of Redberry.
+ *
+ * Redberry is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Redberry is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Redberry. If not, see <http://www.gnu.org/licenses/>.
+ */
 package cc.redberry.physics.feyncalc;
 
 import cc.redberry.core.indexgenerator.IndexGenerator;
@@ -6,10 +28,10 @@ import cc.redberry.core.indices.IndicesFactory;
 import cc.redberry.core.indices.SimpleIndices;
 import cc.redberry.core.number.Complex;
 import cc.redberry.core.tensor.*;
-import cc.redberry.core.tensor.iterator.TensorLastIterator;
-import cc.redberry.core.transformations.ContractIndices;
+import cc.redberry.core.tensor.iterator.FromChildToParentIterator;
+import cc.redberry.core.transformations.EliminateMetricsTransformation;
 import cc.redberry.core.transformations.Transformation;
-import cc.redberry.core.transformations.expand.Expand;
+import cc.redberry.core.transformations.expand.ExpandTransformation;
 import cc.redberry.core.utils.ArraysUtils;
 import cc.redberry.core.utils.TensorUtils;
 
@@ -43,7 +65,7 @@ public final class UnitaryTrace implements Transformation {
 
     public static final Tensor unitaryTrace(Tensor tensor, SimpleTensor SuN, SimpleTensor f, SimpleTensor d, Tensor N) {
         IndexType[] types = TraceUtils.extractTypesFromMatrix(SuN);
-        TensorLastIterator iterator = new TensorLastIterator(tensor);
+        FromChildToParentIterator iterator = new FromChildToParentIterator(tensor);
         Tensor c;
         while ((c = iterator.next()) != null) {
             if (c instanceof SimpleTensor) {
@@ -68,8 +90,8 @@ public final class UnitaryTrace implements Transformation {
                 if (!containsSun)
                     continue;
                 Tensor temp = multiply(nonSun, traceOfProduct(suns.build(), SuN.getName(), f.getName(), d.getName(), N, types[0], types[1]));
-                temp = Expand.expand(temp, ContractIndices.ContractIndices);
-                temp = ContractIndices.contract(temp);
+                temp = ExpandTransformation.expand(temp, EliminateMetricsTransformation.ELIMINATE_METRICS);
+                temp = EliminateMetricsTransformation.eliminate(temp);
                 iterator.set(temp);
             }
         }
@@ -80,13 +102,13 @@ public final class UnitaryTrace implements Transformation {
                                          int sunName, int fName, int dName, Tensor N,
                                          IndexType metricType, IndexType matrixType) {
         Expression[] subs = getSubstitutions(sunName, fName, dName, N, metricType, matrixType);
-        Transformation[] transformations = new Transformation[]{ContractIndices.ContractIndices};
+        Transformation[] transformations = new Transformation[]{EliminateMetricsTransformation.ELIMINATE_METRICS};
         transformations = ArraysUtils.addAll(transformations, Arrays.copyOfRange(subs, 1, subs.length));
 
         Tensor oldTensor = tensor, newTensor;
         while (true) {
             newTensor = subs[0].transform(oldTensor);
-            newTensor = Expand.expand(newTensor, transformations);
+            newTensor = ExpandTransformation.expand(newTensor, transformations);
             for (Transformation tr : transformations)
                 newTensor = tr.transform(newTensor);
             if (newTensor == oldTensor)
@@ -159,7 +181,6 @@ public final class UnitaryTrace implements Transformation {
         SimpleIndices indicesOfC = IndicesFactory.createSimple(null,
                 (0x80000000 | (thirdMetric = generator.generate(metricType))),
                 upper, lower);
-
 
         Tensor lhs = multiply(simpleTensor(sunName, indicesOfA),
                 simpleTensor(sunName, indicesOfB));

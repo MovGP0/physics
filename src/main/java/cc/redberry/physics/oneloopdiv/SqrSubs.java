@@ -1,7 +1,7 @@
 /*
  * Redberry: symbolic tensor computations.
  *
- * Copyright (c) 2010-2012:
+ * Copyright (c) 2010-2013:
  *   Stanislav Poslavsky   <stvlpos@mail.ru>
  *   Bolotin Dmitriy       <bolotin.dmitriy@gmail.com>
  *
@@ -51,7 +51,7 @@ final class SqrSubs implements Transformation {
         Product product = (Product) tensor;
 
         ProductContent content = product.getContent();
-        ContractionStructure cs = content.getContractionStructure();
+        StructureOfContractionsHashed cs = content.getStructureOfContractionsHashed();
         short si = content.getStretchIndexByHash(name);
         if (si == -1)
             return tensor;

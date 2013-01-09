@@ -1,7 +1,7 @@
 /*
  * Redberry: symbolic tensor computations.
  *
- * Copyright (c) 2010-2012:
+ * Copyright (c) 2010-2013:
  *   Stanislav Poslavsky   <stvlpos@mail.ru>
  *   Bolotin Dmitriy       <bolotin.dmitriy@gmail.com>
  *
@@ -30,7 +30,7 @@ import cc.redberry.core.indexmapping.IndexMapping;
 import cc.redberry.core.indices.IndexType;
 import cc.redberry.core.indices.Indices;
 import cc.redberry.core.tensor.*;
-import cc.redberry.core.tensor.iterator.TensorLastIterator;
+import cc.redberry.core.tensor.iterator.FromChildToParentIterator;
 import cc.redberry.core.transformations.Transformation;
 import cc.redberry.core.utils.ArraysUtils;
 
@@ -64,7 +64,7 @@ public final class TrInverseOrderOfMatrices implements Transformation {
     }
 
     private static Tensor inverseOrderOfMatrices1(Tensor t, IndexType type) {
-        TensorLastIterator iterator = new TensorLastIterator(t);
+        FromChildToParentIterator iterator = new FromChildToParentIterator(t);
         Tensor c;
         while ((c = iterator.next()) != null)
             if (c instanceof Product)

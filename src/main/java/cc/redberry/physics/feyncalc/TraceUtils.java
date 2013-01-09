@@ -1,9 +1,31 @@
+/*
+ * Redberry: symbolic tensor computations.
+ *
+ * Copyright (c) 2010-2013:
+ *   Stanislav Poslavsky   <stvlpos@mail.ru>
+ *   Bolotin Dmitriy       <bolotin.dmitriy@gmail.com>
+ *
+ * This file is part of Redberry.
+ *
+ * Redberry is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Redberry is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Redberry. If not, see <http://www.gnu.org/licenses/>.
+ */
 package cc.redberry.physics.feyncalc;
 
 import cc.redberry.core.context.CC;
 import cc.redberry.core.context.NameDescriptor;
 import cc.redberry.core.indices.IndexType;
-import cc.redberry.core.indices.IndicesTypeStructure;
+import cc.redberry.core.indices.StructureOfIndices;
 import cc.redberry.core.tensor.SimpleTensor;
 
 /**
@@ -15,7 +37,7 @@ final class TraceUtils {
         if (matrix.getIndices().size() != 3)
             throw new IllegalArgumentException("Not a matrix: " + matrix + ".");
         NameDescriptor descriptor = CC.getNameDescriptor(matrix.getName());
-        IndicesTypeStructure typeStructure = descriptor.getIndicesTypeStructure();
+        StructureOfIndices typeStructure = descriptor.getStructureOfIndices();
         byte metricType = -1, matrixType = -1;
         int typeCount;
         for (byte type = 0; type < IndexType.TYPES_COUNT; ++type) {

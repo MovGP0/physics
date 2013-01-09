@@ -1,3 +1,25 @@
+/*
+ * Redberry: symbolic tensor computations.
+ *
+ * Copyright (c) 2010-2013:
+ *   Stanislav Poslavsky   <stvlpos@mail.ru>
+ *   Bolotin Dmitriy       <bolotin.dmitriy@gmail.com>
+ *
+ * This file is part of Redberry.
+ *
+ * Redberry is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Redberry is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Redberry. If not, see <http://www.gnu.org/licenses/>.
+ */
 package cc.redberry.physics.feyncalc;
 
 import cc.redberry.core.combinatorics.Combinatorics;
@@ -13,10 +35,10 @@ import cc.redberry.core.indices.IndicesFactory;
 import cc.redberry.core.indices.SimpleIndices;
 import cc.redberry.core.number.Complex;
 import cc.redberry.core.tensor.*;
-import cc.redberry.core.tensor.iterator.TensorLastIterator;
-import cc.redberry.core.transformations.ContractIndices;
+import cc.redberry.core.tensor.iterator.FromChildToParentIterator;
+import cc.redberry.core.transformations.EliminateMetricsTransformation;
 import cc.redberry.core.transformations.Transformation;
-import cc.redberry.core.transformations.expand.Expand;
+import cc.redberry.core.transformations.expand.ExpandTransformation;
 import cc.redberry.core.utils.IntArray;
 import cc.redberry.core.utils.IntArrayList;
 import cc.redberry.core.utils.TensorUtils;
@@ -29,7 +51,7 @@ import java.util.Set;
 
 import static cc.redberry.core.indices.IndicesUtils.getType;
 import static cc.redberry.core.indices.IndicesUtils.inverseIndexState;
-import static cc.redberry.core.tensor.FullContractionsStructure.getToTensorIndex;
+import static cc.redberry.core.tensor.StructureOfContractions.getToTensorIndex;
 import static cc.redberry.core.tensor.Tensors.*;
 
 /**
@@ -55,7 +77,7 @@ public class LeviCivitaSimplify implements Transformation {
     }
 
     private static Tensor simplifyLeviCivita1(Tensor tensor, SimpleTensor LeviCivita) {
-        TensorLastIterator iterator = new TensorLastIterator(tensor);
+        FromChildToParentIterator iterator = new FromChildToParentIterator(tensor);
         Tensor c;
         while ((c = iterator.next()) != null) {
             if (c instanceof SimpleTensor
@@ -89,7 +111,7 @@ public class LeviCivitaSimplify implements Transformation {
         }
         if (epsPositions.isEmpty())
             return product;
-        FullContractionsStructure fs = content.getFullContractionsStructure();
+        StructureOfContractions fs = content.getStructureOfContractions();
 
         j = epsPositions.size();
         Set<Tensor> epsComponent = new HashSet<>(LeviCivita.getIndices().size());
@@ -149,7 +171,7 @@ public class LeviCivitaSimplify implements Transformation {
         for (Expression exp : subs)
             product = exp.transform(product);
         //todo expand only Levi-Civita sums
-        product = ContractIndices.contract(Expand.expand(product, ContractIndices.ContractIndices));
+        product = EliminateMetricsTransformation.eliminate(ExpandTransformation.expand(product, EliminateMetricsTransformation.ELIMINATE_METRICS));
         product = subs[1].transform(product);
         return product;
     }
@@ -206,7 +228,7 @@ public class LeviCivitaSimplify implements Transformation {
     }
 
     private static SimpleTensor setInversedIndices(SimpleTensor eps) {
-        return Tensors.simpleTensor(eps.getName(), eps.getIndices().getInverse());
+        return Tensors.simpleTensor(eps.getName(), eps.getIndices().getInverted());
     }
 
     //todo static can cause to an indeterminate behavior if CC.resetTensorNames() invoked
