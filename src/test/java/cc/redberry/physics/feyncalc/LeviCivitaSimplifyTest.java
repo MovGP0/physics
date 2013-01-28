@@ -114,5 +114,8 @@ public class LeviCivitaSimplifyTest extends TestCase {
         TAssert.assertEquals(simplifyLeviCivita(t, eps), "16*I*e_aceg");
         t = parse("(4*I)*e^{h}_{d}^{fb}*e_{abch}*e_{e}^{d}_{gf}");
         TAssert.assertEquals(simplifyLeviCivita(t, eps), "16*I*e_aceg");
+
+        t = parse("(4*I)*e^{h}_{d}^{fb}*e_{abch}*e_{e}^{d}_{gf}+g_mn*e^mn_ac*g_eg");
+        TAssert.assertEquals(simplifyLeviCivita(t, eps), "16*I*e_aceg");
     }
 }
