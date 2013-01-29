@@ -23,7 +23,6 @@
 package cc.redberry.physics.feyncalc;
 
 import cc.redberry.core.TAssert;
-import cc.redberry.core.context.ContextManager;
 import cc.redberry.core.tensor.SimpleTensor;
 import cc.redberry.core.tensor.Tensor;
 import junit.framework.TestCase;
@@ -31,7 +30,6 @@ import org.junit.Test;
 
 import static cc.redberry.core.number.Complex.ZERO;
 import static cc.redberry.core.tensor.Tensors.*;
-import static cc.redberry.physics.feyncalc.LeviCivitaSimplify.simplifyLeviCivita;
 
 /**
  * @author Dmitry Bolotin
@@ -117,5 +115,9 @@ public class LeviCivitaSimplifyTest extends TestCase {
 
         t = parse("(4*I)*e^{h}_{d}^{fb}*e_{abch}*e_{e}^{d}_{gf}+g_mn*e^mn_ac*g_eg");
         TAssert.assertEquals(simplifyLeviCivita(t, eps), "16*I*e_aceg");
+    }
+
+    private static Tensor simplifyLeviCivita(Tensor t, SimpleTensor eps) {
+        return new LeviCivitaSimplify(eps, true).transform(t);
     }
 }

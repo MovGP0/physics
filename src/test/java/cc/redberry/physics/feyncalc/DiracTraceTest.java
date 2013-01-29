@@ -27,7 +27,8 @@ import cc.redberry.core.context.CC;
 import cc.redberry.core.context.ContextManager;
 import cc.redberry.core.indices.IndexType;
 import cc.redberry.core.parser.preprocessor.GeneralIndicesInsertion;
-import cc.redberry.core.tensor.*;
+import cc.redberry.core.tensor.SimpleTensor;
+import cc.redberry.core.tensor.Tensor;
 import cc.redberry.core.tensor.iterator.FromChildToParentIterator;
 import cc.redberry.core.transformations.EliminateMetricsTransformation;
 import cc.redberry.core.transformations.expand.ExpandTransformation;
@@ -36,7 +37,6 @@ import org.junit.Test;
 
 import static cc.redberry.core.tensor.Tensors.*;
 import static cc.redberry.physics.feyncalc.DiracTrace.trace;
-import static cc.redberry.physics.feyncalc.LeviCivitaSimplify.simplifyLeviCivita;
 
 /**
  * @author Dmitry Bolotin
@@ -410,4 +410,7 @@ public class DiracTraceTest {
         TAssert.assertEquals(tr(t), "20*g_ab*g_cd + f_abcd");
     }
 
+    private static Tensor simplifyLeviCivita(Tensor t, SimpleTensor eps) {
+        return new LeviCivitaSimplify(eps, true).transform(t);
+    }
 }

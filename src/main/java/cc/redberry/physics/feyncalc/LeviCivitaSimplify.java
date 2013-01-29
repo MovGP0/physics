@@ -27,13 +27,19 @@ import cc.redberry.core.combinatorics.Permutation;
 import cc.redberry.core.combinatorics.Symmetry;
 import cc.redberry.core.combinatorics.symmetries.Symmetries;
 import cc.redberry.core.combinatorics.symmetries.SymmetriesFactory;
-import cc.redberry.core.indexgenerator.IndexGenerator;
+import cc.redberry.core.context.CC;
+import cc.redberry.core.context.OutputFormat;
 import cc.redberry.core.indexmapping.IndexMappingBuffer;
 import cc.redberry.core.indexmapping.IndexMappings;
 import cc.redberry.core.indexmapping.MappingsPort;
+import cc.redberry.core.indices.IndexType;
 import cc.redberry.core.indices.IndicesFactory;
+import cc.redberry.core.indices.IndicesUtils;
 import cc.redberry.core.indices.SimpleIndices;
 import cc.redberry.core.number.Complex;
+import cc.redberry.core.parser.ParseToken;
+import cc.redberry.core.parser.preprocessor.ChangeIndicesTypesAndTensorNames;
+import cc.redberry.core.parser.preprocessor.TypesAndNamesTransformer;
 import cc.redberry.core.tensor.*;
 import cc.redberry.core.tensor.iterator.FromChildToParentIterator;
 import cc.redberry.core.transformations.EliminateMetricsTransformation;
@@ -49,95 +55,138 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static cc.redberry.core.indices.IndicesUtils.getType;
-import static cc.redberry.core.indices.IndicesUtils.inverseIndexState;
+import static cc.redberry.core.indices.IndicesUtils.*;
 import static cc.redberry.core.tensor.StructureOfContractions.getToTensorIndex;
 import static cc.redberry.core.tensor.Tensors.*;
 
 /**
+ * Simplifies combinations of Levi-Civita tensors.
+ *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
 public class LeviCivitaSimplify implements Transformation {
-    private final SimpleTensor LeviCivita;
+    private static final String defaultLeviCivitaName = "eps";
 
+    private final int leviCivita;
+    private final boolean minkovskiSpace;
+    private final int numberOfIndices;
+    private final IndexType typeOfLeviCivitaIndices;
+    private final ChangeIndicesTypesAndTensorNames tokenTransformer;
+
+    /**
+     * Creates transformation, which simplifies combinations of Levi-Civita tensors in Euclidean space.
+     *
+     * @param leviCivita tensor, which will be considered as Levi-Civita tensor
+     */
     public LeviCivitaSimplify(SimpleTensor leviCivita) {
+        this(leviCivita, false);
+    }
+
+    /**
+     * Creates transformation, which simplifies combinations of Levi-Civita tensors in Euclidean or Minkovski space.
+     *
+     * @param leviCivita     tensor, which will be considered as Levi-Civita tensor
+     * @param minkovskiSpace if {@code true}, then Levi-Civita tensor will be considered in Minkovski
+     *                       space (so e.g. e_abcd*e^abcd = -24), otherwise in Euclidean space
+     *                       (so e.g. e_abcd*e^abcd = +24)
+     */
+    public LeviCivitaSimplify(SimpleTensor leviCivita, boolean minkovskiSpace) {
         checkLeviCivita(leviCivita);
-        LeviCivita = leviCivita;
+
+        this.leviCivita = leviCivita.getName();
+        this.minkovskiSpace = minkovskiSpace;
+        this.numberOfIndices = leviCivita.getIndices().size();
+        this.typeOfLeviCivitaIndices = IndicesUtils.getTypeEnum(leviCivita.getIndices().get(0));
+
+        final String leviCivitaName = CC.getNameManager().getNameDescriptor(leviCivita.getName()).getName(null);
+
+        this.tokenTransformer = new ChangeIndicesTypesAndTensorNames(
+                new TypesAndNamesTransformer() {
+                    @Override
+                    public IndexType newType(IndexType oldType) {
+                        return typeOfLeviCivitaIndices;
+                    }
+
+                    @Override
+                    public String newName(String oldName) {
+                        return oldName.equals(defaultLeviCivitaName) ? leviCivitaName : oldName;
+                    }
+                }
+        );
+
     }
 
     @Override
     public Tensor transform(Tensor t) {
-        return simplifyLeviCivita1(t, LeviCivita);
-    }
-
-    public static Tensor simplifyLeviCivita(Tensor tensor, SimpleTensor LeviCivita) {
-        checkLeviCivita(LeviCivita);
-        return simplifyLeviCivita1(tensor, LeviCivita);
-    }
-
-    private static Tensor simplifyLeviCivita1(Tensor tensor, SimpleTensor LeviCivita) {
-        FromChildToParentIterator iterator = new FromChildToParentIterator(tensor);
+        FromChildToParentIterator iterator = new FromChildToParentIterator(t);
         Tensor c;
         while ((c = iterator.next()) != null) {
             if (c instanceof SimpleTensor
-                    && ((SimpleTensor) c).getName() == LeviCivita.getName()
+                    && ((SimpleTensor) c).getName() == leviCivita
                     && c.getIndices().size() != c.getIndices().getFree().size()) {
                 iterator.set(Complex.ZERO);
             }
             if (c instanceof Product)
-                iterator.set(simplifyProduct(c, LeviCivita));
+                iterator.set(simplifyProduct(c));
         }
         return iterator.result();
     }
 
-    private static void checkLeviCivita(SimpleTensor LeviCivita) {
-        SimpleIndices indices = LeviCivita.getIndices();
-        if (indices.size() <= 1)
-            throw new IllegalArgumentException("Levi-Civita cannot be a scalar.");
-        byte type = getType(indices.get(0));
-        for (int i = 1; i < indices.size(); ++i)
-            if (type != getType(indices.get(i)))
-                throw new IllegalArgumentException("Levi-Civita have indices with different types.");
-    }
 
-    private static Tensor simplifyProduct(Tensor product, SimpleTensor LeviCivita) {
+    private Tensor simplifyProduct(Tensor product) {
+        /*
+         * Simplifying symmetries
+         */
+
         ProductContent content = ((Product) product).getContent();
+        //positions of Levi-Civita tensors in product
         IntArrayList epsPositions = new IntArrayList();
-        int i = 0, j = content.size();
-        for (i = 0; i < j; ++i) {
-            if (isLeviCivita(content.get(i), LeviCivita))
+        int i = 0, sizeOfComponent = content.size();
+        for (; i < sizeOfComponent; ++i)
+            if (isLeviCivita(content.get(i), leviCivita))
                 epsPositions.add(i);
-        }
+
+        //no Levi-Civita tensors found
         if (epsPositions.isEmpty())
             return product;
-        StructureOfContractions fs = content.getStructureOfContractions();
 
-        j = epsPositions.size();
-        Set<Tensor> epsComponent = new HashSet<>(LeviCivita.getIndices().size());
+        //calculating connected components with Levi-Civita tensors
+        StructureOfContractions fs = content.getStructureOfContractions();
+        sizeOfComponent = epsPositions.size();
+
+        //tensors, which are contracted with Levi-Civita ( ... eps_abcd * (...tensors...)^abpq ... )
+        Set<Tensor> epsComponent = new HashSet<>(numberOfIndices);
         Tensor temp;
         int toIndex, a, b;
-        for (i = 0; i < j; ++i) {
+
+        for (i = 0; i < sizeOfComponent; ++i) {
+            //traversing contractions and building single component
             for (long contraction : fs.contractions[epsPositions.get(i)]) {
                 toIndex = getToTensorIndex(contraction);
                 if (toIndex == -1)
                     continue;
                 temp = content.get(toIndex);
-                if (isLeviCivita(temp, LeviCivita))
+                if (isLeviCivita(temp, leviCivita))
                     continue;
                 epsComponent.add(temp);
             }
+            //all eps indices are free
             if (epsComponent.isEmpty())
                 continue;
 
+            //product, which is contracted with Levi-Civita ( ... eps_abcd * (product)^ab ... )
             temp = multiply(epsComponent.toArray(new Tensor[epsComponent.size()]));
             epsComponent.clear();
-            MappingsPort port = IndexMappings.createPort(temp, temp);
-            IndexMappingBuffer buffer;
-            Symmetry sym;
 
-            IntArrayList nonPermutable = new IntArrayList();
+            //free indices of product, which is contracted with Levi-Civita
             int[] indices = temp.getIndices().getFree().getAllIndices().copy();
+            //nothing to do
+            if (indices.length == 1)
+                continue;
+            //positions of indices of product, which are not contracted with eps
+            IntArrayList nonPermutableList = new IntArrayList();
+            //indices of Levi-Civita
             int[] epsIndices = content.get(epsPositions.get(i)).getIndices().getFree().getAllIndices().copy();
 
             boolean contract;
@@ -147,29 +196,44 @@ public class LeviCivitaSimplify implements Transformation {
                     if (indices[b] == inverseIndexState(epsIndices[a]))
                         contract = true;
                 if (!contract)
-                    nonPermutable.add(b);
+                    nonPermutableList.add(b);
             }
-            int[] nonPermutablePositions = nonPermutable.toArray();
+            int[] nonPermutableArray = nonPermutableList.toArray();
 
-            if (indices.length == 1)
-                continue;
+            //symmetries of eps indices, which are contracted with other product (also totally antisymmetric)
             Map<IntArray, Boolean> symmetries = getEpsilonSymmetries(indices.length);
-            while ((buffer = port.take()) != null) {
-                sym = TensorUtils.getSymmetryFromMapping(indices, buffer);
-                if (!checkNonPermutingPositions(sym, nonPermutablePositions))
-                    continue;
 
+            //symmetries of product, which is contracted with Levi-Civita
+            MappingsPort port = IndexMappings.createPort(temp, temp);
+            IndexMappingBuffer buffer;
+            Symmetry sym;
+
+            //check for two symmetric indices of product contracted with two antisymmetric indices of eps
+            while ((buffer = port.take()) != null) {
+                //symmetry of product indices
+                sym = TensorUtils.getSymmetryFromMapping(indices, buffer);
+                //if symmetry mixes indices of product, which are not contracted with eps
+                if (!checkNonPermutingPositions(sym, nonPermutableArray))
+                    continue;
+                //bingo!
                 if (sym.isAntiSymmetry() != symmetries.get(sym.getPermutation()))
                     return Complex.ZERO;
             }
 
         }
+
+        /*
+         * Simplifying Levi-Civita self-contractions
+         */
+
         if (epsPositions.size() == 1)
             return product;
 
-        Expression[] subs = getLeviCivitaSubstitutions(LeviCivita);
+
+        Expression[] subs = getLeviCivitaSubstitutions();
         for (Expression exp : subs)
             product = exp.transform(product);
+
         //todo expand only Levi-Civita sums
         product = EliminateMetricsTransformation.eliminate(ExpandTransformation.expand(product, EliminateMetricsTransformation.ELIMINATE_METRICS));
         product = subs[1].transform(product);
@@ -183,56 +247,69 @@ public class LeviCivitaSimplify implements Transformation {
         return true;
     }
 
-    private static boolean isLeviCivita(Tensor tensor, SimpleTensor LeviCivita) {
-        return tensor instanceof SimpleTensor && ((SimpleTensor) tensor).getName() == LeviCivita.getName();
+    private static boolean isLeviCivita(Tensor tensor, int leviCivitaName) {
+        return tensor instanceof SimpleTensor && ((SimpleTensor) tensor).getName() == leviCivitaName;
     }
 
-    public static Expression[] getLeviCivitaSubstitutions(SimpleTensor eps) {
-        Expression[] sub = cachedSubstitutions.get(eps.getName());
-        if (sub != null)
-            return sub;
-        sub = new Expression[2];
-        SimpleIndices indices = eps.getIndices();
-        int size = indices.size();
 
-        SimpleTensor eps1 = setDiffIndices(eps),
-                eps2 = setInversedIndices(setDiffIndices(eps1));
-        Tensor lhs = multiply(eps1, eps2);
-        SimpleIndices eps1Indices = eps1.getIndices(),
-                eps2Indices = eps2.getIndices();
-        Tensor[][] matrix = new Tensor[size][size];
-        int j;
-        for (int i = 0; i < size; ++i)
-            for (j = 0; j < size; ++j)
-                matrix[i][j] = createKronecker(eps1Indices.get(i), eps2Indices.get(j));
+    private Expression getLeviCivitaSelfContraction() {
+        ParseToken substitutionToken = cachedLeviCivitaSelfContractions.get(numberOfIndices);
+        if (substitutionToken == null) {
 
-        Tensor rhs = TensorUtils.det(matrix);
-        //todo here we assuming, that all indices belongs to pseudo-Euclidean spaces
-        if (size % 2 == 0)
-            rhs = negate(rhs);
-        sub[0] = expression(lhs, rhs);
-        int index = eps1Indices.get(0);
-        sub[1] = expression(createKronecker(index, inverseIndexState(index)), new Complex(size));
-        cachedSubstitutions.put(eps.getName(), sub);
-        return sub;
+            //the l.h.s. of substitution: eps_{abc...}*eps^{pqr...}
+            //lower indices of eps ( eps_{...lower...} )
+            int[] lower = new int[numberOfIndices];
+            //upper indices of eps ( eps^{...lower...} )
+            int[] upper = new int[numberOfIndices];
+
+            for (int i = 0; i < numberOfIndices; ++i) {
+                lower[i] = i;
+                upper[i] = IndicesUtils.inverseIndexState(numberOfIndices + i);
+            }
+
+            //eps_{abc...}
+            SimpleTensor eps1 = simpleTensor(defaultLeviCivitaName, IndicesFactory.createSimple(null, lower));
+            //eps^{pqr...}
+            SimpleTensor eps2 = simpleTensor(defaultLeviCivitaName, IndicesFactory.createSimple(null, upper));
+            //eps_{abc..}*eps^{pqr...}
+            Tensor lhs = multiply(eps1, eps2);
+
+            //the r.h.s. of substitution: determinant of deltas
+            //Determinant of Kronecker deltas
+            Tensor[][] matrix = new Tensor[numberOfIndices][numberOfIndices];
+            int j;
+            for (int i = 0; i < numberOfIndices; ++i)
+                for (j = 0; j < numberOfIndices; ++j)
+                    matrix[i][j] = createKronecker(lower[i], upper[j]);
+            Tensor rhs = TensorUtils.det(matrix);
+
+            // eps_{abc..}*eps^{pqr...} = det
+            Expression substitution = expression(lhs, rhs);
+
+            substitutionToken = CC.current().getParseManager().getParser().parse(substitution.toString(OutputFormat.Redberry));
+            cachedLeviCivitaSelfContractions.put(numberOfIndices, substitutionToken);
+        }
+
+        Expression substitution = (Expression) tokenTransformer.transform(substitutionToken).toTensor();
+        if (minkovskiSpace & numberOfIndices % 2 == 0)
+            substitution = expression(substitution.get(0), negate(substitution.get(1)));
+        return substitution;
     }
 
-    private static SimpleTensor setDiffIndices(SimpleTensor eps) {
-        byte type = getType(eps.getIndices().get(0));
-        int count = eps.getIndices().size();
-        int[] newIndices = new int[count];
-        IndexGenerator generator = new IndexGenerator(eps.getIndices());
-        for (int i = 0; i < count; ++i)
-            newIndices[i] = generator.generate(type);
-        return Tensors.simpleTensor(eps.getName(), IndicesFactory.createSimple(null, newIndices));
+    private Expression[] getLeviCivitaSubstitutions() {
+        Expression[] substitutions = new Expression[2];
+        //Levi-Civita self-contraction
+        substitutions[0] = getLeviCivitaSelfContraction();
+
+        //d^a_a = numberOfIndices
+        substitutions[1] = expression(createKronecker(
+                setType(typeOfLeviCivitaIndices, 0),
+                setType(typeOfLeviCivitaIndices, 0x80000000)),
+                new Complex(numberOfIndices));
+
+        return substitutions;
     }
 
-    private static SimpleTensor setInversedIndices(SimpleTensor eps) {
-        return Tensors.simpleTensor(eps.getName(), eps.getIndices().getInverted());
-    }
-
-    //todo static can cause to an indeterminate behavior if CC.resetTensorNames() invoked
-    private static final TIntObjectHashMap<Expression[]> cachedSubstitutions = new TIntObjectHashMap<>();
 
     private static Map<IntArray, Boolean> getEpsilonSymmetries(int indicesSize) {
         Map<IntArray, Boolean> symmetries = cachedLeviCivitaSymmetries.get(indicesSize);
@@ -251,7 +328,16 @@ public class LeviCivitaSimplify implements Transformation {
         return symmetries;
     }
 
+    private static TIntObjectHashMap<ParseToken> cachedLeviCivitaSelfContractions = new TIntObjectHashMap<>();
     private static TIntObjectHashMap<Map<IntArray, Boolean>> cachedLeviCivitaSymmetries = new TIntObjectHashMap<>();
 
-
+    private static void checkLeviCivita(SimpleTensor LeviCivita) {
+        SimpleIndices indices = LeviCivita.getIndices();
+        if (indices.size() <= 1)
+            throw new IllegalArgumentException("Levi-Civita cannot be a scalar.");
+        byte type = getType(indices.get(0));
+        for (int i = 1; i < indices.size(); ++i)
+            if (type != getType(indices.get(i)))
+                throw new IllegalArgumentException("Levi-Civita have indices with different types.");
+    }
 }
