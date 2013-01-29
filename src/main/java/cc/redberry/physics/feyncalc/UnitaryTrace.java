@@ -228,7 +228,7 @@ public final class UnitaryTrace implements Transformation {
                 throw new IllegalArgumentException("Illegal input for SU(N) constants: " + st);
             for (int i = 0; i < 3; ++i)
                 if (IndicesUtils.getTypeEnum(st.getIndices().get(i)) != metricType)
-                    throw new IllegalArgumentException("Different indices types: " + unitaryMatrix + " and " + st);
+                    throw new IllegalArgumentException("Different indices metric types: " + unitaryMatrix + " and " + st);
         }
     }
 
