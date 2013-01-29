@@ -74,14 +74,14 @@ public class LeviCivitaSimplify implements Transformation {
     private final IndexType typeOfLeviCivitaIndices;
     private final ChangeIndicesTypesAndTensorNames tokenTransformer;
 
-    /**
-     * Creates transformation, which simplifies combinations of Levi-Civita tensors in Euclidean space.
-     *
-     * @param leviCivita tensor, which will be considered as Levi-Civita tensor
-     */
-    public LeviCivitaSimplify(SimpleTensor leviCivita) {
-        this(leviCivita, false);
-    }
+//    /**
+//     * Creates transformation, which simplifies combinations of Levi-Civita tensors in Euclidean space.
+//     *
+//     * @param leviCivita tensor, which will be considered as Levi-Civita tensor
+//     */
+//    public LeviCivitaSimplify(SimpleTensor leviCivita) {
+//        this(leviCivita, false);
+//    }
 
     /**
      * Creates transformation, which simplifies combinations of Levi-Civita tensors in Euclidean or Minkovski space.

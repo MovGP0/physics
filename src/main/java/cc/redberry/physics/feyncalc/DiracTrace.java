@@ -76,7 +76,7 @@ public class DiracTrace implements Transformation {
                 setType(metricType, 1),
                 setType(metricType, 2),
                 setType(metricType, 3)));
-        this.LeviCivitaSimplify = new LeviCivitaSimplify(leviCivita);
+        this.LeviCivitaSimplify = new LeviCivitaSimplify(leviCivita, true);
     }
 
     public DiracTrace(SimpleTensor gammaMatrix, SimpleTensor gamma5, SimpleTensor leviCivita) {
@@ -87,7 +87,7 @@ public class DiracTrace implements Transformation {
         IndexType[] types = TraceUtils.extractTypesFromMatrix(gammaMatrix);
         this.metricType = types[0];
         this.matrixType = types[1];
-        this.LeviCivitaSimplify = new LeviCivitaSimplify(leviCivita);
+        this.LeviCivitaSimplify = new LeviCivitaSimplify(leviCivita, true);
     }
 
     @Override
