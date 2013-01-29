@@ -25,6 +25,9 @@ package cc.redberry.physics.feyncalc;
 import cc.redberry.core.context.CC;
 import cc.redberry.core.context.NameAndStructureOfIndices;
 import cc.redberry.core.context.OutputFormat;
+import cc.redberry.core.graph.GraphType;
+import cc.redberry.core.graph.PrimitiveSubgraph;
+import cc.redberry.core.graph.PrimitiveSubgraphPartition;
 import cc.redberry.core.indices.IndexType;
 import cc.redberry.core.indices.IndicesUtils;
 import cc.redberry.core.number.Complex;
@@ -36,12 +39,19 @@ import cc.redberry.core.tensor.*;
 import cc.redberry.core.tensor.iterator.FromChildToParentIterator;
 import cc.redberry.core.transformations.EliminateMetricsTransformation;
 import cc.redberry.core.transformations.Transformation;
+import cc.redberry.core.transformations.TransformationCollection;
 import cc.redberry.core.transformations.expand.ExpandTransformation;
+import cc.redberry.core.utils.IntArrayList;
 import cc.redberry.core.utils.TensorUtils;
 
+import java.util.ArrayList;
+
 import static cc.redberry.core.tensor.Tensors.multiply;
+import static cc.redberry.core.tensor.Tensors.parseExpression;
 
 /**
+ * Calculates trace of unitary matrices.
+ *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
@@ -58,8 +68,16 @@ public final class UnitaryTrace implements Transformation {
     private final IndexType matrixType;
 
     private final Expression unitaryCommutator;
-    private final Transformation[] simplifications;
+    private final Transformation simplifications;
 
+    /**
+     * Creates transformation with given definitions.
+     *
+     * @param unitaryMatrix     unitary matrix
+     * @param structureConstant structure constants of SU(N)
+     * @param symmetricConstant symmetric constants of SU(N)
+     * @param dimension         dimension
+     */
     public UnitaryTrace(final SimpleTensor unitaryMatrix,
                         final SimpleTensor structureConstant,
                         final SimpleTensor symmetricConstant,
@@ -89,7 +107,8 @@ public final class UnitaryTrace implements Transformation {
                     case symmetricConstantName:
                         return symmetricConstant.getStringName();
                     case dimensionName:
-                        return dimension.toString(OutputFormat.Redberry);
+                        if (!(dimension instanceof Complex))
+                            return dimension.toString(OutputFormat.Redberry);
                     default:
                         return old.getName();
                 }
@@ -97,12 +116,22 @@ public final class UnitaryTrace implements Transformation {
         });
 
         this.unitaryCommutator = (Expression) tokenTransformer.transform(commutatorToken).toTensor();
-        this.simplifications = new Transformation[1 + unitarySimplificationsTokens.length];
 
-        int i = 0;
-        this.simplifications[i++] = EliminateMetricsTransformation.ELIMINATE_METRICS;
+        //simplifications with SU(N) combinations
+        ArrayList<Transformation> unitarySimplifications = new ArrayList<>();
+        unitarySimplifications.add(EliminateMetricsTransformation.ELIMINATE_METRICS);
         for (ParseToken substitution : unitarySimplificationsTokens)
-            this.simplifications[i++] = (Expression) tokenTransformer.transform(substitution).toTensor();
+            unitarySimplifications.add((Expression) tokenTransformer.transform(substitution).toTensor());
+        if (dimension instanceof Complex)
+            unitarySimplifications.add(parseExpression("N = " + dimension));
+
+        //all simplifications
+        ArrayList<Transformation> simplifications = new ArrayList<>(10);
+        simplifications.add(new ExpandTransformation(new TransformationCollection(unitarySimplifications)));
+        for (Transformation tr : unitarySimplifications)
+            simplifications.add(tr);
+
+        this.simplifications = new TransformationCollection(simplifications);
     }
 
     @Override
@@ -116,32 +145,46 @@ public final class UnitaryTrace implements Transformation {
                     iterator.set(Complex.ZERO);
             } else if (c instanceof Product) {
                 //selecting unitary matrices from product
+                //extracting trace combinations from product
+                Product product = (Product) c;
+                int sizeOfIndexless = product.sizeOfIndexlessPart();
+                ProductContent productContent = product.getContent();
+                PrimitiveSubgraph[] subgraphs
+                        = PrimitiveSubgraphPartition.calculatePartition(productContent, matrixType);
 
-                //subproduct of matrices
-                TensorBuilder matrices = new ProductBuilder();
-                boolean noUnitaryMatrices = true;
-                //remainder (non matrix part)
-                Tensor remainder = c;
-                for (int i = c.size() - 1; i >= 0; --i) {
-                    if (isUnitaryMatrix(c.get(i), unitaryMatrix)) {
-                        noUnitaryMatrices = false;
-                        matrices.put(c.get(i));
-                        if (remainder instanceof Product)
-                            remainder = ((Product) remainder).remove(i);
-                        else {
-                            assert i == 0;
-                            remainder = Complex.ONE;
-                        }
-                    }
-                }
-                if (noUnitaryMatrices)
+                //no unitary matrices in product
+                if (subgraphs.length == 0)
                     continue;
 
+                //positions of unitary matrices
+                IntArrayList positionsOfMatrices = new IntArrayList();
+                //calculated traces
+                ProductBuilder calculatedTraces = new ProductBuilder();
+
+                out:
+                for (PrimitiveSubgraph subgraph : subgraphs) {
+                    //not a trace
+                    if (subgraph.getGraphType() != GraphType.Cycle)
+                        continue;
+
+                    //positions of unitary matrices
+                    int[] partition = subgraph.getPartition();
+                    for (int i = partition.length - 1; i >= 0; --i)
+                        partition[i] = sizeOfIndexless + partition[i];
+
+                    //contains not only unitary matrices
+                    for (int i : partition)
+                        if (!isUnitaryMatrix(product.get(i), unitaryMatrix))
+                            continue out;
+
+                    //calculate trace
+                    calculatedTraces.put(traceOfProduct(product.select(partition)));
+                    positionsOfMatrices.addAll(partition);
+                }
                 //compiling the result
-                Tensor temp = multiply(remainder, traceOfProduct(matrices.build()));
-                temp = ExpandTransformation.expand(temp, EliminateMetricsTransformation.ELIMINATE_METRICS);
-                temp = EliminateMetricsTransformation.eliminate(temp);
-                iterator.set(temp);
+                c = product.remove(positionsOfMatrices.toArray());
+                c = multiply(c, calculatedTraces.build());
+                iterator.set(simplifications.transform(c));
             }
         }
         return iterator.result();
@@ -151,9 +194,7 @@ public final class UnitaryTrace implements Transformation {
         Tensor oldTensor = tensor, newTensor;
         while (true) {
             newTensor = unitaryCommutator.transform(oldTensor);
-            newTensor = ExpandTransformation.expand(newTensor, simplifications);
-            for (Transformation tr : simplifications)
-                newTensor = tr.transform(newTensor);
+            newTensor = simplifications.transform(newTensor);
             if (newTensor == oldTensor)
                 break;
             oldTensor = newTensor;
@@ -169,6 +210,10 @@ public final class UnitaryTrace implements Transformation {
                               final SimpleTensor structureConstant,
                               final SimpleTensor symmetricConstant,
                               final Tensor dimension) {
+
+        if (dimension instanceof Complex && !TensorUtils.isNaturalNumber(dimension))
+            throw new IllegalArgumentException("Non natural dimension.");
+
         if (unitaryMatrix.getIndices().size() != 3)
             throw new IllegalArgumentException("Not a unitary matrix: " + unitaryMatrix);
         IndexType[] types = TraceUtils.extractTypesFromMatrix(unitaryMatrix);

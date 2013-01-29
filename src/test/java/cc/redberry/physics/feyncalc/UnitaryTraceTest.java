@@ -28,7 +28,9 @@ import cc.redberry.core.indices.IndexType;
 import cc.redberry.core.parser.preprocessor.GeneralIndicesInsertion;
 import cc.redberry.core.tensor.Tensor;
 import cc.redberry.core.transformations.EliminateFromSymmetriesTransformation;
+import cc.redberry.core.transformations.EliminateMetricsTransformation;
 import cc.redberry.core.transformations.Transformation;
+import cc.redberry.core.transformations.expand.ExpandTransformation;
 import org.junit.Test;
 
 import static cc.redberry.core.tensor.Tensors.*;
@@ -57,8 +59,7 @@ public class UnitaryTraceTest {
         indicesInsertion.addInsertionRule(parseSimple("T^a'_b'a"), IndexType.Matrix1);
 
         setSymmetric(parseSimple("d_abd"));
-        addAntiSymmetry(parseSimple("f_abc"), 1, 0, 2);
-        addSymmetry("f_abc", 2, 0, 1);
+        setAntiSymmetric("f_abc");
         Tensor t = parse("Tr[T_a*T_b*T_c]");
         t = unitaryTrace(t);
         t = EliminateFromSymmetriesTransformation.ELIMINATE_FROM_SYMMETRIES.transform(t);
@@ -110,6 +111,28 @@ public class UnitaryTraceTest {
 
         Tensor expected = parse("r_\\alpha\\beta\\gamma/4+I/4*e_\\alpha\\beta\\gamma");
         TAssert.assertEquals(t, expected);
+    }
+
+    @Test
+    public void test5() {
+        GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
+        CC.current().getParseManager().defaultParserPreprocessors.add(indicesInsertion);
+        indicesInsertion.addInsertionRule(parseSimple("T^a'_b'a"), IndexType.Matrix1);
+
+        setSymmetric(parseSimple("d_abd"));
+        setAntiSymmetric("f_abc");
+
+        Transformation trace = new UnitaryTrace(
+                parseSimple("T_a"),
+                parseSimple("f_abc"),
+                parseSimple("d_abc"),
+                parse("3"));
+
+        Tensor t = parse("g^ab*g^cr*Tr[T_a*T_b*T_c + f_abc]*Tr[T_p*T_q*T_r - 1/12*d_pqr]");
+        t = trace.transform(t);
+        t = ExpandTransformation.expand(t, EliminateMetricsTransformation.ELIMINATE_METRICS);
+        t = EliminateFromSymmetriesTransformation.ELIMINATE_FROM_SYMMETRIES.transform(t);
+        TAssert.assertEquals(t, "(1/16*I)*d^{rb}_{b}*f_{rpq}");
     }
 
     static Tensor unitaryTrace(Tensor t) {
