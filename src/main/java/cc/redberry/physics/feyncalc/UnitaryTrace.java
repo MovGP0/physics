@@ -169,13 +169,12 @@ public final class UnitaryTrace implements Transformation {
 
                     //positions of unitary matrices
                     int[] partition = subgraph.getPartition();
-                    for (int i = partition.length - 1; i >= 0; --i)
+                    for (int i = partition.length - 1; i >= 0; --i) {
                         partition[i] = sizeOfIndexless + partition[i];
-
-                    //contains not only unitary matrices
-                    for (int i : partition)
-                        if (!isUnitaryMatrix(product.get(i), unitaryMatrix))
+                        //contains not only unitary matrices
+                        if (!isUnitaryMatrix(product.get(partition[i]), unitaryMatrix))
                             continue out;
+                    }
 
                     //calculate trace
                     calculatedTraces.put(traceOfProduct(product.select(partition)));

@@ -36,7 +36,6 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import static cc.redberry.core.tensor.Tensors.*;
-import static cc.redberry.physics.feyncalc.DiracTrace.trace;
 
 /**
  * @author Dmitry Bolotin
@@ -73,11 +72,11 @@ public class DiracTraceTest {
         }
     }
 
-    @Test
-    public void test3() {
-        Tensor[] product = {parse("G_a"), parse("G_b"), parse("G_c"), parse("G_d"), parse("G_e"), parse("G_f"), parse("G_g"), parse("G_h")};
-        System.out.println(ExpandTransformation.expand(DiracTrace.traceOfArray(product, IndexType.LatinLower)));
-    }
+//    @Test
+//    public void test3() {
+//        Tensor[] product = {parse("G_a"), parse("G_b"), parse("G_c"), parse("G_d"), parse("G_e"), parse("G_f"), parse("G_g"), parse("G_h")};
+//        System.out.println(ExpandTransformation.expand(DiracTrace.traceOfArray(product, IndexType.LatinLower)));
+//    }
 
     @Test
     public void test4() {
@@ -221,6 +220,7 @@ public class DiracTraceTest {
         t = parse("Tr[G5*G_a*G_b*G5*G_c*G_d*G5*G5*G5]");
         TAssert.assertEquals(trace(t), "(-4*I)*e_{abcd}");
         t = parse("Tr[G5*G_a*G5*G5*G_b*G5*G_c*G5*G5*G_d*G5*G5*G5]");
+        System.out.println(t);
         TAssert.assertEquals(trace(t), "(-4*I)*e_{abcd}");
         t = parse("Tr[G5*G5*G_a*G5*G5*G_b*G5*G_c*G5*G5*G_d*G5*G5*G5]");
         TAssert.assertEquals(trace(t), trace(parse("Tr[G_a*G_b*G_c*G_d]")));
@@ -408,6 +408,10 @@ public class DiracTraceTest {
 
         t = parse("Tr[G_a*G_b]*Tr[G_c*G_d] + Tr[G_a*G_b]*g_cd + f_abcd");
         TAssert.assertEquals(tr(t), "20*g_ab*g_cd + f_abcd");
+    }
+
+    private static Tensor trace(Tensor t) {
+        return new DiracTrace(parseSimple("G^{a a'}_b'"), parseSimple("G5^a'_b'"), parseSimple("e_abcd"), true).transform(t);
     }
 
     private static Tensor simplifyLeviCivita(Tensor t, SimpleTensor eps) {

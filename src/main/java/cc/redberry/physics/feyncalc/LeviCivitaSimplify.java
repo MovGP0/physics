@@ -74,15 +74,11 @@ public class LeviCivitaSimplify implements Transformation {
     private final int numberOfIndices;
     private final IndexType typeOfLeviCivitaIndices;
     private final ChangeIndicesTypesAndTensorNames tokenTransformer;
+    /**
+     * First is Levi-Civita self-contraction and second is d^a_a = numberOfIndices
+     */
+    private final Expression[] leviCivitaSimplifications;
 
-//    /**
-//     * Creates transformation, which simplifies combinations of Levi-Civita tensors in Euclidean space.
-//     *
-//     * @param leviCivita tensor, which will be considered as Levi-Civita tensor
-//     */
-//    public LeviCivitaSimplify(SimpleTensor leviCivita) {
-//        this(leviCivita, false);
-//    }
 
     /**
      * Creates transformation, which simplifies combinations of Levi-Civita tensors in Euclidean or Minkovski space.
@@ -105,7 +101,7 @@ public class LeviCivitaSimplify implements Transformation {
         this.tokenTransformer = new ChangeIndicesTypesAndTensorNames(
                 new TypesAndNamesTransformer() {
                     @Override
-                    public IndexType newType(IndexType oldType,NameAndStructureOfIndices old) {
+                    public IndexType newType(IndexType oldType, NameAndStructureOfIndices old) {
                         return typeOfLeviCivitaIndices;
                     }
 
@@ -115,7 +111,7 @@ public class LeviCivitaSimplify implements Transformation {
                     }
                 }
         );
-
+        leviCivitaSimplifications = getLeviCivitaSubstitutions();
     }
 
     @Override
@@ -230,14 +226,12 @@ public class LeviCivitaSimplify implements Transformation {
         if (epsPositions.size() == 1)
             return product;
 
-
-        Expression[] subs = getLeviCivitaSubstitutions();
-        for (Expression exp : subs)
+        for (Expression exp : leviCivitaSimplifications)
             product = exp.transform(product);
 
         //todo expand only Levi-Civita sums
         product = EliminateMetricsTransformation.eliminate(ExpandTransformation.expand(product, EliminateMetricsTransformation.ELIMINATE_METRICS));
-        product = subs[1].transform(product);
+        product = leviCivitaSimplifications[1].transform(product);
         return product;
     }
 
