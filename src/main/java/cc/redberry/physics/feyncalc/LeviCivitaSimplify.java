@@ -28,6 +28,7 @@ import cc.redberry.core.combinatorics.Symmetry;
 import cc.redberry.core.combinatorics.symmetries.Symmetries;
 import cc.redberry.core.combinatorics.symmetries.SymmetriesFactory;
 import cc.redberry.core.context.CC;
+import cc.redberry.core.context.NameAndStructureOfIndices;
 import cc.redberry.core.context.OutputFormat;
 import cc.redberry.core.indexmapping.IndexMappingBuffer;
 import cc.redberry.core.indexmapping.IndexMappings;
@@ -104,13 +105,13 @@ public class LeviCivitaSimplify implements Transformation {
         this.tokenTransformer = new ChangeIndicesTypesAndTensorNames(
                 new TypesAndNamesTransformer() {
                     @Override
-                    public IndexType newType(IndexType oldType) {
+                    public IndexType newType(IndexType oldType,NameAndStructureOfIndices old) {
                         return typeOfLeviCivitaIndices;
                     }
 
                     @Override
-                    public String newName(String oldName) {
-                        return oldName.equals(defaultLeviCivitaName) ? leviCivitaName : oldName;
+                    public String newName(NameAndStructureOfIndices old) {
+                        return old.getName().equals(defaultLeviCivitaName) ? leviCivitaName : old.getName();
                     }
                 }
         );

@@ -28,6 +28,7 @@ import cc.redberry.core.indices.IndexType;
 import cc.redberry.core.parser.preprocessor.GeneralIndicesInsertion;
 import cc.redberry.core.tensor.Tensor;
 import cc.redberry.core.transformations.EliminateFromSymmetriesTransformation;
+import cc.redberry.core.transformations.Transformation;
 import org.junit.Test;
 
 import static cc.redberry.core.tensor.Tensors.*;
@@ -45,7 +46,7 @@ public class UnitaryTraceTest {
         indicesInsertion.addInsertionRule(parseSimple("T^a'_b'a"), IndexType.Matrix1);
 
         Tensor t = parse("Tr[T_a*T_b]");
-        t = UnitaryTrace.unitaryTrace(t);
+        t = unitaryTrace(t);
         TAssert.assertEquals(t, parse("g_ab/2"));
     }
 
@@ -59,7 +60,7 @@ public class UnitaryTraceTest {
         addAntiSymmetry(parseSimple("f_abc"), 1, 0, 2);
         addSymmetry("f_abc", 2, 0, 1);
         Tensor t = parse("Tr[T_a*T_b*T_c]");
-        t = UnitaryTrace.unitaryTrace(t);
+        t = unitaryTrace(t);
         t = EliminateFromSymmetriesTransformation.ELIMINATE_FROM_SYMMETRIES.transform(t);
         Tensor expected = parse("d_abc/4+I/4*f_abc");
         TAssert.assertEquals(t, expected);
@@ -78,8 +79,8 @@ public class UnitaryTraceTest {
         Tensor t = parse("Tr[T_a*T_b*T_c*T_d]");
         Tensor t1 = parse("Tr[T_b*T_a*T_c*T_d]");
 
-        t = UnitaryTrace.unitaryTrace(t);
-        t1 = UnitaryTrace.unitaryTrace(t1);
+        t = unitaryTrace(t);
+        t1 = unitaryTrace(t1);
         System.out.println(subtract(t, t1));
 
         t = EliminateFromSymmetriesTransformation.ELIMINATE_FROM_SYMMETRIES.transform(t);
@@ -87,5 +88,31 @@ public class UnitaryTraceTest {
         System.out.println(t);
         System.out.println(expected);
 //        TAssert.assertEquals(t, expected);
+    }
+
+    @Test
+    public void test4() {
+        GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
+        CC.current().getParseManager().defaultParserPreprocessors.add(indicesInsertion);
+        indicesInsertion.addInsertionRule(parseSimple("M^A'_B'\\alpha"), IndexType.Matrix2);
+
+        setSymmetric("e_\\alpha\\beta\\gamma");
+        setAntiSymmetric("r_\\alpha\\beta\\gamma");
+        Transformation trace = new UnitaryTrace(
+                parseSimple("M_\\alpha^A'_B'"),
+                parseSimple("e_\\alpha\\beta\\gamma"),
+                parseSimple("r_\\alpha\\beta\\gamma"),
+                parseSimple("D"));
+
+        Tensor t = parse("Tr[M_\\alpha*M_\\beta*M_\\gamma]");
+        t = trace.transform(t);
+        t = EliminateFromSymmetriesTransformation.ELIMINATE_FROM_SYMMETRIES.transform(t);
+
+        Tensor expected = parse("r_\\alpha\\beta\\gamma/4+I/4*e_\\alpha\\beta\\gamma");
+        TAssert.assertEquals(t, expected);
+    }
+
+    static Tensor unitaryTrace(Tensor t) {
+        return new UnitaryTrace(parseSimple("T_a^a'_b'"), parseSimple("f_abc"), parseSimple("d_abc"), parseSimple("N")).transform(t);
     }
 }
