@@ -1,17 +1,41 @@
+/*
+ * Redberry: symbolic tensor computations.
+ *
+ * Copyright (c) 2010-2013:
+ *   Stanislav Poslavsky   <stvlpos@mail.ru>
+ *   Bolotin Dmitriy       <bolotin.dmitriy@gmail.com>
+ *
+ * This file is part of Redberry.
+ *
+ * Redberry is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Redberry is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Redberry. If not, see <http://www.gnu.org/licenses/>.
+ */
 package cc.redberry.physics.feyncalc;
 
+import cc.redberry.core.context.CC;
+import cc.redberry.core.graph.GraphType;
+import cc.redberry.core.graph.PrimitiveSubgraph;
+import cc.redberry.core.graph.PrimitiveSubgraphPartition;
 import cc.redberry.core.indexgenerator.IndexGenerator;
 import cc.redberry.core.indices.*;
 import cc.redberry.core.number.Complex;
 import cc.redberry.core.tensor.*;
-import cc.redberry.core.tensor.iterator.TensorLastIterator;
-import cc.redberry.core.transformations.ContractIndices;
+import cc.redberry.core.tensor.iterator.FromChildToParentIterator;
+import cc.redberry.core.transformations.EliminateMetricsTransformation;
 import cc.redberry.core.transformations.Transformation;
-import cc.redberry.core.transformations.expand.Expand;
-import cc.redberry.core.transformations.expand.ExpandAll;
-import cc.redberry.core.transformations.substitutions.Substitution;
+import cc.redberry.core.transformations.expand.ExpandTransformation;
+import cc.redberry.core.transformations.substitutions.SubstitutionTransformation;
 
-import java.rmi.server.UID;
 import java.util.HashMap;
 
 import static cc.redberry.core.indices.IndicesFactory.createSimple;
@@ -32,6 +56,29 @@ public class DiracTrace implements Transformation {
         this(parseSimple("G^a'_{a b'}"), parseSimple("G5^a'_b'"), parseSimple("e_{abcd}"));
     }
 
+    public DiracTrace(SimpleTensor gammaMatrix) {
+        //todo check correct input
+        this.gammaName = gammaMatrix.getName();
+        IndexType[] types = TraceUtils.extractTypesFromMatrix(gammaMatrix);
+        this.metricType = types[0];
+        this.matrixType = types[1];
+
+        //creating default gamma5 tensor
+        String gamma5String = CC.getNameManager().getNameDescriptor(gammaName).getName(null) + "5";
+        StructureOfIndices gamma5Types = new StructureOfIndices(matrixType.getType(), 2, true, false);
+        this.gamma5Name = CC.getNameManager().mapNameDescriptor(gamma5String, gamma5Types).getId();
+
+        //creating default Levi-Civita tensor
+        StructureOfIndices leviCivitaTypes = new StructureOfIndices(metricType.getType(), 4);
+        this.leviCivitaName = CC.getNameManager().mapNameDescriptor("e", leviCivitaTypes).getId();
+        SimpleTensor leviCivita = simpleTensor(leviCivitaName, IndicesFactory.createSimple(null,
+                setType(metricType, 0),
+                setType(metricType, 1),
+                setType(metricType, 2),
+                setType(metricType, 3)));
+        this.LeviCivitaSimplify = new LeviCivitaSimplify(leviCivita, true);
+    }
+
     public DiracTrace(SimpleTensor gammaMatrix, SimpleTensor gamma5, SimpleTensor leviCivita) {
         //todo check correct input
         this.gammaName = gammaMatrix.getName();
@@ -40,16 +87,17 @@ public class DiracTrace implements Transformation {
         IndexType[] types = TraceUtils.extractTypesFromMatrix(gammaMatrix);
         this.metricType = types[0];
         this.matrixType = types[1];
-        this.LeviCivitaSimplify = new LeviCivitaSimplify(leviCivita);
+        this.LeviCivitaSimplify = new LeviCivitaSimplify(leviCivita, true);
     }
 
     @Override
     public Tensor transform(Tensor tensor) {
         //todo check for contains gammas
-        tensor = Expand.expand(tensor, ContractIndices.ContractIndices);
-        tensor = ContractIndices.contract(tensor);
-        TensorLastIterator iterator = new TensorLastIterator(tensor);
+        tensor = ExpandTransformation.expand(tensor, EliminateMetricsTransformation.ELIMINATE_METRICS);
+        tensor = EliminateMetricsTransformation.eliminate(tensor);
+        FromChildToParentIterator iterator = new FromChildToParentIterator(tensor);
         Tensor current;
+        out:
         while ((current = iterator.next()) != null) {
             if (isGammaOrGamma5(current)
                     && current.getIndices().getFree().size(matrixType) == 0) {
@@ -57,42 +105,65 @@ public class DiracTrace implements Transformation {
             } else if (current instanceof Product) {
                 if (current.getIndices().getFree().size(matrixType) != 0)
                     continue;
+                Product product = (Product) current;
+                ProductContent pc = product.getContent();
+                int sizeOfIndexless = product.sizeOfIndexlessPart();
+                PrimitiveSubgraph[] partition
+                        = PrimitiveSubgraphPartition.calculatePartition(pc, matrixType);
 
-                int[] gg = calculateGammasInProduct(current);
-                int gammasCount = gg[0];
-                int gamma5Count = gg[1];
-
-                if (gammasCount == 0) {
-                    if (gamma5Count == 0)
+                for (PrimitiveSubgraph subgraph : partition) {
+                    if (subgraph.getGraphType() != GraphType.Cycle)
                         continue;
-                    if (gamma5Count % 2 == 1)
+
+                    int[] positions = subgraph.getPartition();
+                    //actual positions in current
+                    for (int i = positions.length - 1; i >= 0; --i)
+                        positions[i] = positions[i] + sizeOfIndexless;
+
+                    int[] gg = calculateGammasInProduct(product.select(positions));
+                    if (gg[0] + gg[1] != positions.length)
+                        continue;
+
+                    assert positions.length != 0;
+
+                    if (positions.length == 1) {
                         iterator.set(Complex.ZERO);
+                        continue out;
+                    }
+
+                    int gammasCount = gg[0];
+                    int gamma5Count = gg[1];
+
+                    if (gammasCount == 0) {
+                        if (gamma5Count % 2 == 0) {
+                            iterator.set(multiply(product.remove(positions), Complex.FOUR));
+                            continue out;
+                        } else {
+                            iterator.set(Complex.ZERO);
+                            continue out;
+                        }
+                    }
+
+                    if (gamma5Count == 0 && gammasCount % 2 == 1) {
+                        iterator.set(Complex.ZERO);
+                        continue out;
+                    }
+
+                    if (gamma5Count % 2 == 1 && gammasCount % 2 == 1) {
+                        iterator.set(Complex.ZERO);
+                        continue out;
+                    }
+
+                    if (gamma5Count == 0)
+                        current = traceWithout5(current, gammasCount);
                     else
-                        iterator.set(Complex.FOUR);
-                    continue;
+                        current = trace5((Product) current, gammasCount, gamma5Count);
+
                 }
-
-                if (gamma5Count == 0 && gammasCount % 2 == 1) {
-                    iterator.set(Complex.ZERO);
-                    continue;
-                }
-
-                if (gamma5Count % 2 == 1 && gammasCount % 2 == 1) {
-                    iterator.set(Complex.ZERO);
-                    continue;
-                }
-
-                if (gamma5Count == 0)
-                    current = traceWithout5(current, gammasCount);
-                else
-                    current = trace5((Product) current, gammasCount, gamma5Count);
-
-
                 //todo d_i^i = 4
                 iterator.set(current);
             }
         }
-
         return iterator.result();
     }
 
@@ -100,12 +171,13 @@ public class DiracTrace implements Transformation {
     int[] calculateGammasInProduct(Tensor product) {
         int[] r = new int[2];
         for (Tensor t : product) {
-            if (t instanceof SimpleTensor) {
-                if (((SimpleTensor) t).getName() == gammaName)
-                    ++r[0];
-                if (((SimpleTensor) t).getName() == gamma5Name)
-                    ++r[1];
-            }
+            if (!(t instanceof SimpleTensor))
+                continue;
+            SimpleTensor st = (SimpleTensor) t;
+            if (st.getName() == gammaName)
+                ++r[0];
+            if (st.getName() == gamma5Name)
+                ++r[1];
         }
         return r;
     }
@@ -116,15 +188,15 @@ public class DiracTrace implements Transformation {
 
     private Tensor traceWithout5(Tensor tensor, int gammasCount) {
         tensor = createGammaSubstitution(gammasCount).transform(tensor);
-        tensor = Expand.expand(tensor, ContractIndices.ContractIndices);
-        tensor = ContractIndices.contract(tensor);
+        tensor = ExpandTransformation.expand(tensor, EliminateMetricsTransformation.ELIMINATE_METRICS);
+        tensor = EliminateMetricsTransformation.eliminate(tensor);
         tensor = parseExpression("d^a_a = 4").transform(tensor);
         return tensor;
     }
 
     //cached trace identities
-    //todo make context independent
-    private static final HashMap<Key, Substitution> cache = new HashMap<>();
+//todo make context independent
+    private static final HashMap<Key, SubstitutionTransformation> cache = new HashMap<>();
 
     private static class Key {
         final int gammaName, gammasCount;
@@ -159,9 +231,9 @@ public class DiracTrace implements Transformation {
         }
     }
 
-    private Substitution createGammaSubstitution(int gammasCount) {
+    private SubstitutionTransformation createGammaSubstitution(int gammasCount) {
         Key key = new Key(gammaName, gammasCount, metricType, matrixType);
-        Substitution sub = cache.get(key);
+        SubstitutionTransformation sub = cache.get(key);
         if (sub != null)
             return sub;
         Tensor[] gammas = new Tensor[gammasCount];
@@ -175,7 +247,7 @@ public class DiracTrace implements Transformation {
                             generator.generate(metricType)));
 
         }
-        sub = new Substitution(Tensors.multiply(gammas), traceOfArray(gammas, metricType));
+        sub = new SubstitutionTransformation(Tensors.multiply(gammas), traceOfArray(gammas, metricType));
         cache.put(key, sub);
         return sub;
     }
@@ -236,7 +308,7 @@ public class DiracTrace implements Transformation {
         }
 
         Tensor gammasPart = gammasBuilder.build();
-        Substitution[] gamma5 = gamma5Substitution();
+        SubstitutionTransformation[] gamma5 = gamma5Substitution();
         //eliminating multiple gamma5s
         gammasPart = eliminateGamma5((Product) gammasPart, gamma5[0]);
 
@@ -249,8 +321,8 @@ public class DiracTrace implements Transformation {
 
         //main routine
         t = gamma5[1].transform(gammasPart);
-        t = Expand.expand(t);
-        t = ContractIndices.contract(t);
+        t = ExpandTransformation.expand(t);
+        t = EliminateMetricsTransformation.eliminate(t);
         if (t instanceof Sum) {
             SumBuilder sb = new SumBuilder();
             for (Tensor tt : t) {
@@ -265,14 +337,14 @@ public class DiracTrace implements Transformation {
                 t = trace5((Product) t, gg[0], gg[1]);
         }
         t = multiply(nonGammaPart, t);
-        t = Expand.expand(t, ContractIndices.ContractIndices);
-        t = ContractIndices.contract(t);
+        t = ExpandTransformation.expand(t, EliminateMetricsTransformation.ELIMINATE_METRICS);
+        t = EliminateMetricsTransformation.eliminate(t);
         t = LeviCivitaSimplify.transform(t);
         t = parseExpression("d_a^a=4").transform(t);
         return t;
     }
 
-    private Tensor eliminateGamma5(Product tensor, Substitution sub) {
+    private Tensor eliminateGamma5(Product tensor, SubstitutionTransformation sub) {
         //find and remove temporary any non gamma5 matrix:
         Tensor pivot = null;
         Tensor t;
@@ -289,14 +361,14 @@ public class DiracTrace implements Transformation {
         do {
             temp = t;
             t = sub.transform(temp);
-            t = ContractIndices.contract(t);
+            t = EliminateMetricsTransformation.eliminate(t);
         } while (temp != t);
 
         return multiply(t, pivot);
     }
 
     //todo make context independent
-    private static HashMap<Key5, Substitution[]> cache5 = new HashMap<>();
+    private static HashMap<Key5, SubstitutionTransformation[]> cache5 = new HashMap<>();
 
     private static final class Key5 extends Key {
         final int gamma5Name, leviCivita;
@@ -325,15 +397,16 @@ public class DiracTrace implements Transformation {
             result = 31 * result + gamma5Name;
             return result;
         }
+
     }
 
     //first is swapping, second is trace of 4x1 and Chiholm-Kahane identitie
-    private Substitution[] gamma5Substitution() {
+    private SubstitutionTransformation[] gamma5Substitution() {
         Key5 key = new Key5(gammaName, 3, metricType, matrixType, gamma5Name, leviCivitaName);
-        Substitution[] subs = cache5.get(key);
+        SubstitutionTransformation[] subs = cache5.get(key);
         if (subs != null)
             return subs;
-        subs = new Substitution[2];
+        subs = new SubstitutionTransformation[2];
         Expression[] expressions = new Expression[3];
 
         //G5*G_m = -G_m*G5
@@ -375,7 +448,7 @@ public class DiracTrace implements Transformation {
                 setType(matrixType, 0))),
                 Complex.ZERO);
 
-        subs[0] = new Substitution(expressions);
+        subs[0] = new SubstitutionTransformation(expressions);
 
         expressions = new Expression[2];
 
@@ -443,7 +516,7 @@ public class DiracTrace implements Transformation {
                         setType(matrixType, 3))));
         rhs.put(temp);
         expressions[1] = expression(lhs, rhs.build());
-        subs[1] = new Substitution(expressions);
+        subs[1] = new SubstitutionTransformation(expressions);
         cache5.put(key, subs);
         return subs;
     }
@@ -451,18 +524,6 @@ public class DiracTrace implements Transformation {
     private boolean isGammaOrGamma5(Tensor tensor) {
         return tensor instanceof SimpleTensor
                 && (((SimpleTensor) tensor).getName() == gammaName || ((SimpleTensor) tensor).getName() == gamma5Name);
-    }
-
-    static Tensor traceOfArray5(Tensor[] product, IndexType metricType, int epsilonName) {
-        if (product.length < 4 || product.length % 2 == 1)
-            return Complex.ZERO;
-        if (product.length == 4) {
-            int[] indices = new int[4];
-            for (int i = 0; i < 4; ++i)
-                indices[i] = product[i].getIndices().get(metricType, 0);
-            return multiply(Complex.FOUR.negate(), Complex.IMAGE_ONE, simpleTensor(epsilonName, createSimple(null, indices)));
-        }
-        return null;
     }
 
     private static Tensor[] subArray(Tensor[] array, int a, int b) {

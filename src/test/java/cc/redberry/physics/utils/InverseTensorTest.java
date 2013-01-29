@@ -1,7 +1,7 @@
 /*
  * Redberry: symbolic tensor computations.
  *
- * Copyright (c) 2010-2012:
+ * Copyright (c) 2010-2013:
  *   Stanislav Poslavsky   <stvlpos@mail.ru>
  *   Bolotin Dmitriy       <bolotin.dmitriy@gmail.com>
  *
@@ -27,8 +27,8 @@ import cc.redberry.core.tensor.Expression;
 import cc.redberry.core.tensor.ExpressionFactory;
 import cc.redberry.core.tensor.Tensor;
 import cc.redberry.core.tensor.Tensors;
-import cc.redberry.core.transformations.expand.Expand;
-import cc.redberry.core.transformations.symmetrization.SymmetrizeUpperLowerIndices;
+import cc.redberry.core.transformations.expand.ExpandTransformation;
+import cc.redberry.core.transformations.symmetrization.SymmetrizeUpperLowerIndicesTransformation;
 import cc.redberry.core.transformations.Transformation;
 import cc.redberry.core.utils.TensorUtils;
 import org.junit.Assert;
@@ -122,11 +122,11 @@ public class InverseTensorTest {
                 + "6*(1/2+l*b)*(n_p*n_q*g^ab*d_r^c+n^a*n^b*g_pq*d_r^c)+"
                 + "6*(-1/4+l*b**2)*n_p*g_qr*n^a*g^bc");
         Expression toInverse = ExpressionFactory.FACTORY.create(Tensors.parseSimple("K^abc_pqr"),
-                SymmetrizeUpperLowerIndices.symmetrizeUpperLowerIndices(toInv, true));
+                SymmetrizeUpperLowerIndicesTransformation.symmetrizeUpperLowerIndices(toInv, true));
 
         Tensor eqRhs = Tensors.parse("d_i^a*d_j^b*d_k^c");
         Expression equation = ExpressionFactory.FACTORY.create(Tensors.parse("K^abc_pqr*KINV^pqr_ijk"),
-                Expand.expand(SymmetrizeUpperLowerIndices.symmetrizeUpperLowerIndices(eqRhs, true)));
+                ExpandTransformation.expand(SymmetrizeUpperLowerIndicesTransformation.symmetrizeUpperLowerIndices(eqRhs, true)));
 
         Tensor[] samples = {Tensors.parse("g_mn"), Tensors.parse("g^mn"), Tensors.parse("d_m^n"), Tensors.parse("n_m"), Tensors.parse("n^b")};
 

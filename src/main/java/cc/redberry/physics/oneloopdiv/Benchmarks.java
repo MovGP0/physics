@@ -1,7 +1,7 @@
 /*
  * Redberry: symbolic tensor computations.
  *
- * Copyright (c) 2010-2012:
+ * Copyright (c) 2010-2013:
  *   Stanislav Poslavsky   <stvlpos@mail.ru>
  *   Bolotin Dmitriy       <bolotin.dmitriy@gmail.com>
  *
@@ -27,8 +27,10 @@ import cc.redberry.core.context.OutputFormat;
 import cc.redberry.core.indices.IndexType;
 import cc.redberry.core.tensor.Expression;
 import cc.redberry.core.tensor.Tensors;
-import cc.redberry.core.transformations.ContractIndices;
-import cc.redberry.core.transformations.expand.Expand;
+import cc.redberry.core.transformations.EliminateMetricsTransformation;
+import cc.redberry.core.transformations.Transformation;
+import cc.redberry.core.transformations.expand.ExpandTransformation;
+import cc.redberry.core.transformations.factor.FactorTransformation;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -454,16 +456,20 @@ public final class Benchmarks {
                 Tensors.parseExpression("c=(1+2*beta)/(5+6*beta)"),
                 Tensors.parseExpression("b=-(1+2*beta)/(1+beta)")
         };
-//        for (Expression cons : consts) {
-//            KINV = (Expression) cons.transform(KINV);
-//            K = (Expression) cons.transform(K);
-//        }
+        for (Expression cons : consts) {
+            KINV = (Expression) cons.transform(KINV);
+            K = (Expression) cons.transform(K);
+        }
 
         Expression S = (Expression) Tensors.parse("S^\\rho^{\\alpha\\beta}_{\\mu\\nu}=0");
         Expression W = (Expression) Tensors.parse("W^{\\alpha\\beta}_{\\mu\\nu}=0");
         Expression F = Tensors.parseExpression("F_\\mu\\nu\\alpha\\beta\\gamma\\delta=0");
 
-        OneLoopInput input = new OneLoopInput(2, KINV, K, S, W, null, null, F, OneLoopUtils.antiDeSitterBackground());
+        Transformation[] ds = OneLoopUtils.antiDeSitterBackground();
+        Transformation[] tr = new Transformation[ds.length + 1];
+        System.arraycopy(ds, 0, tr, 0, ds.length);
+        tr[tr.length - 1] = FactorTransformation.FACTOR;
+        OneLoopInput input = new OneLoopInput(2, KINV, K, S, W, null, null, F, tr);
 
         OneLoopCounterterms action = OneLoopCounterterms.calculateOneLoopCounterterms(input);
     }
@@ -523,8 +529,8 @@ public final class Benchmarks {
                 + "*(R_\\gamma^\\mu_\\delta^\\nu+R_\\gamma^\\nu_\\delta^\\mu-g^\\mu\\nu*R_\\gamma\\delta-g_\\gamma\\delta*R^\\mu\\nu"
                 + "+1/2*(d^\\mu_\\gamma*R^\\nu_\\delta+d^\\nu_\\gamma*R_\\delta^\\mu+d^\\mu_\\delta*R^\\nu_\\gamma+d^\\nu_\\delta*R^\\mu_\\gamma)"
                 + "-1/2*(d^\\mu_\\gamma*d^\\nu_\\delta+d^\\nu_\\gamma*d^\\mu_\\delta)*(R-2*LA)+1/2*g_\\gamma\\delta*g^\\mu\\nu*R)");
-        P = (Expression) Expand.expand(P,
-                ContractIndices.ContractIndices,
+        P = (Expression) ExpandTransformation.expand(P,
+                EliminateMetricsTransformation.ELIMINATE_METRICS,
                 Tensors.parseExpression("R_{\\mu \\nu}^{\\mu}_{\\alpha} = R_{\\nu\\alpha}"),
                 Tensors.parseExpression("R_{\\mu\\nu}^{\\alpha}_{\\alpha}=0"),
                 Tensors.parseExpression("R_{\\mu}^{\\mu}= R"));

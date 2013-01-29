@@ -1,7 +1,7 @@
 /*
  * Redberry: symbolic tensor computations.
  *
- * Copyright (c) 2010-2012:
+ * Copyright (c) 2010-2013:
  *   Stanislav Poslavsky   <stvlpos@mail.ru>
  *   Bolotin Dmitriy       <bolotin.dmitriy@gmail.com>
  *
@@ -29,9 +29,9 @@ import cc.redberry.core.indices.IndexType;
 import cc.redberry.core.tensor.Expression;
 import cc.redberry.core.tensor.Tensor;
 import cc.redberry.core.tensor.Tensors;
-import cc.redberry.core.transformations.ContractIndices;
-import cc.redberry.core.transformations.expand.Expand;
-import cc.redberry.core.transformations.RemoveDueToSymmetry;
+import cc.redberry.core.transformations.EliminateFromSymmetriesTransformation;
+import cc.redberry.core.transformations.EliminateMetricsTransformation;
+import cc.redberry.core.transformations.expand.ExpandTransformation;
 import cc.redberry.core.utils.TensorUtils;
 import junit.framework.Assert;
 import org.junit.Ignore;
@@ -44,8 +44,8 @@ public class AveragingTest {
 
         Tensor t = Tensors.parse("F^\\alpha\\beta*n_{\\nu}*n_{\\alpha}*n_{\\beta}*n^{\\gamma}+V^\\beta\\alpha*n_{\\nu}*n_{\\alpha}*n_{\\beta}*n^{\\gamma}");
         t = new Averaging(Tensors.parseSimple("n_\\mu")).transform(t);
-        t = Expand.expand(t, ContractIndices.ContractIndices);
-        t = ContractIndices.ContractIndices.transform(t);
+        t = ExpandTransformation.expand(t, EliminateMetricsTransformation.ELIMINATE_METRICS);
+        t = EliminateMetricsTransformation.ELIMINATE_METRICS.transform(t);
         Tensor expected = Tensors.parse("1/24*V^{\\gamma }_{\\nu }+1/24*V_{\\nu }^{\\gamma }+1/24*V_{\\alpha }^{\\alpha }*d^{\\gamma }_{\\nu }+1/24*d^{\\gamma }_{\\nu }*F_{\\beta }^{\\beta }+1/24*F_{\\nu }^{\\gamma }+1/24*F^{\\gamma }_{\\nu }");
         Assert.assertTrue(TensorUtils.equals(t, expected));
     }
@@ -65,8 +65,8 @@ public class AveragingTest {
             Tensor t = Tensors.parse("n^\\mu*n_\\mu*n_\\alpha*n^\\alpha*n_\\nu*n^\\nu");
             Expression d = (Expression) Tensors.parse("d_\\mu^\\mu=4");
             t = new Averaging(Tensors.parseSimple("n_\\mu")).transform(t);
-            t = Expand.expand(t, ContractIndices.ContractIndices, d);
-            t = ContractIndices.contract(t);
+            t = ExpandTransformation.expand(t, EliminateMetricsTransformation.ELIMINATE_METRICS, d);
+            t = EliminateMetricsTransformation.eliminate(t);
             t = d.transform(t);
             if (!TensorUtils.isOne(t))
                 System.out.println(t);
@@ -79,8 +79,8 @@ public class AveragingTest {
         Tensor t = Tensors.parse("n^\\mu*n_\\mu*n_\\alpha*n^\\alpha*n_\\nu*n^\\nu*n_\\lambda*n^\\lambda*n_\\rho*n^\\rho");
         Expression d = (Expression) Tensors.parse("d_\\mu^\\mu=4");
         t = new Averaging(Tensors.parseSimple("n_\\mu")).transform(t);
-        t = Expand.expand(t, ContractIndices.ContractIndices);
-        t = ContractIndices.contract(t);
+        t = ExpandTransformation.expand(t, EliminateMetricsTransformation.ELIMINATE_METRICS);
+        t = EliminateMetricsTransformation.eliminate(t);
         t = d.transform(t);
         Assert.assertTrue(TensorUtils.isOne(t));
     }
@@ -90,8 +90,8 @@ public class AveragingTest {
         Tensor ff = (Expression) Tensors.parse("FF=(-1/6)*F^{\\nu \\beta \\epsilon }_{\\zeta }*F_{\\nu \\beta }^{\\zeta }_{\\epsilon }+n^{\\mu }*F^{\\alpha }_{\\nu }^{\\epsilon }_{\\lambda }*n^{\\nu }*F_{\\alpha \\mu }^{\\lambda }_{\\epsilon }+(-8/3)*n^{\\mu }*F_{\\beta \\nu }^{\\epsilon }_{\\lambda }*n^{\\alpha }*n^{\\beta }*n^{\\nu }*F_{\\alpha \\mu }^{\\lambda }_{\\epsilon }");
         Tensors.addSymmetry("F_{\\mu\\nu\\alpha\\beta}", IndexType.GreekLower, true, new int[]{1, 0, 2, 3});
         ff = new Averaging(Tensors.parseSimple("n_\\mu")).transform(ff);
-        ff = Expand.expand(ff);
-        ff = ContractIndices.ContractIndices.transform(ff);
+        ff = ExpandTransformation.expand(ff);
+        ff = EliminateMetricsTransformation.ELIMINATE_METRICS.transform(ff);
         ff = ((Expression) Tensors.parse("F_{\\mu}^\\mu_\\alpha\\beta=0")).transform(ff);
 
         System.out.println(ff);
@@ -110,8 +110,8 @@ public class AveragingTest {
         Tensor t = Tensors.parse("a*n_\\mu*n_\\nu+g_{\\mu\\nu}*n_\\alpha*n^\\alpha+n_\\mu*n_\\nu*n_\\alpha*g^\\alpha");
         Expression d = Tensors.parseExpression("d_\\mu^\\mu =4");
         t = new Averaging(Tensors.parseSimple("n_\\mu")).transform(t);
-        t = Expand.expand(t, ContractIndices.ContractIndices, d);
-        t = ContractIndices.contract(t);
+        t = ExpandTransformation.expand(t, EliminateMetricsTransformation.ELIMINATE_METRICS, d);
+        t = EliminateMetricsTransformation.eliminate(t);
         t = d.transform(t);
         Tensor expected = Tensors.parse("(1/4*a+1)*g_\\mu\\nu");
         Assert.assertTrue(TensorUtils.equals(t, expected));
@@ -143,7 +143,7 @@ public class AveragingTest {
     public void test11() {
         Tensor t = Tensors.parse("(n_{\\sigma}*n^{\\alpha}*R_{\\alpha}^{\\sigma})**2");
         t = new Averaging(Tensors.parseSimple("n_\\alpha")).transform(t);
-        t = ContractIndices.contract(t);
+        t = EliminateMetricsTransformation.eliminate(t);
         System.out.println(t);
         Assert.assertTrue(TensorUtils.equals(t, Tensors.parse("(1/16)*R_{\\sigma}^{\\sigma}**2")));
     }
@@ -153,7 +153,7 @@ public class AveragingTest {
     public void test12() {
         Tensor t = Tensors.parse("2+(n_{\\sigma}*n^{\\alpha}*R_{\\alpha}^{\\sigma})**2");
         t = new Averaging(Tensors.parseSimple("n_\\alpha")).transform(t);
-        t = ContractIndices.contract(t);
+        t = EliminateMetricsTransformation.eliminate(t);
         Assert.assertTrue(TensorUtils.equals(t, Tensors.parse("2+(1/16)*R_{\\sigma}^{\\sigma}**2")));
     }
 
@@ -162,7 +162,7 @@ public class AveragingTest {
     public void test13() {
         Tensor t = Tensors.parse("n_\\mu*n^\\mu+(n_{\\sigma}*n^{\\alpha}*R_{\\alpha}^{\\sigma})**2");
         t = new Averaging(Tensors.parseSimple("n_\\alpha")).transform(t);
-        t = ContractIndices.contract(t);
+        t = EliminateMetricsTransformation.eliminate(t);
         t = Tensors.parseExpression("d_\\mu^\\mu = 4").transform(t);
         Assert.assertTrue(TensorUtils.equals(t, Tensors.parse("1+(1/16)*R_{\\sigma}^{\\sigma}**2")));
     }
@@ -172,17 +172,17 @@ public class AveragingTest {
     public void test14() {
         Tensor t = Tensors.parse("(128/5)*(R^{\\sigma}_{\\alpha\\beta\\gamma}*n^{\\gamma}*n_{\\sigma}*n^{\\alpha}*n^{\\beta})**2-(1/6)*R**2+(24/5)*(R_{\\gamma}^{\\sigma}*n_{\\sigma}*n^{\\gamma})**2-(1/3)*R_{\\mu\\nu}*R^{\\mu\\nu}");
         t = new Averaging(Tensors.parseSimple("n_\\alpha")).transform(t);
-        t = Expand.expand(t);
-        t = ContractIndices.contract(t);
+        t = ExpandTransformation.expand(t);
+        t = EliminateMetricsTransformation.eliminate(t);
         t = Tensors.parseExpression("d_\\mu^\\mu = 4").transform(t);
-        t = RemoveDueToSymmetry.INSTANCE.transform(t);
+        t = EliminateFromSymmetriesTransformation.ELIMINATE_FROM_SYMMETRIES.transform(t);
     }
 
     @Ignore
     @Test
     public void test15() {
         Tensor t = Tensors.parse("4*(-(4/5)*(n_{\\rho}*n^{\\beta}*R_{\\beta}^{\\rho})**2+(32/5)*(R^{\\sigma}_{\\alpha\\beta\\gamma}*n^{\\alpha}*n^{\\beta}*n_{\\sigma}*n^{\\gamma})**2)");
-        System.out.println(Expand.expand(t));
+        System.out.println(ExpandTransformation.expand(t));
     }
 
 }

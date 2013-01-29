@@ -1,7 +1,28 @@
+/*
+ * Redberry: symbolic tensor computations.
+ *
+ * Copyright (c) 2010-2013:
+ *   Stanislav Poslavsky   <stvlpos@mail.ru>
+ *   Bolotin Dmitriy       <bolotin.dmitriy@gmail.com>
+ *
+ * This file is part of Redberry.
+ *
+ * Redberry is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Redberry is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Redberry. If not, see <http://www.gnu.org/licenses/>.
+ */
 package cc.redberry.physics.feyncalc;
 
 import cc.redberry.core.TAssert;
-import cc.redberry.core.context.ContextManager;
 import cc.redberry.core.tensor.SimpleTensor;
 import cc.redberry.core.tensor.Tensor;
 import junit.framework.TestCase;
@@ -9,7 +30,6 @@ import org.junit.Test;
 
 import static cc.redberry.core.number.Complex.ZERO;
 import static cc.redberry.core.tensor.Tensors.*;
-import static cc.redberry.physics.feyncalc.LeviCivitaSimplify.simplifyLeviCivita;
 
 /**
  * @author Dmitry Bolotin
@@ -92,5 +112,12 @@ public class LeviCivitaSimplifyTest extends TestCase {
         TAssert.assertEquals(simplifyLeviCivita(t, eps), "16*I*e_aceg");
         t = parse("(4*I)*e^{h}_{d}^{fb}*e_{abch}*e_{e}^{d}_{gf}");
         TAssert.assertEquals(simplifyLeviCivita(t, eps), "16*I*e_aceg");
+
+        t = parse("(4*I)*e^{h}_{d}^{fb}*e_{abch}*e_{e}^{d}_{gf}+g_mn*e^mn_ac*g_eg");
+        TAssert.assertEquals(simplifyLeviCivita(t, eps), "16*I*e_aceg");
+    }
+
+    private static Tensor simplifyLeviCivita(Tensor t, SimpleTensor eps) {
+        return new LeviCivitaSimplify(eps, true).transform(t);
     }
 }

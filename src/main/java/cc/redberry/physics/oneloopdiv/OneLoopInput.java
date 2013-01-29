@@ -1,7 +1,7 @@
 /*
  * Redberry: symbolic tensor computations.
  *
- * Copyright (c) 2010-2012:
+ * Copyright (c) 2010-2013:
  *   Stanislav Poslavsky   <stvlpos@mail.ru>
  *   Bolotin Dmitriy       <bolotin.dmitriy@gmail.com>
  *
@@ -28,17 +28,17 @@ import cc.redberry.core.context.NameDescriptor;
 import cc.redberry.core.context.OutputFormat;
 import cc.redberry.core.indices.*;
 import cc.redberry.core.number.Complex;
-import cc.redberry.core.parser.ParseNodeSimpleTensor;
+import cc.redberry.core.parser.ParseTokenSimpleTensor;
 import cc.redberry.core.parser.preprocessor.IndicesInsertion;
 import cc.redberry.core.tensor.Expression;
 import cc.redberry.core.tensor.SimpleTensor;
 import cc.redberry.core.tensor.Tensor;
 import cc.redberry.core.tensor.Tensors;
 import cc.redberry.core.tensor.iterator.TraverseState;
-import cc.redberry.core.transformations.ContractIndices;
+import cc.redberry.core.transformations.EliminateMetricsTransformation;
 import cc.redberry.core.transformations.Transformation;
 import cc.redberry.core.transformations.Transformer;
-import cc.redberry.core.transformations.expand.Expand;
+import cc.redberry.core.transformations.expand.ExpandTransformation;
 import cc.redberry.core.utils.ArraysUtils;
 import cc.redberry.core.utils.Indicator;
 
@@ -226,12 +226,12 @@ public final class OneLoopInput {
             lower[i - operatorOrder] = IndicesUtils.createIndex(i + matrixIndicesCount / 2, IndexType.GreekLower, false);
         }
 
-        Indicator<ParseNodeSimpleTensor> indicator = new Indicator<ParseNodeSimpleTensor>() {
+        Indicator<ParseTokenSimpleTensor> indicator = new Indicator<ParseTokenSimpleTensor>() {
 
-            private final IndicesTypeStructure F_TYPES = new IndicesTypeStructure(IndexType.GreekLower, 2);
+            private final StructureOfIndices F_TYPES = new StructureOfIndices(IndexType.GreekLower, 2);
 
             @Override
-            public boolean is(ParseNodeSimpleTensor object) {
+            public boolean is(ParseTokenSimpleTensor object) {
                 String name = object.name;
                 int i;
                 for (i = 0; i < INPUT_VALUES_GENERAL_COUNT; ++i)
@@ -257,7 +257,7 @@ public final class OneLoopInput {
         Tensor temp;
         String covariantIndicesString;
         Transformation n2 = new SqrSubs(Tensors.parseSimple("n_\\mu")), n2Transformer = new Transformer(TraverseState.Leaving, new Transformation[]{n2});
-        Transformation[] transformations = ArraysUtils.addAll(new Transformation[]{ContractIndices.ContractIndices, n2Transformer}, riemannBackground);
+        Transformation[] transformations = ArraysUtils.addAll(new Transformation[]{EliminateMetricsTransformation.ELIMINATE_METRICS, n2Transformer}, riemannBackground);
         for (i = 0; i < actualHatQuantities; ++i) {
             hatQuantities[i] = new Expression[operatorOrder + 1 - i];
             covariantIndicesString = IndicesUtils.toString(Arrays.copyOfRange(covariantIndices, 0, covariantIndices.length - i), OutputFormat.Redberry);
@@ -274,7 +274,7 @@ public final class OneLoopInput {
                 temp = Tensors.parse(sb.toString(), insertion);
                 temp = inputValues[0].transform(temp);
                 temp = inputValues[i + 1].transform(temp);
-                temp = Expand.expand(temp, transformations);
+                temp = ExpandTransformation.expand(temp, transformations);
                 for (Transformation t : transformations)
                     temp = t.transform(temp);
                 hatQuantities[i][j] = (Expression) temp;
@@ -301,7 +301,7 @@ public final class OneLoopInput {
             temp = Tensors.parse(sb.toString());
             temp = inputValues[0].transform(temp);
             temp = inputValues[1].transform(temp);
-            temp = Expand.expand(temp, transformations);
+            temp = ExpandTransformation.expand(temp, transformations);
             for (Transformation t : transformations)
                 temp = t.transform(temp);
             kn[i] = (Expression) temp;
@@ -378,8 +378,8 @@ public final class OneLoopInput {
 
 
         SimpleIndices indices = (SimpleIndices) inputValues[1].get(0).getIndices();
-        IndicesTypeStructure indicesTypeStructure = indices.getIndicesTypeStructure();
-        if (indicesTypeStructure.getTypeData(IndexType.GreekLower.getType()).length != indicesTypeStructure.size())
+        StructureOfIndices structureOfIndices = indices.getStructureOfIndices();
+        if (structureOfIndices.getTypeData(IndexType.GreekLower.getType()).length != structureOfIndices.size())
             throw new IllegalArgumentException("Only Greek lower indices are legal.");
 
         int matrixIndicesCount = indices.size() - operatorOrder;
@@ -390,10 +390,10 @@ public final class OneLoopInput {
             throw new IllegalArgumentException();
 
         for (i = 1; i < actualInput; ++i) {
-            indicesTypeStructure = ((SimpleIndices) inputValues[i].get(0).getIndices()).getIndicesTypeStructure();
-            if (indicesTypeStructure.getTypeData(IndexType.GreekLower.getType()).length != indicesTypeStructure.size())
+            structureOfIndices = ((SimpleIndices) inputValues[i].get(0).getIndices()).getStructureOfIndices();
+            if (structureOfIndices.getTypeData(IndexType.GreekLower.getType()).length != structureOfIndices.size())
                 throw new IllegalArgumentException("Only Greek lower indices are legal.");
-            if (indicesTypeStructure.size() + i - 1 != operatorOrder + matrixIndicesCount)
+            if (structureOfIndices.size() + i - 1 != operatorOrder + matrixIndicesCount)
                 throw new IllegalArgumentException();
         }
     }

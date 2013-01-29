@@ -1,218 +1,293 @@
+/*
+ * Redberry: symbolic tensor computations.
+ *
+ * Copyright (c) 2010-2013:
+ *   Stanislav Poslavsky   <stvlpos@mail.ru>
+ *   Bolotin Dmitriy       <bolotin.dmitriy@gmail.com>
+ *
+ * This file is part of Redberry.
+ *
+ * Redberry is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Redberry is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Redberry. If not, see <http://www.gnu.org/licenses/>.
+ */
 package cc.redberry.physics.feyncalc;
 
-import cc.redberry.core.indexgenerator.IndexGenerator;
+import cc.redberry.core.context.CC;
+import cc.redberry.core.context.NameAndStructureOfIndices;
+import cc.redberry.core.context.OutputFormat;
+import cc.redberry.core.graph.GraphType;
+import cc.redberry.core.graph.PrimitiveSubgraph;
+import cc.redberry.core.graph.PrimitiveSubgraphPartition;
 import cc.redberry.core.indices.IndexType;
-import cc.redberry.core.indices.IndicesFactory;
-import cc.redberry.core.indices.SimpleIndices;
+import cc.redberry.core.indices.IndicesUtils;
 import cc.redberry.core.number.Complex;
+import cc.redberry.core.parser.ParseToken;
+import cc.redberry.core.parser.Parser;
+import cc.redberry.core.parser.preprocessor.ChangeIndicesTypesAndTensorNames;
+import cc.redberry.core.parser.preprocessor.TypesAndNamesTransformer;
 import cc.redberry.core.tensor.*;
-import cc.redberry.core.tensor.iterator.TensorLastIterator;
-import cc.redberry.core.transformations.ContractIndices;
+import cc.redberry.core.tensor.iterator.FromChildToParentIterator;
+import cc.redberry.core.transformations.EliminateMetricsTransformation;
 import cc.redberry.core.transformations.Transformation;
-import cc.redberry.core.transformations.expand.Expand;
-import cc.redberry.core.utils.ArraysUtils;
+import cc.redberry.core.transformations.TransformationCollection;
+import cc.redberry.core.transformations.expand.ExpandTransformation;
+import cc.redberry.core.utils.IntArrayList;
 import cc.redberry.core.utils.TensorUtils;
 
-import java.util.*;
+import java.util.ArrayList;
 
-import static cc.redberry.core.tensor.Tensors.*;
+import static cc.redberry.core.tensor.Tensors.multiply;
+import static cc.redberry.core.tensor.Tensors.parseExpression;
 
 /**
+ * Calculates trace of unitary matrices.
+ *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
 public final class UnitaryTrace implements Transformation {
-    private final SimpleTensor SuN, f, d;
-    private final Tensor N;
+    /*
+     * Defaults
+     */
+    private static final String unitaryMatrixName = "T";
+    private static final String structureConstantName = "F";
+    private static final String symmetricConstantName = "D";
+    private static final String dimensionName = "N";
 
-    public UnitaryTrace(SimpleTensor suN, SimpleTensor f, SimpleTensor d, Tensor n) {
-        SuN = suN;
-        this.f = f;
-        this.d = d;
-        N = n;
+    private final int unitaryMatrix;
+    private final IndexType matrixType;
+
+    private final Expression unitaryCommutator;
+    private final Transformation simplifications;
+
+    /**
+     * Creates transformation with given definitions.
+     *
+     * @param unitaryMatrix     unitary matrix
+     * @param structureConstant structure constants of SU(N)
+     * @param symmetricConstant symmetric constants of SU(N)
+     * @param dimension         dimension
+     */
+    public UnitaryTrace(final SimpleTensor unitaryMatrix,
+                        final SimpleTensor structureConstant,
+                        final SimpleTensor symmetricConstant,
+                        final Tensor dimension) {
+        check(unitaryMatrix, structureConstant, symmetricConstant, dimension);
+        this.unitaryMatrix = unitaryMatrix.getName();
+        final IndexType[] types = TraceUtils.extractTypesFromMatrix(unitaryMatrix);
+        this.matrixType = types[1];
+
+        ChangeIndicesTypesAndTensorNames tokenTransformer = new ChangeIndicesTypesAndTensorNames(new TypesAndNamesTransformer() {
+            @Override
+            public IndexType newType(IndexType oldType, NameAndStructureOfIndices old) {
+                if (oldType == IndexType.LatinLower)
+                    return types[0];
+                if (oldType == IndexType.Matrix1)
+                    return types[1];
+                return oldType;
+            }
+
+            @Override
+            public String newName(NameAndStructureOfIndices old) {
+                switch (old.getName()) {
+                    case unitaryMatrixName:
+                        return unitaryMatrix.getStringName();
+                    case structureConstantName:
+                        return structureConstant.getStringName();
+                    case symmetricConstantName:
+                        return symmetricConstant.getStringName();
+                    case dimensionName:
+                        if (!(dimension instanceof Complex))
+                            return dimension.toString(OutputFormat.Redberry);
+                    default:
+                        return old.getName();
+                }
+            }
+        });
+
+        this.unitaryCommutator = (Expression) tokenTransformer.transform(commutatorToken).toTensor();
+
+        //simplifications with SU(N) combinations
+        ArrayList<Transformation> unitarySimplifications = new ArrayList<>();
+        unitarySimplifications.add(EliminateMetricsTransformation.ELIMINATE_METRICS);
+        for (ParseToken substitution : unitarySimplificationsTokens)
+            unitarySimplifications.add((Expression) tokenTransformer.transform(substitution).toTensor());
+        if (dimension instanceof Complex)
+            unitarySimplifications.add(parseExpression("N = " + dimension));
+
+        //all simplifications
+        ArrayList<Transformation> simplifications = new ArrayList<>(10);
+        simplifications.add(new ExpandTransformation(new TransformationCollection(unitarySimplifications)));
+        for (Transformation tr : unitarySimplifications)
+            simplifications.add(tr);
+
+        this.simplifications = new TransformationCollection(simplifications);
     }
 
     @Override
     public Tensor transform(Tensor t) {
-        return unitaryTrace(t, SuN, f, d, N);
-    }
-
-    public static final Tensor unitaryTrace(Tensor t) {
-        return unitaryTrace(t, parseSimple("T^a'_b'a"), parseSimple("f_abc"), parseSimple("d_abc"), parseSimple("N"));
-    }
-
-    public static final Tensor unitaryTrace(Tensor tensor, SimpleTensor SuN, SimpleTensor f, SimpleTensor d, Tensor N) {
-        IndexType[] types = TraceUtils.extractTypesFromMatrix(SuN);
-        TensorLastIterator iterator = new TensorLastIterator(tensor);
+        FromChildToParentIterator iterator = new FromChildToParentIterator(t);
         Tensor c;
         while ((c = iterator.next()) != null) {
             if (c instanceof SimpleTensor) {
-                if (((SimpleTensor) c).getName() == SuN.getName() && c.getIndices().getOfType(types[1]).getFree().size() == 0)
+                // Tr[T_a] = 0
+                if (((SimpleTensor) c).getName() == unitaryMatrix && c.getIndices().getOfType(matrixType).getFree().size() == 0)
                     iterator.set(Complex.ZERO);
             } else if (c instanceof Product) {
-                TensorBuilder suns = new ProductBuilder();
-                boolean containsSun = false;
-                Tensor nonSun = c;
-                for (int i = c.size() - 1; i >= 0; --i) {
-                    if (isSuN(c.get(i), SuN.getName())) {
-                        containsSun = true;
-                        suns.put(c.get(i));
-                        if (nonSun instanceof Product)
-                            nonSun = ((Product) nonSun).remove(i);
-                        else {
-                            assert i == 0;
-                            nonSun = Complex.ONE;
-                        }
-                    }
-                }
-                if (!containsSun)
+                //selecting unitary matrices from product
+                //extracting trace combinations from product
+                Product product = (Product) c;
+                int sizeOfIndexless = product.sizeOfIndexlessPart();
+                ProductContent productContent = product.getContent();
+                PrimitiveSubgraph[] subgraphs
+                        = PrimitiveSubgraphPartition.calculatePartition(productContent, matrixType);
+
+                //no unitary matrices in product
+                if (subgraphs.length == 0)
                     continue;
-                Tensor temp = multiply(nonSun, traceOfProduct(suns.build(), SuN.getName(), f.getName(), d.getName(), N, types[0], types[1]));
-                temp = Expand.expand(temp, ContractIndices.ContractIndices);
-                temp = ContractIndices.contract(temp);
-                iterator.set(temp);
+
+                //positions of unitary matrices
+                IntArrayList positionsOfMatrices = new IntArrayList();
+                //calculated traces
+                ProductBuilder calculatedTraces = new ProductBuilder();
+
+                out:
+                for (PrimitiveSubgraph subgraph : subgraphs) {
+                    //not a trace
+                    if (subgraph.getGraphType() != GraphType.Cycle)
+                        continue;
+
+                    //positions of unitary matrices
+                    int[] partition = subgraph.getPartition();
+                    for (int i = partition.length - 1; i >= 0; --i)
+                        partition[i] = sizeOfIndexless + partition[i];
+
+                    //contains not only unitary matrices
+                    for (int i : partition)
+                        if (!isUnitaryMatrix(product.get(i), unitaryMatrix))
+                            continue out;
+
+                    //calculate trace
+                    calculatedTraces.put(traceOfProduct(product.select(partition)));
+                    positionsOfMatrices.addAll(partition);
+                }
+                //compiling the result
+                c = product.remove(positionsOfMatrices.toArray());
+                c = multiply(c, calculatedTraces.build());
+                iterator.set(simplifications.transform(c));
             }
         }
         return iterator.result();
     }
 
-    private static Tensor traceOfProduct(Tensor tensor,
-                                         int sunName, int fName, int dName, Tensor N,
-                                         IndexType metricType, IndexType matrixType) {
-        Expression[] subs = getSubstitutions(sunName, fName, dName, N, metricType, matrixType);
-        Transformation[] transformations = new Transformation[]{ContractIndices.ContractIndices};
-        transformations = ArraysUtils.addAll(transformations, Arrays.copyOfRange(subs, 1, subs.length));
-
+    private Tensor traceOfProduct(Tensor tensor) {
         Tensor oldTensor = tensor, newTensor;
         while (true) {
-            newTensor = subs[0].transform(oldTensor);
-            newTensor = Expand.expand(newTensor, transformations);
-            for (Transformation tr : transformations)
-                newTensor = tr.transform(newTensor);
+            newTensor = unitaryCommutator.transform(oldTensor);
+            newTensor = simplifications.transform(newTensor);
             if (newTensor == oldTensor)
                 break;
             oldTensor = newTensor;
         }
-
         return newTensor;
     }
 
-    private static final boolean isSuN(Tensor tensor, int sunName) {
-        return tensor instanceof SimpleTensor && ((SimpleTensor) tensor).getName() == sunName;
+    private static final boolean isUnitaryMatrix(Tensor tensor, int unitaryMatrix) {
+        return tensor instanceof SimpleTensor && ((SimpleTensor) tensor).getName() == unitaryMatrix;
     }
 
-    private static final class CacheContainer {
-        final int sunName, fName, dName;
-        final Tensor N;
+    private static void check(final SimpleTensor unitaryMatrix,
+                              final SimpleTensor structureConstant,
+                              final SimpleTensor symmetricConstant,
+                              final Tensor dimension) {
 
-        private CacheContainer(int sunName, int fName, int dName, Tensor n) {
-            this.sunName = sunName;
-            this.fName = fName;
-            this.dName = dName;
-            this.N = n;
+        if (dimension instanceof Complex && !TensorUtils.isNaturalNumber(dimension))
+            throw new IllegalArgumentException("Non natural dimension.");
+
+        if (unitaryMatrix.getIndices().size() != 3)
+            throw new IllegalArgumentException("Not a unitary matrix: " + unitaryMatrix);
+        IndexType[] types = TraceUtils.extractTypesFromMatrix(unitaryMatrix);
+        IndexType metricType = types[0];
+        if (!TensorUtils.isScalar(dimension))
+            throw new IllegalArgumentException("Non scalar dimension.");
+        if (structureConstant.getName() == symmetricConstant.getName())
+            throw new IllegalArgumentException("Structure and symmetric constants have same names.");
+        SimpleTensor[] ss = {structureConstant, symmetricConstant};
+        for (SimpleTensor st : ss) {
+            if (st.getIndices().size() != 3)
+                throw new IllegalArgumentException("Illegal input for SU(N) constants: " + st);
+            for (int i = 0; i < 3; ++i)
+                if (IndicesUtils.getTypeEnum(st.getIndices().get(i)) != metricType)
+                    throw new IllegalArgumentException("Different indices metric types: " + unitaryMatrix + " and " + st);
         }
-
-        @Override
-        public boolean equals(Object o) {
-            CacheContainer that = (CacheContainer) o;
-            return sunName == that.sunName &&
-                    fName == that.sunName &&
-                    dName == that.dName &&
-                    TensorUtils.equals(N, that.N);
-        }
-
-        @Override
-        public int hashCode() {
-            int result = sunName;
-            result = 31 * result + fName;
-            result = 31 * result + dName;
-            result = 31 * result + N.hashCode();
-            return result;
-        }
-
     }
 
-    //todo static expression vs CC.resetTensorNames
-    private static final Map<CacheContainer, Expression[]> cachedSubstitutions = new HashMap<>();
+    /*
+     * Substitutions
+     */
 
-    private static Expression[] getSubstitutions(int sunName, int fName, int dName, Tensor N,
-                                                 IndexType metricType, IndexType matrixType) {
-        CacheContainer cacheContainer = new CacheContainer(sunName, fName, dName, N);
-        Expression[] expressions = cachedSubstitutions.get(cacheContainer);
-        if (expressions != null)
-            return expressions;
-        List<Expression> expressionsList = new ArrayList<>();
-        IndexGenerator generator = new IndexGenerator();
+    private static final Parser parser;
+    /**
+     * T_a*T_b  = 1/2N g_ab + I/2*f_abc*T^c + 1/2*d_abc*T^c
+     */
+    private static final ParseToken commutatorToken;
+    /**
+     * Tr[T_a] = 0
+     */
+    private static final ParseToken singleTraceToken;
 
-        //creating  T_a*T_b  = 1/2N g_ab + I/2*f_abc*T^c + 1/2*d_abc*T^c
-        int upper, lower, contracted, firstMetric, secondMetric, thirdMetric;
-        SimpleIndices indicesOfA = IndicesFactory.createSimple(null,
-                firstMetric = generator.generate(metricType),
-                upper = (0x80000000 | generator.generate(matrixType)),
-                contracted = generator.generate(matrixType));
+    /**
+     * d_apq*d_b^pq = (N**2 - 4)/N * g_ab
+     */
+    private static final ParseToken symmetricCombinationToken;
 
-        SimpleIndices indicesOfB = IndicesFactory.createSimple(null,
-                secondMetric = generator.generate(metricType),
-                (0x80000000 | contracted),
-                lower = generator.generate(matrixType));
+    /**
+     * f_apq*f_b^pq = N * g_ab
+     */
+    private static final ParseToken aSymmetricCombinationToken;
 
-        SimpleIndices indicesOfC = IndicesFactory.createSimple(null,
-                (0x80000000 | (thirdMetric = generator.generate(metricType))),
-                upper, lower);
+    /**
+     * f_apq*d_b^pq = 0
+     */
+    private static final ParseToken symmetrySimplificationToken;
 
+    /**
+     * d^a_a = N*(N-1)/2
+     */
+    private static final ParseToken numberOfGeneratorsToken;
 
-        Tensor lhs = multiply(simpleTensor(sunName, indicesOfA),
-                simpleTensor(sunName, indicesOfB));
+    /**
+     * Tr[1] = N
+     */
+    private static final ParseToken dimensionToken;
 
-        //(1/(2*N))*g_ab
-        Tensor gTerm = multiply(Complex.ONE_HALF, reciprocal(N),
-                createMetric(firstMetric, secondMetric), createKronecker(upper, lower));
+    private static final ParseToken[] unitarySimplificationsTokens;
 
-        SimpleIndices fIndices = IndicesFactory.createSimple(null, firstMetric, secondMetric, thirdMetric);
-        Tensor C = simpleTensor(sunName, indicesOfC);
-        //(I/2)*f_abc*T^c
-        Tensor fTerm = multiply(Complex.ONE_HALF, Complex.IMAGE_ONE,
-                simpleTensor(fName, fIndices), C);
-        //(1/2)*d_abc*T^c
-        Tensor dTerm = multiply(Complex.ONE_HALF,
-                simpleTensor(dName, fIndices), C);
+    static {
+        parser = CC.current().getParseManager().getParser();
 
-        expressionsList.add(expression(lhs, sum(gTerm, fTerm, dTerm)));
+        commutatorToken = parser.parse("T_a^a'_c'*T_b^c'_b' = 1/(2*N)*g_ab*d^a'_b' + I/2*F_abc*T^ca'_b' + 1/2*D_abc*T^ca'_b'");
+        singleTraceToken = parser.parse("T_a^a'_a' = 0");
+        symmetricCombinationToken = parser.parse("D_apq*D_b^pq = (N**2 - 4)/N * g_ab");
+        aSymmetricCombinationToken = parser.parse("F_apq*F_b^pq = N * g_ab");
+        symmetrySimplificationToken = parser.parse("F_apq*D_b^pq = 0");
+        numberOfGeneratorsToken = parser.parse("d^a_a = N*(N-1)/2");
+        dimensionToken = parser.parse("d^a'_a' = N");
 
-        //creating Tr[T] = 0
-        indicesOfA = IndicesFactory.createSimple(null, firstMetric, (0x80000000 | contracted), contracted);
-        expressionsList.add(expression(simpleTensor(sunName, indicesOfA), Complex.ZERO));
-
-        //creating d_apq*d_b^pq = (N**2 - 4)/N * g_ab
-        indicesOfA = IndicesFactory.createSimple(null,
-                upper = generator.generate(metricType),
-                firstMetric = generator.generate(metricType),
-                secondMetric = generator.generate(metricType));
-        indicesOfB = IndicesFactory.createSimple(null,
-                lower = generator.generate(metricType),
-                (0x80000000 | firstMetric),
-                (0x80000000 | secondMetric));
-
-        lhs = multiply(simpleTensor(dName, indicesOfA), simpleTensor(dName, indicesOfB));
-        Tensor rhs = multiply(reciprocal(N), subtract(pow(N, 2), Complex.FOUR), createMetric(upper, lower));
-        expressionsList.add(expression(lhs, rhs));
-
-        //creating f_apq*f_b^pq = N * g_ab
-        lhs = multiply(simpleTensor(fName, indicesOfA), simpleTensor(fName, indicesOfB));
-        rhs = multiply(N, createMetric(upper, lower));
-        expressionsList.add(expression(lhs, rhs));
-
-        //creating f_apq*d_b^pq = 0
-        lhs = multiply(simpleTensor(fName, indicesOfA), simpleTensor(dName, indicesOfB));
-        expressionsList.add(expression(lhs, Complex.ZERO));
-
-
-        //creating Tr[1] = N
-        lhs = createKronecker(contracted, (0x80000000 | contracted));
-        expressionsList.add(expression(lhs, N));
-
-        expressions = expressionsList.toArray(new Expression[expressionsList.size()]);
-        cachedSubstitutions.put(cacheContainer, expressions);
-        return expressions;
+        unitarySimplificationsTokens = new ParseToken[]{
+                singleTraceToken, symmetricCombinationToken, aSymmetricCombinationToken,
+                symmetrySimplificationToken, numberOfGeneratorsToken, dimensionToken};
     }
+
+
 }
