@@ -55,7 +55,7 @@ import static cc.redberry.core.tensor.Tensors.parseExpression;
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public final class UnitaryTrace implements Transformation {
+public final class UnitaryTraceTransformation implements Transformation {
     /*
      * Defaults
      */
@@ -67,7 +67,7 @@ public final class UnitaryTrace implements Transformation {
     private final int unitaryMatrix;
     private final IndexType matrixType;
 
-    private final Expression unitaryCommutator;
+    private final Expression pairProduct;
     private final Transformation simplifications;
 
     /**
@@ -78,10 +78,10 @@ public final class UnitaryTrace implements Transformation {
      * @param symmetricConstant symmetric constants of SU(N)
      * @param dimension         dimension
      */
-    public UnitaryTrace(final SimpleTensor unitaryMatrix,
-                        final SimpleTensor structureConstant,
-                        final SimpleTensor symmetricConstant,
-                        final Tensor dimension) {
+    public UnitaryTraceTransformation(final SimpleTensor unitaryMatrix,
+                                      final SimpleTensor structureConstant,
+                                      final SimpleTensor symmetricConstant,
+                                      final Tensor dimension) {
         check(unitaryMatrix, structureConstant, symmetricConstant, dimension);
         this.unitaryMatrix = unitaryMatrix.getName();
         final IndexType[] types = TraceUtils.extractTypesFromMatrix(unitaryMatrix);
@@ -115,7 +115,7 @@ public final class UnitaryTrace implements Transformation {
             }
         });
 
-        this.unitaryCommutator = (Expression) tokenTransformer.transform(commutatorToken).toTensor();
+        this.pairProduct = (Expression) tokenTransformer.transform(pairProductToken).toTensor();
 
         //simplifications with SU(N) combinations
         ArrayList<Transformation> unitarySimplifications = new ArrayList<>();
@@ -192,7 +192,7 @@ public final class UnitaryTrace implements Transformation {
     private Tensor traceOfProduct(Tensor tensor) {
         Tensor oldTensor = tensor, newTensor;
         while (true) {
-            newTensor = unitaryCommutator.transform(oldTensor);
+            newTensor = pairProduct.transform(oldTensor);
             newTensor = simplifications.transform(newTensor);
             if (newTensor == oldTensor)
                 break;
@@ -239,7 +239,7 @@ public final class UnitaryTrace implements Transformation {
     /**
      * T_a*T_b  = 1/2N g_ab + I/2*f_abc*T^c + 1/2*d_abc*T^c
      */
-    private static final ParseToken commutatorToken;
+    private static final ParseToken pairProductToken;
     /**
      * Tr[T_a] = 0
      */
@@ -275,7 +275,7 @@ public final class UnitaryTrace implements Transformation {
     static {
         parser = CC.current().getParseManager().getParser();
 
-        commutatorToken = parser.parse("T_a^a'_c'*T_b^c'_b' = 1/(2*N)*g_ab*d^a'_b' + I/2*F_abc*T^ca'_b' + 1/2*D_abc*T^ca'_b'");
+        pairProductToken = parser.parse("T_a^a'_c'*T_b^c'_b' = 1/(2*N)*g_ab*d^a'_b' + I/2*F_abc*T^ca'_b' + 1/2*D_abc*T^ca'_b'");
         singleTraceToken = parser.parse("T_a^a'_a' = 0");
         symmetricCombinationToken = parser.parse("D_apq*D_b^pq = (N**2 - 4)/N * g_ab");
         aSymmetricCombinationToken = parser.parse("F_apq*F_b^pq = N * g_ab");

@@ -31,13 +31,13 @@ import org.junit.Test;
 import static cc.redberry.core.indices.IndexType.Matrix1;
 import static cc.redberry.core.tensor.Tensors.parse;
 import static cc.redberry.core.tensor.Tensors.parseSimple;
-import static cc.redberry.physics.feyncalc.TrInverseOrderOfMatrices.inverseOrderOfMatrices;
+import static cc.redberry.physics.feyncalc.InverseOrderOfMatricesTransformation.inverseOrderOfMatrices;
 
 /**
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public class TrInverseOrderOfMatricesTest {
+public class InverseOrderOfMatricesTransformationTest {
     @Test
     public void test1() {
         GeneralIndicesInsertion gii = new GeneralIndicesInsertion();

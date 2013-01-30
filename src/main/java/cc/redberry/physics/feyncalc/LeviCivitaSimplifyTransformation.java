@@ -66,7 +66,7 @@ import static cc.redberry.core.tensor.Tensors.*;
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public class LeviCivitaSimplify implements Transformation {
+public class LeviCivitaSimplifyTransformation implements Transformation {
     private static final String defaultLeviCivitaName = "eps";
 
     private final int leviCivita;
@@ -88,7 +88,7 @@ public class LeviCivitaSimplify implements Transformation {
      *                       space (so e.g. e_abcd*e^abcd = -24), otherwise in Euclidean space
      *                       (so e.g. e_abcd*e^abcd = +24)
      */
-    public LeviCivitaSimplify(SimpleTensor leviCivita, boolean minkovskiSpace) {
+    public LeviCivitaSimplifyTransformation(SimpleTensor leviCivita, boolean minkovskiSpace) {
         checkLeviCivita(leviCivita);
 
         this.leviCivita = leviCivita.getName();

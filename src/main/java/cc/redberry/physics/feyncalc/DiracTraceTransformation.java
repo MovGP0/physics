@@ -48,12 +48,12 @@ import static cc.redberry.core.indices.IndicesUtils.*;
 import static cc.redberry.core.tensor.Tensors.*;
 
 /**
- * Calculate trace of gamma matrices in four dimensions.
+ * Calculate traces of gamma matrices in four dimensions.
  *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public class DiracTrace implements Transformation {
+public class DiracTraceTransformation implements Transformation {
     /*
      * Defaults
      */
@@ -63,7 +63,7 @@ public class DiracTrace implements Transformation {
 
     private final int gammaName, gamma5Name;
     private final IndexType metricType, matrixType;
-    private final LeviCivitaSimplify simplifyLeviCivita;
+    private final LeviCivitaSimplifyTransformation simplifyLeviCivita;
 
     private final ParseTokenTransformer tokenTransformer;
     private final Expression deltaTrace;
@@ -73,7 +73,7 @@ public class DiracTrace implements Transformation {
      *
      * @param gammaMatrix tensor, which will be considered as gamma matrix
      */
-    public DiracTrace(final SimpleTensor gammaMatrix) {
+    public DiracTraceTransformation(final SimpleTensor gammaMatrix) {
         checkNotation(gammaMatrix);
         this.gammaName = gammaMatrix.getName();
         //no gamma5 should be in tensors
@@ -114,20 +114,20 @@ public class DiracTrace implements Transformation {
     }
 
     /**
-     * Creates transformation with specified notations.
+     * Creates transformation with specified notations for gamma matrices and Levi-Civita tensor.
      *
      * @param gammaMatrix tensor, which will be considered as gamma matrix
      * @param gamma5      tensor, which will be considered as gamma5 matrix
      * @param leviCivita  tensor, which will be considered as Levi-Civita tensor
      */
-    public DiracTrace(final SimpleTensor gammaMatrix,
-                      final SimpleTensor gamma5,
-                      final SimpleTensor leviCivita) {
+    public DiracTraceTransformation(final SimpleTensor gammaMatrix,
+                                    final SimpleTensor gamma5,
+                                    final SimpleTensor leviCivita) {
         this(gammaMatrix, gamma5, leviCivita, true);
     }
 
     /**
-     * Creates transformation with specified notations.
+     * Creates transformation with specified notations for gamma matrices and Levi-Civita tensor.
      *
      * @param gammaMatrix    tensor, which will be considered as gamma matrix
      * @param gamma5         tensor, which will be considered as gamma5 matrix
@@ -136,10 +136,10 @@ public class DiracTrace implements Transformation {
      *                       space (so e.g. e_abcd*e^abcd = -24), otherwise in Euclidean space
      *                       (so e.g. e_abcd*e^abcd = +24)
      */
-    public DiracTrace(final SimpleTensor gammaMatrix,
-                      final SimpleTensor gamma5,
-                      final SimpleTensor leviCivita,
-                      final boolean minkovskiSpace) {
+    public DiracTraceTransformation(final SimpleTensor gammaMatrix,
+                                    final SimpleTensor gamma5,
+                                    final SimpleTensor leviCivita,
+                                    final boolean minkovskiSpace) {
         checkNotation(gammaMatrix, gamma5, leviCivita);
         this.gammaName = gammaMatrix.getName();
         this.gamma5Name = gamma5.getName();
@@ -174,7 +174,7 @@ public class DiracTrace implements Transformation {
             }
         });
 
-        this.simplifyLeviCivita = new LeviCivitaSimplify(leviCivita, minkovskiSpace);
+        this.simplifyLeviCivita = new LeviCivitaSimplifyTransformation(leviCivita, minkovskiSpace);
         this.deltaTrace = (Expression) tokenTransformer.transform(CC.current().getParseManager().getParser().parse("d^a_a=4")).toTensor();
     }
 

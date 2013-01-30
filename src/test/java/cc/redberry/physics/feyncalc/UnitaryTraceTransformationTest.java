@@ -39,7 +39,7 @@ import static cc.redberry.core.tensor.Tensors.*;
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public class UnitaryTraceTest {
+public class UnitaryTraceTransformationTest {
 
     @Test
     public void test1() {
@@ -99,7 +99,7 @@ public class UnitaryTraceTest {
 
         setSymmetric("e_\\alpha\\beta\\gamma");
         setAntiSymmetric("r_\\alpha\\beta\\gamma");
-        Transformation trace = new UnitaryTrace(
+        Transformation trace = new UnitaryTraceTransformation(
                 parseSimple("M_\\alpha^A'_B'"),
                 parseSimple("e_\\alpha\\beta\\gamma"),
                 parseSimple("r_\\alpha\\beta\\gamma"),
@@ -122,7 +122,7 @@ public class UnitaryTraceTest {
         setSymmetric(parseSimple("d_abd"));
         setAntiSymmetric("f_abc");
 
-        Transformation trace = new UnitaryTrace(
+        Transformation trace = new UnitaryTraceTransformation(
                 parseSimple("T_a"),
                 parseSimple("f_abc"),
                 parseSimple("d_abc"),
@@ -136,6 +136,6 @@ public class UnitaryTraceTest {
     }
 
     static Tensor unitaryTrace(Tensor t) {
-        return new UnitaryTrace(parseSimple("T_a^a'_b'"), parseSimple("f_abc"), parseSimple("d_abc"), parseSimple("N")).transform(t);
+        return new UnitaryTraceTransformation(parseSimple("T_a^a'_b'"), parseSimple("f_abc"), parseSimple("d_abc"), parseSimple("N")).transform(t);
     }
 }

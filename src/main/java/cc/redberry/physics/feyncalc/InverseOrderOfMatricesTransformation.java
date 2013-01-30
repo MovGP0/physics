@@ -40,10 +40,10 @@ import java.util.Arrays;
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public final class TrInverseOrderOfMatrices implements Transformation {
+public final class InverseOrderOfMatricesTransformation implements Transformation {
     private final IndexType type;
 
-    public TrInverseOrderOfMatrices(IndexType type) {
+    public InverseOrderOfMatricesTransformation(IndexType type) {
         assertType(type);
         this.type = type;
     }

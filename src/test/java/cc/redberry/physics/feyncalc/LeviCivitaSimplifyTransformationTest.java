@@ -35,7 +35,7 @@ import static cc.redberry.core.tensor.Tensors.*;
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public class LeviCivitaSimplifyTest extends TestCase {
+public class LeviCivitaSimplifyTransformationTest extends TestCase {
 
     @Test
     public void test1() {
@@ -118,6 +118,6 @@ public class LeviCivitaSimplifyTest extends TestCase {
     }
 
     private static Tensor simplifyLeviCivita(Tensor t, SimpleTensor eps) {
-        return new LeviCivitaSimplify(eps, true).transform(t);
+        return new LeviCivitaSimplifyTransformation(eps, true).transform(t);
     }
 }

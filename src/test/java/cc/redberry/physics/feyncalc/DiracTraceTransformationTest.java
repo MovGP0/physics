@@ -41,7 +41,7 @@ import static cc.redberry.core.tensor.Tensors.*;
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public class DiracTraceTest {
+public class DiracTraceTransformationTest {
     @Test
     public void test1() {
         for (int i = 0; i < 100; ++i) {
@@ -448,10 +448,10 @@ public class DiracTraceTest {
     }
 
     private static Tensor trace(Tensor t) {
-        return new DiracTrace(parseSimple("G^{a a'}_b'"), parseSimple("G5^a'_b'"), parseSimple("e_abcd"), true).transform(t);
+        return new DiracTraceTransformation(parseSimple("G^{a a'}_b'"), parseSimple("G5^a'_b'"), parseSimple("e_abcd"), true).transform(t);
     }
 
     private static Tensor simplifyLeviCivita(Tensor t, SimpleTensor eps) {
-        return new LeviCivitaSimplify(eps, true).transform(t);
+        return new LeviCivitaSimplifyTransformation(eps, true).transform(t);
     }
 }
