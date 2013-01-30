@@ -280,7 +280,7 @@ public final class UnitaryTrace implements Transformation {
         symmetricCombinationToken = parser.parse("D_apq*D_b^pq = (N**2 - 4)/N * g_ab");
         aSymmetricCombinationToken = parser.parse("F_apq*F_b^pq = N * g_ab");
         symmetrySimplificationToken = parser.parse("F_apq*D_b^pq = 0");
-        numberOfGeneratorsToken = parser.parse("d^a_a = N*(N-1)/2");
+        numberOfGeneratorsToken = parser.parse("d^a_a = N**2-1");
         dimensionToken = parser.parse("d^a'_a' = N");
 
         unitarySimplificationsTokens = new ParseToken[]{
