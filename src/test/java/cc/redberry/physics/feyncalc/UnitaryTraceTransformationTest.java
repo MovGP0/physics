@@ -31,6 +31,7 @@ import cc.redberry.core.transformations.EliminateFromSymmetriesTransformation;
 import cc.redberry.core.transformations.EliminateMetricsTransformation;
 import cc.redberry.core.transformations.Transformation;
 import cc.redberry.core.transformations.expand.ExpandTransformation;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static cc.redberry.core.tensor.Tensors.*;
@@ -137,6 +138,7 @@ public class UnitaryTraceTransformationTest {
         TAssert.assertEquals(t, "0");
     }
 
+    @Ignore
     @Test
     public void test6() {
         GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
@@ -172,6 +174,7 @@ public class UnitaryTraceTransformationTest {
 
     }
 
+    @Ignore
     @Test
     public void test6a() {
         GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
