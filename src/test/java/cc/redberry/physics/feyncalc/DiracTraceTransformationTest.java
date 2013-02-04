@@ -27,7 +27,8 @@ import cc.redberry.core.context.CC;
 import cc.redberry.core.context.ContextManager;
 import cc.redberry.core.indices.IndexType;
 import cc.redberry.core.parser.preprocessor.GeneralIndicesInsertion;
-import cc.redberry.core.tensor.*;
+import cc.redberry.core.tensor.SimpleTensor;
+import cc.redberry.core.tensor.Tensor;
 import cc.redberry.core.tensor.iterator.FromChildToParentIterator;
 import cc.redberry.core.transformations.EliminateMetricsTransformation;
 import cc.redberry.core.transformations.expand.ExpandTransformation;
@@ -35,14 +36,12 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import static cc.redberry.core.tensor.Tensors.*;
-import static cc.redberry.physics.feyncalc.DiracTrace.trace;
-import static cc.redberry.physics.feyncalc.LeviCivitaSimplify.simplifyLeviCivita;
 
 /**
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public class DiracTraceTest {
+public class DiracTraceTransformationTest {
     @Test
     public void test1() {
         for (int i = 0; i < 100; ++i) {
@@ -73,11 +72,11 @@ public class DiracTraceTest {
         }
     }
 
-    @Test
-    public void test3() {
-        Tensor[] product = {parse("G_a"), parse("G_b"), parse("G_c"), parse("G_d"), parse("G_e"), parse("G_f"), parse("G_g"), parse("G_h")};
-        System.out.println(ExpandTransformation.expand(DiracTrace.traceOfArray(product, IndexType.LatinLower)));
-    }
+//    @Test
+//    public void test3() {
+//        Tensor[] product = {parse("G_a"), parse("G_b"), parse("G_c"), parse("G_d"), parse("G_e"), parse("G_f"), parse("G_g"), parse("G_h")};
+//        System.out.println(ExpandTransformation.expand(DiracTrace.traceOfArray(product, IndexType.LatinLower)));
+//    }
 
     @Test
     public void test4() {
@@ -208,28 +207,31 @@ public class DiracTraceTest {
 
     @Test
     public void test11() {
-        GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
-        CC.current().getParseManager().defaultParserPreprocessors.add(indicesInsertion);
-        indicesInsertion.addInsertionRule(parseSimple("G^a'_b'a"), IndexType.Matrix1);
-        indicesInsertion.addInsertionRule(parseSimple("G5^a'_b'"), IndexType.Matrix1);
-        setAntiSymmetric(parseSimple("e_abcd"));
-        Tensor t;
-        t = parse("Tr[G_a*G_b*G_c*G_d*G5]");
-        TAssert.assertEquals(trace(t), "(-4*I)*e_{abcd}");
-        t = parse("Tr[G5*G_a*G_b*G5*G_c*G_d*G5]");
-        TAssert.assertEquals(trace(t), "(-4*I)*e_{abcd}");
-        t = parse("Tr[G5*G_a*G_b*G5*G_c*G_d*G5*G5*G5]");
-        TAssert.assertEquals(trace(t), "(-4*I)*e_{abcd}");
-        t = parse("Tr[G5*G_a*G5*G5*G_b*G5*G_c*G5*G5*G_d*G5*G5*G5]");
-        TAssert.assertEquals(trace(t), "(-4*I)*e_{abcd}");
-        t = parse("Tr[G5*G5*G_a*G5*G5*G_b*G5*G_c*G5*G5*G_d*G5*G5*G5]");
-        TAssert.assertEquals(trace(t), trace(parse("Tr[G_a*G_b*G_c*G_d]")));
-        t = parse("a*Tr[G5*G5*G_a*G5*G5*G_b*G5*G_c*G5*G5*b*G_d*G5*G5*G5]");
-        TAssert.assertEquals(ExpandTransformation.expand(trace(t)), trace(parse("a*b*Tr[G_a*G_b*G_c*G_d]")));
-        t = parse("Tr[G5*G5*G5*G5*G5*G5]");
-        TAssert.assertEquals(trace(t), "4");
-        t = parse("Tr[G5*G5*G5*G5*G5]");
-        TAssert.assertEquals(trace(t), "0");
+        for (int i = 0; i < 50; ++i) {
+            ContextManager.initializeNew();
+            GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
+            CC.current().getParseManager().defaultParserPreprocessors.add(indicesInsertion);
+            indicesInsertion.addInsertionRule(parseSimple("G^a'_b'a"), IndexType.Matrix1);
+            indicesInsertion.addInsertionRule(parseSimple("G5^a'_b'"), IndexType.Matrix1);
+            setAntiSymmetric(parseSimple("e_abcd"));
+            Tensor t;
+            t = parse("Tr[G_a*G_b*G_c*G_d*G5]");
+            TAssert.assertEquals(trace(t), "(-4*I)*e_{abcd}");
+            t = parse("Tr[G5*G_a*G_b*G5*G_c*G_d*G5]");
+            TAssert.assertEquals(trace(t), "(-4*I)*e_{abcd}");
+            t = parse("Tr[G5*G_a*G_b*G5*G_c*G_d*G5*G5*G5]");
+            TAssert.assertEquals(trace(t), "(-4*I)*e_{abcd}");
+            t = parse("Tr[G5*G_a*G5*G5*G_b*G5*G_c*G5*G5*G_d*G5*G5*G5]");
+            TAssert.assertEquals(trace(t), "(-4*I)*e_{abcd}");
+            t = parse("Tr[G5*G5*G_a*G5*G5*G_b*G5*G_c*G5*G5*G_d*G5*G5*G5]");
+            TAssert.assertEquals(trace(t), trace(parse("Tr[G_a*G_b*G_c*G_d]")));
+            t = parse("a*Tr[G5*G5*G_a*G5*G5*G_b*G5*G_c*G5*G5*b*G_d*G5*G5*G5]");
+            TAssert.assertEquals(ExpandTransformation.expand(trace(t)), trace(parse("a*b*Tr[G_a*G_b*G_c*G_d]")));
+            t = parse("Tr[G5*G5*G5*G5*G5*G5]");
+            TAssert.assertEquals(trace(t), "4");
+            t = parse("Tr[G5*G5*G5*G5*G5]");
+            TAssert.assertEquals(trace(t), "0");
+        }
     }
 
     @Test
@@ -244,86 +246,121 @@ public class DiracTraceTest {
         TAssert.assertEquals(trace(t), "4");
     }
 
-
     @Test
-    public void test12() {
+    public void test11b() {
+        CC.resetTensorNames(-2969995398048215680L);
         GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
         CC.current().getParseManager().defaultParserPreprocessors.add(indicesInsertion);
         indicesInsertion.addInsertionRule(parseSimple("G^a'_b'a"), IndexType.Matrix1);
         indicesInsertion.addInsertionRule(parseSimple("G5^a'_b'"), IndexType.Matrix1);
         setAntiSymmetric(parseSimple("e_abcd"));
         Tensor t;
-
-        t = parse("Tr[G_a*G_b*G_c*G_d*G_e*G^d*G5]");
-        TAssert.assertEquals(trace(t), "8*I*e_abce");
-        t = parse("Tr[G_a*G_b*G_c*G_d*G_e*G^a*G5]");
-        TAssert.assertEquals(trace(t), "16*I*e_bcde");
-        t = parse("Tr[G_a*G_b*G_c*G_d*G_e*G^b*G5]");
-        TAssert.assertEquals(trace(t), "-8*I*e_acde");
-        t = parse("Tr[G_a*G_b*G_c*G_d*G_e*G^c*G5]");
-        TAssert.assertEquals(trace(t), "0");
-        t = parse("Tr[G_a*G_b*G_c*G_d*G_e*G^e*G5]");
-        TAssert.assertEquals(trace(t), "-16*I*e_abcd");
-        t = parse("-Tr[G5*G_a*G5*G_b*G_c*G_d*G_e*G^d*G5]");
-        TAssert.assertEquals(trace(t), "8*I*e_abce");
-        t = parse("Tr[G_a*G5*G_b*G_c*G5*G5*G5*G_d*G_e*G^a*G5]");
-        TAssert.assertEquals(trace(t), "16*I*e_bcde");
-        t = parse("Tr[G_a*G5*G_b*G_c*G_d*G5*G_e*G^b*G5]");
-        TAssert.assertEquals(trace(t), "8*I*e_acde");
-        t = parse("Tr[-G5*G_a*G_b*G_c*G5*G_d*G_e*G^c*G5]");
-        TAssert.assertEquals(trace(t), "0");
-        t = parse("-Tr[G5*G_a*G5*G_b*G5*G_c*G_d*G_e*G^e*G5*G5]");
-        TAssert.assertEquals(trace(t), "-16*I*e_abcd");
+        t = parse("Tr[G5*G_a*G5*G5*G_b*G5*G_c*G5*G5*G_d*G5*G5*G5]");
+        TAssert.assertEquals(trace(t), "(-4*I)*e_{abcd}");
+        t = parse("Tr[G5*G_a*G_b*G5*G_c*G_d*G5*G5*G5]");
+        TAssert.assertEquals(trace(t), "(-4*I)*e_{abcd}");
     }
 
     @Test
-    public void test13() {
+    public void test11c() {
+        CC.resetTensorNames(123);
         GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
         CC.current().getParseManager().defaultParserPreprocessors.add(indicesInsertion);
         indicesInsertion.addInsertionRule(parseSimple("G^a'_b'a"), IndexType.Matrix1);
         indicesInsertion.addInsertionRule(parseSimple("G5^a'_b'"), IndexType.Matrix1);
         setAntiSymmetric(parseSimple("e_abcd"));
-        Tensor t, expected;
+        Tensor t;
+        t = parse("Tr[G5*G_a*G_b*G5*G_c*G_d*G5]");
+        System.out.println(trace(t));
+        TAssert.assertEquals(trace(t), "(-4*I)*e_{abcd}");
+    }
 
-        t = parse("Tr[G_a*G_b*G_c*G_d*G_e*G_f*G_g*G^a*G5]");
-        expected = parse("16*I*g_{bf}*e_{cdeg}-16*I*g_{bg}*e_{cdef}+16*I*g_{cd}*e_{befg}-16*I*g_{ce}*e_{bdfg}+16*I*g_{de}*e_{bcfg}+16*I*g_{fg}*e_{bcde}");
-        TAssert.assertEquals(trace(t), expected);
-        t = parse("Tr[G_a*G_b*G_c*G_d*G_e*G^d*G_g*G^b*G5]");
-        TAssert.assertEquals(trace(t), "(16*I)*e_{aceg}");
-        t = parse("Tr[(g_ab*G_c-g_ac*G_b+g_bc*G_a-I*e_abcd*G5*G^d)*G_d*(d_e^d*G_g-g_eg*G^d+d_g^d*G_e-I*e_e^d_gf*G5*G^f)*G^b*G5]");
-        TAssert.assertEquals(tr1(t), "(16*I)*e_{aceg}");
+    @Test
+    public void test12() {
+        for (int i = 0; i < 50; ++i) {
+            ContextManager.initializeNew();
+            GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
+            CC.current().getParseManager().defaultParserPreprocessors.add(indicesInsertion);
+            indicesInsertion.addInsertionRule(parseSimple("G^a'_b'a"), IndexType.Matrix1);
+            indicesInsertion.addInsertionRule(parseSimple("G5^a'_b'"), IndexType.Matrix1);
+            setAntiSymmetric(parseSimple("e_abcd"));
+            Tensor t;
 
-        t = parse("Tr[G_c*G_e*G_g*G_a*G5]");
-        TAssert.assertEquals(trace(t), "-4*I*e_cega");
-        t = parse("Tr[-g_eg*G_c*G_d*G^d*G_b*G5]");
-        TAssert.assertEquals(trace(t), "0");
-        t = parse("Tr[g_ab*G_c*G_d*d_g^d*G_e*G^b*G5]");
-        TAssert.assertEquals(trace(t), "-4*I*e_cgea");
+            t = parse("Tr[G_a*G_b*G_c*G_d*G_e*G^d*G5]");
+            TAssert.assertEquals(trace(t), "8*I*e_abce");
+            t = parse("Tr[G_a*G_b*G_c*G_d*G_e*G^a*G5]");
+            TAssert.assertEquals(trace(t), "16*I*e_bcde");
+            t = parse("Tr[G_a*G_b*G_c*G_d*G_e*G^b*G5]");
+            TAssert.assertEquals(trace(t), "-8*I*e_acde");
+            t = parse("Tr[G_a*G_b*G_c*G_d*G_e*G^c*G5]");
+            TAssert.assertEquals(trace(t), "0");
+            t = parse("Tr[G_a*G_b*G_c*G_d*G_e*G^e*G5]");
+            TAssert.assertEquals(trace(t), "-16*I*e_abcd");
+            t = parse("-Tr[G5*G_a*G5*G_b*G_c*G_d*G_e*G^d*G5]");
+            TAssert.assertEquals(trace(t), "8*I*e_abce");
+            t = parse("Tr[G_a*G5*G_b*G_c*G5*G5*G5*G_d*G_e*G^a*G5]");
+            TAssert.assertEquals(trace(t), "16*I*e_bcde");
+            t = parse("Tr[G_a*G5*G_b*G_c*G_d*G5*G_e*G^b*G5]");
+            TAssert.assertEquals(trace(t), "8*I*e_acde");
+            t = parse("Tr[-G5*G_a*G_b*G_c*G5*G_d*G_e*G^c*G5]");
+            TAssert.assertEquals(trace(t), "0");
+            t = parse("-Tr[G5*G_a*G5*G_b*G5*G_c*G_d*G_e*G^e*G5*G5]");
+            TAssert.assertEquals(trace(t), "-16*I*e_abcd");
+        }
+    }
 
-        t = parse("Tr[-I*g_ab*G_c*G_d*e_e^d_gf*G5*G^f*G^b*G5]");
-        TAssert.assertEquals(tr1(t), "-8*I*e_ecga");
-        t = parse("Tr[I*g_ac*G_b*G_d*e_e^d_gf*G5*G^f*G^b*G5]");
-        TAssert.assertEquals(tr1(t), "0");
-        t = parse("Tr[-I*g_bc*G_a*G_d*e_e^d_gf*G5*G^f*G^b*G5]");
-        TAssert.assertEquals(tr1(t), "-8*I*e_eagc");
-        t = parse("Tr[(-I)*(-I)*e_abcj*G5*G^j*G^d*e_edgf*G5*G^f*G^b*G5]");
-        TAssert.assertEquals(tr1(t), simplifyLeviCivita(parse("4*I*e_abcj*e_edgf*e^jdfb"), parseSimple("e_abcd")));
-        t = parse("Tr[-I*e_abcj*G5*G^j*G_d*d_e^d*G_g*G^b*G5]");
-        TAssert.assertEquals(tr1(t), "-8*I*e_agce");
-        t = parse("Tr[-I*e_abcj*G5*G^j*G_d*g_eg*G^d*G^b*G5]");
-        TAssert.assertEquals(tr1(t), "0");
-        t = parse("Tr[-I*e_abcj*G5*G^j*G_d*d^d_g*G_e*G^b*G5]");
-        TAssert.assertEquals(tr1(t), "-8*I*e_aecg");
-        t = parse("Tr[-g_ac*G_b*G_d*g_eg*G^d*G^b*G5]");
-        TAssert.assertEquals(tr1(t), "0");
-        t = parse("Tr[-g_ac*G_b*G_d*g^d_g*G_e*G^b*G5]");
-        TAssert.assertEquals(tr1(t), "0");
-        t = parse("Tr[g_bc*G_a*G_d*g^d_e*G_g*G^b*G5]");
-        TAssert.assertEquals(tr1(t), "-4*I*e_aegc");
-        t = parse("Tr[-g_bc*G_a*G_d*g_eg*G^d*G^b*G5]");
-        TAssert.assertEquals(tr1(t), "0");
-        t = parse("Tr[g_bc*G_a*G_d*g^d_g*G_e*G^b*G5]");
-        TAssert.assertEquals(tr1(t), "-4*I*e_agec");
+    @Test
+    public void test13() {
+        for (int i = 0; i < 5; ++i) {
+            ContextManager.initializeNew();
+            GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
+            CC.current().getParseManager().defaultParserPreprocessors.add(indicesInsertion);
+            indicesInsertion.addInsertionRule(parseSimple("G^a'_b'a"), IndexType.Matrix1);
+            indicesInsertion.addInsertionRule(parseSimple("G5^a'_b'"), IndexType.Matrix1);
+            setAntiSymmetric(parseSimple("e_abcd"));
+            Tensor t, expected;
+
+            //todo apply Shouten identity
+            //t = parse("Tr[G_a*G_b*G_c*G_d*G_e*G_f*G_g*G^a*G5]");
+            //expected = parse("16*I*g_{bf}*e_{cdeg}-16*I*g_{bg}*e_{cdef}+16*I*g_{cd}*e_{befg}-16*I*g_{ce}*e_{bdfg}+16*I*g_{de}*e_{bcfg}+16*I*g_{fg}*e_{bcde}");
+            //TAssert.assertEquals(trace(t), expected);
+            t = parse("Tr[G_a*G_b*G_c*G_d*G_e*G^d*G_g*G^b*G5]");
+            TAssert.assertEquals(trace(t), "(16*I)*e_{aceg}");
+            t = parse("Tr[(g_ab*G_c-g_ac*G_b+g_bc*G_a-I*e_abcd*G5*G^d)*G_d*(d_e^d*G_g-g_eg*G^d+d_g^d*G_e-I*e_e^d_gf*G5*G^f)*G^b*G5]");
+            TAssert.assertEquals(tr1(t), "(16*I)*e_{aceg}");
+
+            t = parse("Tr[G_c*G_e*G_g*G_a*G5]");
+            TAssert.assertEquals(trace(t), "-4*I*e_cega");
+            t = parse("Tr[-g_eg*G_c*G_d*G^d*G_b*G5]");
+            TAssert.assertEquals(trace(t), "0");
+            t = parse("Tr[g_ab*G_c*G_d*d_g^d*G_e*G^b*G5]");
+            TAssert.assertEquals(trace(t), "-4*I*e_cgea");
+
+            t = parse("Tr[-I*g_ab*G_c*G_d*e_e^d_gf*G5*G^f*G^b*G5]");
+            TAssert.assertEquals(tr1(t), "-8*I*e_ecga");
+            t = parse("Tr[I*g_ac*G_b*G_d*e_e^d_gf*G5*G^f*G^b*G5]");
+            TAssert.assertEquals(tr1(t), "0");
+            t = parse("Tr[-I*g_bc*G_a*G_d*e_e^d_gf*G5*G^f*G^b*G5]");
+            TAssert.assertEquals(tr1(t), "-8*I*e_eagc");
+            t = parse("Tr[(-I)*(-I)*e_abcj*G5*G^j*G^d*e_edgf*G5*G^f*G^b*G5]");
+            TAssert.assertEquals(tr1(t), simplifyLeviCivita(parse("4*I*e_abcj*e_edgf*e^jdfb"), parseSimple("e_abcd")));
+            t = parse("Tr[-I*e_abcj*G5*G^j*G_d*d_e^d*G_g*G^b*G5]");
+            TAssert.assertEquals(tr1(t), "-8*I*e_agce");
+            t = parse("Tr[-I*e_abcj*G5*G^j*G_d*g_eg*G^d*G^b*G5]");
+            TAssert.assertEquals(tr1(t), "0");
+            t = parse("Tr[-I*e_abcj*G5*G^j*G_d*d^d_g*G_e*G^b*G5]");
+            TAssert.assertEquals(tr1(t), "-8*I*e_aecg");
+            t = parse("Tr[-g_ac*G_b*G_d*g_eg*G^d*G^b*G5]");
+            TAssert.assertEquals(tr1(t), "0");
+            t = parse("Tr[-g_ac*G_b*G_d*g^d_g*G_e*G^b*G5]");
+            TAssert.assertEquals(tr1(t), "0");
+            t = parse("Tr[g_bc*G_a*G_d*g^d_e*G_g*G^b*G5]");
+            TAssert.assertEquals(tr1(t), "-4*I*e_aegc");
+            t = parse("Tr[-g_bc*G_a*G_d*g_eg*G^d*G^b*G5]");
+            TAssert.assertEquals(tr1(t), "0");
+            t = parse("Tr[g_bc*G_a*G_d*g^d_g*G_e*G^b*G5]");
+            TAssert.assertEquals(tr1(t), "-4*I*e_agec");
+        }
     }
 
     @Test
@@ -410,4 +447,11 @@ public class DiracTraceTest {
         TAssert.assertEquals(tr(t), "20*g_ab*g_cd + f_abcd");
     }
 
+    private static Tensor trace(Tensor t) {
+        return new DiracTraceTransformation(parseSimple("G^{a a'}_b'"), parseSimple("G5^a'_b'"), parseSimple("e_abcd"), true).transform(t);
+    }
+
+    private static Tensor simplifyLeviCivita(Tensor t, SimpleTensor eps) {
+        return new LeviCivitaSimplifyTransformation(eps, true).transform(t);
+    }
 }

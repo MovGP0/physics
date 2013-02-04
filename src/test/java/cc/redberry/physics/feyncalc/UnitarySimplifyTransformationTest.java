@@ -20,23 +20,18 @@
  * You should have received a copy of the GNU General Public License
  * along with Redberry. If not, see <http://www.gnu.org/licenses/>.
  */
+package cc.redberry.physics.feyncalc;
 
-
-import cc.redberry.core.context.ContextManager;
-import org.junit.runner.Description;
-import org.junit.runner.notification.RunListener;
+import org.junit.Test;
 
 /**
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public class GlobalRunListener extends RunListener {
+public class UnitarySimplifyTransformationTest {
+    @Test
+    public void test1() {
 
-    public GlobalRunListener() {
-    }
 
-    @Override
-    public void testStarted(Description description) throws Exception {
-        ContextManager.initializeNew();
     }
 }

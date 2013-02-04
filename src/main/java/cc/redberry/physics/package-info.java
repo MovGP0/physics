@@ -20,23 +20,10 @@
  * You should have received a copy of the GNU General Public License
  * along with Redberry. If not, see <http://www.gnu.org/licenses/>.
  */
-
-
-import cc.redberry.core.context.ContextManager;
-import org.junit.runner.Description;
-import org.junit.runner.notification.RunListener;
-
 /**
+ * Transformations and tools for calculations in high-energy physics.
+ *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public class GlobalRunListener extends RunListener {
-
-    public GlobalRunListener() {
-    }
-
-    @Override
-    public void testStarted(Description description) throws Exception {
-        ContextManager.initializeNew();
-    }
-}
+package cc.redberry.physics;
