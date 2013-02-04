@@ -132,14 +132,14 @@ public class DiracTraceTransformation implements Transformation {
      * @param gammaMatrix    tensor, which will be considered as gamma matrix
      * @param gamma5         tensor, which will be considered as gamma5 matrix
      * @param leviCivita     tensor, which will be considered as Levi-Civita tensor
-     * @param minkovskiSpace if {@code true}, then Levi-Civita tensor will be considered in Minkovski
+     * @param minkowskiSpace if {@code true}, then Levi-Civita tensor will be considered in Minkovski
      *                       space (so e.g. e_abcd*e^abcd = -24), otherwise in Euclidean space
      *                       (so e.g. e_abcd*e^abcd = +24)
      */
     public DiracTraceTransformation(final SimpleTensor gammaMatrix,
                                     final SimpleTensor gamma5,
                                     final SimpleTensor leviCivita,
-                                    final boolean minkovskiSpace) {
+                                    final boolean minkowskiSpace) {
         checkNotation(gammaMatrix, gamma5, leviCivita);
         this.gammaName = gammaMatrix.getName();
         this.gamma5Name = gamma5.getName();
@@ -174,7 +174,7 @@ public class DiracTraceTransformation implements Transformation {
             }
         });
 
-        this.simplifyLeviCivita = new LeviCivitaSimplifyTransformation(leviCivita, minkovskiSpace);
+        this.simplifyLeviCivita = new LeviCivitaSimplifyTransformation(leviCivita, minkowskiSpace);
         this.deltaTrace = (Expression) tokenTransformer.transform(CC.current().getParseManager().getParser().parse("d^a_a=4")).toTensor();
     }
 
@@ -455,7 +455,11 @@ public class DiracTraceTransformation implements Transformation {
     /*
     * Cached parse tokens
     */
-    private static final TIntObjectHashMap<ParseToken> cachedRawGammaTraces = new TIntObjectHashMap<>();
+    private static TIntObjectHashMap<ParseToken> cachedRawGammaTraces = new TIntObjectHashMap<>();
+
+    public static void resetCache() {
+        cachedRawGammaTraces = new TIntObjectHashMap<>();
+    }
 
 
     /*
@@ -463,7 +467,6 @@ public class DiracTraceTransformation implements Transformation {
      * Trace with gamma5
      * *********************
      */
-
     //cached substitutions of traces with 5
     /**
      * Tr[G_a*G_b*G_c*G_d*G5] = -4*I*e_abcd

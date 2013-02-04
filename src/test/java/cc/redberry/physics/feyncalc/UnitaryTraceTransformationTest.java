@@ -49,6 +49,7 @@ public class UnitaryTraceTransformationTest {
 
         Tensor t = parse("Tr[T_a*T_b]");
         t = unitaryTrace(t);
+        System.out.println(t);
         TAssert.assertEquals(t, parse("g_ab/2"));
     }
 
@@ -99,6 +100,7 @@ public class UnitaryTraceTransformationTest {
 
         setSymmetric("e_\\alpha\\beta\\gamma");
         setAntiSymmetric("r_\\alpha\\beta\\gamma");
+
         Transformation trace = new UnitaryTraceTransformation(
                 parseSimple("M_\\alpha^A'_B'"),
                 parseSimple("e_\\alpha\\beta\\gamma"),
@@ -132,7 +134,78 @@ public class UnitaryTraceTransformationTest {
         t = trace.transform(t);
         t = ExpandTransformation.expand(t, EliminateMetricsTransformation.ELIMINATE_METRICS);
         t = EliminateFromSymmetriesTransformation.ELIMINATE_FROM_SYMMETRIES.transform(t);
-        TAssert.assertEquals(t, "(1/16*I)*d^{rb}_{b}*f_{rpq}");
+        TAssert.assertEquals(t, "0");
+    }
+
+    @Test
+    public void test6() {
+        GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
+        CC.current().getParseManager().defaultParserPreprocessors.add(indicesInsertion);
+        indicesInsertion.addInsertionRule(parseSimple("T^a'_b'a"), IndexType.Matrix1);
+
+        setSymmetric("d_abd");
+        setAntiSymmetric("f_abc");
+
+        Transformation trace = new UnitaryTraceTransformation(
+                parseSimple("T_a"),
+                parseSimple("f_abc"),
+                parseSimple("d_abc"),
+                parse("N"));
+
+        Tensor t = parse("Tr[T_a*T_b*T_c*T^a]");
+        TAssert.assertEquals(trace.transform(t), "(N/4-1/4/N)*g_bc");
+        t = parse("Tr[T_a*T_b*T^a*T_c]");
+        TAssert.assertEquals(trace.transform(t), "-1/4/N*g_bc");
+        t = parse("Tr[T_a*T_b*T^a*T_c]");
+        TAssert.assertEquals(trace.transform(t), "-1/4/N*g_bc");
+        t = parse("Tr[T_a*T_b*T_c*T^a*T^b]");
+        TAssert.assertEquals(trace.transform(t), "0");
+        t = parse("Tr[T_a*T_b*T_c*T_d*T^a*T^c]");
+        TAssert.assertEquals(trace.transform(t), "g_bd/8/N**2");
+        t = parse("Tr[T_a*T_b*T_c*T_d*T^c*T^a]");
+        TAssert.assertEquals(trace.transform(t), "g_bd/8/N**2-g_bd/8");
+        t = parse("Tr[T_a*T_b*T_c*T_d*T^a*T^b*T^c]");
+//        System.out.println(trace.transform(t));
+        t = EliminateFromSymmetriesTransformation.ELIMINATE_FROM_SYMMETRIES.transform(trace.transform(t));
+        System.out.println(t);
+        TAssert.assertEquals(trace.transform(t), "0");
+
+    }
+
+    @Test
+    public void test6a() {
+        GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
+        CC.current().getParseManager().defaultParserPreprocessors.add(indicesInsertion);
+        indicesInsertion.addInsertionRule(parseSimple("T^a'_b'a"), IndexType.Matrix1);
+
+        setSymmetric("d_abd");
+        setAntiSymmetric("f_abc");
+        setAntiSymmetric("e_abc");
+
+        Transformation trace = new UnitaryTraceTransformation(
+                parseSimple("T_a"),
+                parseSimple("f_abc"),
+                parseSimple("d_abc"),
+                parse("N"));
+        Tensor t;
+//        t = parse("Tr[T_c*T_d*T_b*T^b*T^c]");
+//        TAssert.assertEquals(trace.transform(t), "0");
+//
+//        t = parse("Tr[T_f*T_c*T_d*T^a*T^b*T^c]");
+//        System.out.println(trace.transform(t));
+//        TAssert.assertEquals(trace.transform(t), "0");
+
+        t = parse("Tr[T_a*T_b*T_c*T_d*T^a*T^b*T^c]");
+        t = EliminateFromSymmetriesTransformation.ELIMINATE_FROM_SYMMETRIES.transform(trace.transform(t));
+        t = parseExpression("f_abc = I*e_abc").transform(t);
+        t = new LeviCivitaSimplifyTransformation(parseSimple("e_abc"), false).transform(t);
+        t = new UnitarySimplifyTransformation(
+                parseSimple("T_a"),
+                parseSimple("f_abc"),
+                parseSimple("d_abc"),
+                parse("N")).transform(t);
+        System.out.println(t);
+        TAssert.assertEquals(trace.transform(t), "0");
     }
 
     static Tensor unitaryTrace(Tensor t) {

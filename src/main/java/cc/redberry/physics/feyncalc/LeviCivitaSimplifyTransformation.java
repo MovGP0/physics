@@ -70,7 +70,7 @@ public class LeviCivitaSimplifyTransformation implements Transformation {
     private static final String defaultLeviCivitaName = "eps";
 
     private final int leviCivita;
-    private final boolean minkovskiSpace;
+    private final boolean minkowskiSpace;
     private final int numberOfIndices;
     private final IndexType typeOfLeviCivitaIndices;
     private final ChangeIndicesTypesAndTensorNames tokenTransformer;
@@ -81,18 +81,18 @@ public class LeviCivitaSimplifyTransformation implements Transformation {
 
 
     /**
-     * Creates transformation, which simplifies combinations of Levi-Civita tensors in Euclidean or Minkovski space.
+     * Creates transformation, which simplifies combinations of Levi-Civita tensors in Euclidean or Minkowski space.
      *
      * @param leviCivita     tensor, which will be considered as Levi-Civita tensor
-     * @param minkovskiSpace if {@code true}, then Levi-Civita tensor will be considered in Minkovski
+     * @param minkowskiSpace if {@code true}, then Levi-Civita tensor will be considered in Minkowski
      *                       space (so e.g. e_abcd*e^abcd = -24), otherwise in Euclidean space
      *                       (so e.g. e_abcd*e^abcd = +24)
      */
-    public LeviCivitaSimplifyTransformation(SimpleTensor leviCivita, boolean minkovskiSpace) {
+    public LeviCivitaSimplifyTransformation(SimpleTensor leviCivita, boolean minkowskiSpace) {
         checkLeviCivita(leviCivita);
 
         this.leviCivita = leviCivita.getName();
-        this.minkovskiSpace = minkovskiSpace;
+        this.minkowskiSpace = minkowskiSpace;
         this.numberOfIndices = leviCivita.getIndices().size();
         this.typeOfLeviCivitaIndices = IndicesUtils.getTypeEnum(leviCivita.getIndices().get(0));
 
@@ -286,7 +286,7 @@ public class LeviCivitaSimplifyTransformation implements Transformation {
         }
 
         Expression substitution = (Expression) tokenTransformer.transform(substitutionToken).toTensor();
-        if (minkovskiSpace & numberOfIndices % 2 == 0)
+        if (minkowskiSpace & numberOfIndices % 2 == 0)
             substitution = expression(substitution.get(0), negate(substitution.get(1)));
         return substitution;
     }

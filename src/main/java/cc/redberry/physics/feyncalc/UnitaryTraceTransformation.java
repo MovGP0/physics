@@ -29,7 +29,6 @@ import cc.redberry.core.graph.GraphType;
 import cc.redberry.core.graph.PrimitiveSubgraph;
 import cc.redberry.core.graph.PrimitiveSubgraphPartition;
 import cc.redberry.core.indices.IndexType;
-import cc.redberry.core.indices.IndicesUtils;
 import cc.redberry.core.number.Complex;
 import cc.redberry.core.parser.ParseToken;
 import cc.redberry.core.parser.Parser;
@@ -37,17 +36,13 @@ import cc.redberry.core.parser.preprocessor.ChangeIndicesTypesAndTensorNames;
 import cc.redberry.core.parser.preprocessor.TypesAndNamesTransformer;
 import cc.redberry.core.tensor.*;
 import cc.redberry.core.tensor.iterator.FromChildToParentIterator;
-import cc.redberry.core.transformations.EliminateMetricsTransformation;
+import cc.redberry.core.transformations.ExpandAndEliminateTransformation;
 import cc.redberry.core.transformations.Transformation;
-import cc.redberry.core.transformations.TransformationCollection;
-import cc.redberry.core.transformations.expand.ExpandTransformation;
 import cc.redberry.core.utils.IntArrayList;
-import cc.redberry.core.utils.TensorUtils;
-
-import java.util.ArrayList;
 
 import static cc.redberry.core.tensor.Tensors.multiply;
 import static cc.redberry.core.tensor.Tensors.parseExpression;
+import static cc.redberry.physics.feyncalc.TraceUtils.*;
 
 /**
  * Calculates trace of unitary matrices.
@@ -56,18 +51,11 @@ import static cc.redberry.core.tensor.Tensors.parseExpression;
  * @author Stanislav Poslavsky
  */
 public final class UnitaryTraceTransformation implements Transformation {
-    /*
-     * Defaults
-     */
-    private static final String unitaryMatrixName = "T";
-    private static final String structureConstantName = "F";
-    private static final String symmetricConstantName = "D";
-    private static final String dimensionName = "N";
-
     private final int unitaryMatrix;
     private final IndexType matrixType;
 
     private final Expression pairProduct;
+    private final Expression singleTrace;
     private final Transformation simplifications;
 
     /**
@@ -82,9 +70,9 @@ public final class UnitaryTraceTransformation implements Transformation {
                                       final SimpleTensor structureConstant,
                                       final SimpleTensor symmetricConstant,
                                       final Tensor dimension) {
-        check(unitaryMatrix, structureConstant, symmetricConstant, dimension);
+        checkUnitaryInput(unitaryMatrix, structureConstant, symmetricConstant, dimension);
         this.unitaryMatrix = unitaryMatrix.getName();
-        final IndexType[] types = TraceUtils.extractTypesFromMatrix(unitaryMatrix);
+        final IndexType[] types = extractTypesFromMatrix(unitaryMatrix);
         this.matrixType = types[1];
 
         ChangeIndicesTypesAndTensorNames tokenTransformer = new ChangeIndicesTypesAndTensorNames(new TypesAndNamesTransformer() {
@@ -115,23 +103,14 @@ public final class UnitaryTraceTransformation implements Transformation {
             }
         });
 
-        this.pairProduct = (Expression) tokenTransformer.transform(pairProductToken).toTensor();
-
-        //simplifications with SU(N) combinations
-        ArrayList<Transformation> unitarySimplifications = new ArrayList<>();
-        unitarySimplifications.add(EliminateMetricsTransformation.ELIMINATE_METRICS);
-        for (ParseToken substitution : unitarySimplificationsTokens)
-            unitarySimplifications.add((Expression) tokenTransformer.transform(substitution).toTensor());
+        Expression pairProduct = (Expression) tokenTransformer.transform(pairProductToken).toTensor();
         if (dimension instanceof Complex)
-            unitarySimplifications.add(parseExpression("N = " + dimension));
+            pairProduct = (Expression) parseExpression("N = " + dimension).transform(pairProduct);
+        this.pairProduct = pairProduct;
 
-        //all simplifications
-        ArrayList<Transformation> simplifications = new ArrayList<>(10);
-        simplifications.add(new ExpandTransformation(new TransformationCollection(unitarySimplifications)));
-        for (Transformation tr : unitarySimplifications)
-            simplifications.add(tr);
-
-        this.simplifications = new TransformationCollection(simplifications);
+        this.singleTrace = (Expression) tokenTransformer.transform(singleTraceToken).toTensor();
+        //simplifications with SU(N) combinations
+        this.simplifications = new UnitarySimplifyTransformation(dimension, tokenTransformer);
     }
 
     @Override
@@ -186,14 +165,17 @@ public final class UnitaryTraceTransformation implements Transformation {
                 iterator.set(simplifications.transform(c));
             }
         }
-        return iterator.result();
+        return simplifications.transform(iterator.result());
     }
 
     private Tensor traceOfProduct(Tensor tensor) {
         Tensor oldTensor = tensor, newTensor;
         while (true) {
-            newTensor = pairProduct.transform(oldTensor);
+            newTensor = oldTensor;
             newTensor = simplifications.transform(newTensor);
+            newTensor = singleTrace.transform(newTensor);
+            newTensor = pairProduct.transform(newTensor);
+            newTensor = ExpandAndEliminateTransformation.expandAndEliminate(newTensor);
             if (newTensor == oldTensor)
                 break;
             oldTensor = newTensor;
@@ -205,32 +187,6 @@ public final class UnitaryTraceTransformation implements Transformation {
         return tensor instanceof SimpleTensor && ((SimpleTensor) tensor).getName() == unitaryMatrix;
     }
 
-    private static void check(final SimpleTensor unitaryMatrix,
-                              final SimpleTensor structureConstant,
-                              final SimpleTensor symmetricConstant,
-                              final Tensor dimension) {
-
-        if (dimension instanceof Complex && !TensorUtils.isNaturalNumber(dimension))
-            throw new IllegalArgumentException("Non natural dimension.");
-
-        if (unitaryMatrix.getIndices().size() != 3)
-            throw new IllegalArgumentException("Not a unitary matrix: " + unitaryMatrix);
-        IndexType[] types = TraceUtils.extractTypesFromMatrix(unitaryMatrix);
-        IndexType metricType = types[0];
-        if (!TensorUtils.isScalar(dimension))
-            throw new IllegalArgumentException("Non scalar dimension.");
-        if (structureConstant.getName() == symmetricConstant.getName())
-            throw new IllegalArgumentException("Structure and symmetric constants have same names.");
-        SimpleTensor[] ss = {structureConstant, symmetricConstant};
-        for (SimpleTensor st : ss) {
-            if (st.getIndices().size() != 3)
-                throw new IllegalArgumentException("Illegal input for SU(N) constants: " + st);
-            for (int i = 0; i < 3; ++i)
-                if (IndicesUtils.getTypeEnum(st.getIndices().get(i)) != metricType)
-                    throw new IllegalArgumentException("Different indices metric types: " + unitaryMatrix + " and " + st);
-        }
-    }
-
     /*
      * Substitutions
      */
@@ -240,52 +196,14 @@ public final class UnitaryTraceTransformation implements Transformation {
      * T_a*T_b  = 1/2N g_ab + I/2*f_abc*T^c + 1/2*d_abc*T^c
      */
     private static final ParseToken pairProductToken;
-    /**
-     * Tr[T_a] = 0
-     */
+
     private static final ParseToken singleTraceToken;
-
-    /**
-     * d_apq*d_b^pq = (N**2 - 4)/N * g_ab
-     */
-    private static final ParseToken symmetricCombinationToken;
-
-    /**
-     * f_apq*f_b^pq = N * g_ab
-     */
-    private static final ParseToken aSymmetricCombinationToken;
-
-    /**
-     * f_apq*d_b^pq = 0
-     */
-    private static final ParseToken symmetrySimplificationToken;
-
-    /**
-     * d^a_a = N*(N-1)/2
-     */
-    private static final ParseToken numberOfGeneratorsToken;
-
-    /**
-     * Tr[1] = N
-     */
-    private static final ParseToken dimensionToken;
-
-    private static final ParseToken[] unitarySimplificationsTokens;
 
     static {
         parser = CC.current().getParseManager().getParser();
 
         pairProductToken = parser.parse("T_a^a'_c'*T_b^c'_b' = 1/(2*N)*g_ab*d^a'_b' + I/2*F_abc*T^ca'_b' + 1/2*D_abc*T^ca'_b'");
         singleTraceToken = parser.parse("T_a^a'_a' = 0");
-        symmetricCombinationToken = parser.parse("D_apq*D_b^pq = (N**2 - 4)/N * g_ab");
-        aSymmetricCombinationToken = parser.parse("F_apq*F_b^pq = N * g_ab");
-        symmetrySimplificationToken = parser.parse("F_apq*D_b^pq = 0");
-        numberOfGeneratorsToken = parser.parse("d^a_a = N**2-1");
-        dimensionToken = parser.parse("d^a'_a' = N");
-
-        unitarySimplificationsTokens = new ParseToken[]{
-                singleTraceToken, symmetricCombinationToken, aSymmetricCombinationToken,
-                symmetrySimplificationToken, numberOfGeneratorsToken, dimensionToken};
     }
 
 

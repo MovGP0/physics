@@ -25,8 +25,12 @@ package cc.redberry.physics.feyncalc;
 import cc.redberry.core.context.CC;
 import cc.redberry.core.context.NameDescriptor;
 import cc.redberry.core.indices.IndexType;
+import cc.redberry.core.indices.IndicesUtils;
 import cc.redberry.core.indices.StructureOfIndices;
+import cc.redberry.core.number.Complex;
 import cc.redberry.core.tensor.SimpleTensor;
+import cc.redberry.core.tensor.Tensor;
+import cc.redberry.core.utils.TensorUtils;
 
 /**
  * @author Dmitry Bolotin
@@ -61,4 +65,38 @@ final class TraceUtils {
         }
         return new IndexType[]{IndexType.getType(metricType), IndexType.getType(matrixType)};
     }
+
+    static void checkUnitaryInput(final SimpleTensor unitaryMatrix,
+                                  final SimpleTensor structureConstant,
+                                  final SimpleTensor symmetricConstant,
+                                  final Tensor dimension) {
+
+        if (dimension instanceof Complex && !TensorUtils.isNaturalNumber(dimension))
+            throw new IllegalArgumentException("Non natural dimension.");
+
+        if (unitaryMatrix.getIndices().size() != 3)
+            throw new IllegalArgumentException("Not a unitary matrix: " + unitaryMatrix);
+        IndexType[] types = TraceUtils.extractTypesFromMatrix(unitaryMatrix);
+        IndexType metricType = types[0];
+        if (!TensorUtils.isScalar(dimension))
+            throw new IllegalArgumentException("Non scalar dimension.");
+        if (structureConstant.getName() == symmetricConstant.getName())
+            throw new IllegalArgumentException("Structure and symmetric constants have same names.");
+        SimpleTensor[] ss = {structureConstant, symmetricConstant};
+        for (SimpleTensor st : ss) {
+            if (st.getIndices().size() != 3)
+                throw new IllegalArgumentException("Illegal input for SU(N) constants: " + st);
+            for (int i = 0; i < 3; ++i)
+                if (IndicesUtils.getTypeEnum(st.getIndices().get(i)) != metricType)
+                    throw new IllegalArgumentException("Different indices metric types: " + unitaryMatrix + " and " + st);
+        }
+    }
+
+    /*
+    * Default unitary notations
+    */
+    static final String unitaryMatrixName = "T";
+    static final String structureConstantName = "F";
+    static final String symmetricConstantName = "D";
+    static final String dimensionName = "N";
 }
