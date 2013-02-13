@@ -125,8 +125,6 @@
                             <value>5</value>
                         </property>
                     </properties>
-
-                    <skipTests>false</skipTests>
                 </configuration>
             </plugin>
             <plugin>
